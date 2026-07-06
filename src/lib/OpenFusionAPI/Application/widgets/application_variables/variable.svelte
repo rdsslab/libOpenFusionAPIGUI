@@ -5,7 +5,7 @@
 		Level,
 		copyTextToClipboard,
 		Notifications
-	} from '@edwinspire/svelte-components';
+	} from '@rdsslab/svelte-components';
 	import { equalObjs } from '$lib/OpenFusionAPI/Application/utils/utils.js';
 	import { UpsertAppVar, DeleteAppVar } from '$lib/OpenFusionAPI/Application/utils/request.js';
 	import { userStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';

@@ -1,5 +1,5 @@
 import { url_paths } from '$lib/OpenFusionAPI/Application/utils/paths.js';
-import uFetch from '@edwinspire/universal-fetch';
+import uFetch from '@rdsslab/uFetch';
 import { createEndpoint } from '$lib/OpenFusionAPI/Application/utils/utils.js';
 import {
 	listHandlerStore,

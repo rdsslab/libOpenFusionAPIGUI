@@ -7,7 +7,7 @@
 	} from '../Application/utils/request.js';
 	import { userStore } from '../Application/utils/stores.js';
 	import logo from '../img/favicon.png';
-	import { Notifications, Modal } from '@edwinspire/svelte-components';
+	import { Notifications, Modal } from '@rdsslab/svelte-components';
 	import { version } from '../version.js';
 
 	let noty = new Notifications();

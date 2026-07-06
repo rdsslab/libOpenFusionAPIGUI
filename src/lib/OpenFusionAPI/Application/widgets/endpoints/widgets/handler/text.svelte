@@ -6,7 +6,7 @@
 		Input,
 		Notifications,
 		Level
-	} from '@edwinspire/svelte-components';
+	} from '@rdsslab/svelte-components';
 
 	let notify = new Notifications();
 

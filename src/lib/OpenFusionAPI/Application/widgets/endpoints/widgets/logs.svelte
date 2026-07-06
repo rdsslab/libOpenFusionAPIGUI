@@ -1,10 +1,10 @@
 <script>
 	import { onMount } from 'svelte';
-	import { Tab, Table, ColumnTypes } from '@edwinspire/svelte-components';
+	import { Tab, Table, ColumnTypes } from '@rdsslab/svelte-components';
 	import { url_paths } from '../../../utils/paths.js';
 	import LogLevelSelect from './loglevel_select.svelte';
 	import { DateTime } from 'luxon';
-	import uFetch from '@edwinspire/universal-fetch';
+	import uFetch from '@rdsslab/uFetch';
 
 	let uF = new uFetch(url_paths.getLogs);
 

@@ -3,7 +3,7 @@
 	import { userStore, storeServerModelChanged } from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import VarEnv from './variable.svelte';
 	import { isNewApp } from '$lib/OpenFusionAPI/Application/utils/utils.js';
-	import { DialogModal, Notifications } from '@edwinspire/svelte-components';
+	import { DialogModal, Notifications } from '@rdsslab/svelte-components';
 	import SelectEnvironment from '$lib/OpenFusionAPI/Application/widgets/common/Select.svelte';
 	import { Environment as environment_list } from '$lib/OpenFusionAPI/Application/utils/static_values.js';
 	import { onDestroy, onMount } from 'svelte';

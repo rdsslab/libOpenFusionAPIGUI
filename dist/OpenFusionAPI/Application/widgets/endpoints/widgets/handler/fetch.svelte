@@ -1,5 +1,5 @@
 <script>
-	import { Tab } from '@edwinspire/svelte-components';
+	import { Tab } from '@rdsslab/svelte-components';
 	import AppVarsSelector from '../app_vars_selector.svelte';
 
 	let { endpoint = $bindable({}), onchange = () => {} } = $props();

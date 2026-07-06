@@ -1,6 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import { Input } from '@edwinspire/svelte-components';
+	import { Input } from '@rdsslab/svelte-components';
 
 	let { mcp = $bindable({}) } = $props();
 

@@ -6,7 +6,7 @@
 		listFunctionStorePRD
 	} from '../../../../utils/stores.js';
 	import SelectFns from '../../../common/Select.svelte';
-	import { Tab } from '@edwinspire/svelte-components';
+	import { Tab } from '@rdsslab/svelte-components';
 
 	let { endpoint = $bindable({}), onchange = () => {} } = $props();
 	let functions = $derived.by(() => {

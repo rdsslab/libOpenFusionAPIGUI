@@ -1,10 +1,10 @@
 {
-  "name": "@edwinspire/libopenfusionapigui",
-  "version": "1.5.4",
+  "name": "@rdsslab/libopenfusionapigui",
+  "version": "2.0.1",
   "main": "./dist/index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/edwinspire/libOpenFusionAPIGUI.git"
+    "url": "git+https://github.com/rdsslab/libOpenFusionAPIGUI.git"
   },
   "keywords": [
     "svelte",
@@ -17,9 +17,9 @@
   "author": "edwinspire",
   "license": "LGPL-3.0",
   "bugs": {
-    "url": "https://github.com/edwinspire/libOpenFusionAPIGUI.git/issues"
+    "url": "https://github.com/rdsslab/libOpenFusionAPIGUI.git/issues"
   },
-  "homepage": "https://github.com/edwinspire/libOpenFusionAPIGUI.git#readme",
+  "homepage": "https://github.com/rdsslab/libOpenFusionAPIGUI.git#readme",
   "description": "GUI for OpenFusionAPI",
   "scripts": {
     "dev": "vite dev",
@@ -71,8 +71,8 @@
   "types": "./dist/index.d.ts",
   "type": "module",
   "dependencies": {
-    "@edwinspire/svelte-components": "https://github.com/edwinspire/svelte-components.git",
-    "@edwinspire/universal-fetch": "https://github.com/edwinspire/universal-fetch.git",
+    "@rdsslab/svelte-components": "https://github.com/rdsslab/svelte-components.git",
+    "@rdsslab/uFetch": "https://github.com/rdsslab/uFetch.git",
     "@fortawesome/fontawesome-free": "^7.0.0",
     "bulma": "^1.0.4",
     "echarts": "^6.0.0",

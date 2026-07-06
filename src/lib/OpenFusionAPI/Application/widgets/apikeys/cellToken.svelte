@@ -1,5 +1,5 @@
 <script>
-	import { copyTextToClipboard } from '@edwinspire/svelte-components';
+	import { copyTextToClipboard } from '@rdsslab/svelte-components';
 
 	let { value = '' } = $props();
 	let isExpanded = $state(false);

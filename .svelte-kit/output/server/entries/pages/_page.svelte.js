@@ -1,6 +1,6 @@
 import "clsx";
 import { a6 as attr_class, a7 as bind_props, a8 as ensure_array_like, a9 as stringify, e as escape_html, aa as attr, ab as clsx } from "../../chunks/index.js";
-import "@edwinspire/universal-fetch";
+import "@rdsslab/uFetch";
 import "events";
 import "prettier-plugin-sql";
 import "marked";
@@ -30,13 +30,13 @@ function Notifications($$renderer, $$props) {
     notifications_store.subscribe((value) => {
       list_notify = value;
     });
-    $$renderer2.push(`<div class="bottom-right svelte-5sfib3"><!--[-->`);
+    $$renderer2.push(`<div class="bottom-right svelte-qo16om"><!--[-->`);
     const each_array = ensure_array_like(list_notify);
     for (let $$index = 0, $$length = each_array.length; $$index < $$length; $$index++) {
       let s = each_array[$$index];
       if (!s.hidden) {
         $$renderer2.push("<!--[0-->");
-        $$renderer2.push(`<article${attr_class(`message is-small is-${stringify(s.color)}`, "svelte-5sfib3")}>`);
+        $$renderer2.push(`<article${attr_class(`message is-small is-${stringify(s.color)}`, "svelte-qo16om")}>`);
         if (s.title) {
           $$renderer2.push("<!--[0-->");
           $$renderer2.push(`<div class="message-header"><p>${escape_html(s.title)}</p> <button class="delete is-small" aria-label="delete"></button></div>`);
@@ -52,7 +52,7 @@ function Notifications($$renderer, $$props) {
     $$renderer2.push(`<!--]--></div>`);
   });
 }
-const version = "1.5.4";
+const version = "2.0.1";
 function Login($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let username = "";

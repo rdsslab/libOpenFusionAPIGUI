@@ -1,4 +1,4 @@
-import { E as ENDPOINT_METHODS, P as PAGE_METHODS, i as negotiate, m as method_not_allowed, h as handle_error_and_jsonify, j as get_status, k as is_form_content_type, l as normalize_error, o as create_replacer, q as get_global_name, r as serialize_uses, t as clarify_devalue_error, u as get_node_type, b as noop, v as escape_html, g as create_remote_key, p as parse_remote_arg, w as deserialize_binary_form, e as stringify, x as split_remote_key, S as SVELTE_KIT_ASSETS, y as static_error_page, z as redirect_response, A as once, B as has_prerendered_path, C as get_set_cookies, T as TRAILING_SLASH_PARAM, I as INVALIDATED_PARAM, D as handle_fatal_error, F as format_server_error } from "./chunks/utils.js";
+import { E as ENDPOINT_METHODS, P as PAGE_METHODS, i as negotiate, m as method_not_allowed, h as handle_error_and_jsonify, j as get_status, k as is_form_content_type, l as normalize_error, o as create_replacer, b as noop, q as get_global_name, r as serialize_uses, t as clarify_devalue_error, u as get_node_type, v as escape_html, g as create_remote_key, p as parse_remote_arg, w as deserialize_binary_form, e as stringify, x as split_remote_key, S as SVELTE_KIT_ASSETS, y as static_error_page, z as redirect_response, A as once, B as has_prerendered_path, C as get_set_cookies, T as TRAILING_SLASH_PARAM, I as INVALIDATED_PARAM, D as handle_fatal_error, F as format_server_error } from "./chunks/utils.js";
 import { D as DEV } from "./chunks/false.js";
 import { json, text, error, isRedirect } from "@sveltejs/kit";
 import { Redirect, SvelteKitError, ActionFailure, HttpError } from "@sveltejs/kit/internal";
@@ -506,10 +506,17 @@ function create_async_iterator() {
       };
     },
     add: (promise) => {
-      deferred.push(with_resolvers());
-      void promise.then((value) => {
-        deferred[++resolved].resolve(value);
-      });
+      const next = with_resolvers();
+      void next.promise.catch(noop);
+      deferred.push(next);
+      void promise.then(
+        (value) => {
+          deferred[++resolved].resolve(value);
+        },
+        (error2) => {
+          deferred[++resolved].reject(error2);
+        }
+      );
     }
   };
 }
@@ -916,7 +923,7 @@ function create_universal_fetch(event, state, fetched, csr, resolve_opts) {
               dependency.body = new Uint8Array(result);
             }
             void push_fetched(base64_encode(result), true);
-          })();
+          })().catch(noop);
           return teed_body = b;
         }
         if (key2 === "arrayBuffer") {

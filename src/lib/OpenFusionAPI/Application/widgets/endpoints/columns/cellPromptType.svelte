@@ -1,7 +1,7 @@
 <script>
 	'use strict';
 	import { onMount } from 'svelte';
-	import { BasicSelect } from '@edwinspire/svelte-components';
+	import { BasicSelect } from '@rdsslab/svelte-components';
 
 	let { value = $bindable(), row = $bindable() } = $props();
 

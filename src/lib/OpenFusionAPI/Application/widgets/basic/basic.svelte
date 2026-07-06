@@ -1,5 +1,5 @@
 <script>
-	import uFetch from '@edwinspire/universal-fetch';
+	import uFetch from '@rdsslab/uFetch';
 	import { isNewApp, mergeSourceOverwrite } from '../../utils/utils.js';
 	import { defaultApp } from '../../utils/static_values.js';
 	import SaveDeploy from '../common/saveDeploy.svelte';
@@ -12,7 +12,7 @@
 		RestoreAppBackup,
 		restoreSystemEndpoints
 	} from '../../utils/request.js';
-	import { Notifications } from '@edwinspire/svelte-components';
+	import { Notifications } from '@rdsslab/svelte-components';
 
 	let notify = new Notifications();
 	let uf = new uFetch();

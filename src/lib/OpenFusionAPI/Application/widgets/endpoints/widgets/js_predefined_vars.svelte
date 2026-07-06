@@ -1,8 +1,8 @@
 <script>
-	import uFetch from '@edwinspire/universal-fetch';
+	import uFetch from '@rdsslab/uFetch';
 	import { onMount } from 'svelte';
 	import { url_paths } from '$lib/OpenFusionAPI/Application/utils/paths.js';
-	import { copyTextToClipboard } from '@edwinspire/svelte-components';
+	import { copyTextToClipboard } from '@rdsslab/svelte-components';
 
 	let uF;
 	let vars_js = {};

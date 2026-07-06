@@ -1,7 +1,7 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
 	import { storeUsersList } from '$lib/OpenFusionAPI/Application/utils/stores.js';
-	import { Table, ColumnTypes } from '@edwinspire/svelte-components';
+	import { Table, ColumnTypes } from '@rdsslab/svelte-components';
 	//import { TimeOutChangeValue } from '$lib/OpenFusionAPI/app/utils.js';
 
 	let { users = $bindable({}) } = $props();

@@ -6,7 +6,7 @@
 		Level,
 		Input,
 		Notifications
-	} from '@edwinspire/svelte-components';
+	} from '@rdsslab/svelte-components';
 	import SelectEnvironment from '../../common/Select.svelte';
 	import MethodSelect from '../../common/methods_select.svelte';
 	import { listHandlerStore, userStore } from '../../../utils/stores.js';

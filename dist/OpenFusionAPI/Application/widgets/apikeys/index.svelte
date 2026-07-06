@@ -11,10 +11,10 @@
 		DialogModal,
 		BasicSelect,
 		Notifications
-	} from '@edwinspire/svelte-components';
+	} from '@rdsslab/svelte-components';
 
 	import { url_paths } from '../../utils/paths.js';
-	import uFetch from '@edwinspire/universal-fetch';
+	import uFetch from '@rdsslab/uFetch';
 	import CellMethod from '../endpoints/columns/cellMethod.svelte';
 	import {
 		userStore,

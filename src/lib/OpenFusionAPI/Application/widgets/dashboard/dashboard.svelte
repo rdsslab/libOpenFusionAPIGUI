@@ -1,6 +1,6 @@
 <script>
 	import { onDestroy, onMount } from 'svelte';
-	import { Chart } from '@edwinspire/svelte-components';
+	import { Chart } from '@rdsslab/svelte-components';
 	import {
 		storeEndpointOnComplete,
 		storeServerDynamicInformation,

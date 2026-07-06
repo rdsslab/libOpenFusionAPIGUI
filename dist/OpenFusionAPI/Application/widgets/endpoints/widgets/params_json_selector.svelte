@@ -1,5 +1,5 @@
 <script>
-	import { EditorCode } from '@edwinspire/svelte-components';
+	import { EditorCode } from '@rdsslab/svelte-components';
 	import AppVarsSelector from './app_vars_selector.svelte';
 
 	// Props (Svelte 5 Runes)

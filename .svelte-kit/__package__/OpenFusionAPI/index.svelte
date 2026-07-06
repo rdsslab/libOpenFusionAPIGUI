@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import Login from './login/index.svelte';
 	import Application from './Application/index.svelte';
-	import { Notify } from '@edwinspire/svelte-components';
+	import { Notify } from '@rdsslab/svelte-components';
 	import { get } from 'svelte/store';
 	import { userStore, authEventStore } from './Application/utils/stores.js';
 	import { isJwtExpiringSoon, getJwtExpiresInMinutes } from './Application/utils/jwtUtils.js';

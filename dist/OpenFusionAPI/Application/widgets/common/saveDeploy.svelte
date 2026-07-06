@@ -1,5 +1,5 @@
 <script>
-	import { Level, Modal } from '@edwinspire/svelte-components';
+	import { Level, Modal } from '@rdsslab/svelte-components';
 	let {
 		left = $bindable([]),
 		onsavedeploy = () => {},

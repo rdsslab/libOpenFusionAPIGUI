@@ -1,6 +1,6 @@
 <script>
-	import uFetch from '@edwinspire/universal-fetch';
-	import { Table } from '@edwinspire/svelte-components';
+	import uFetch from '@rdsslab/uFetch';
+	import { Table } from '@rdsslab/svelte-components';
 	import { onMount, onDestroy } from 'svelte';
 	import { userStore } from '../utils.js';
 	import CellAttrs from '../app/cellMethodsAttrs.svelte';

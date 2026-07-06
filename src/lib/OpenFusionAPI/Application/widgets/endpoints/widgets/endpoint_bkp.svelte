@@ -1,8 +1,8 @@
 <script>
 	import { onMount } from 'svelte';
-	import { Table } from '@edwinspire/svelte-components';
+	import { Table } from '@rdsslab/svelte-components';
 	import { url_paths } from '../../../utils/paths.js';
-	import uFetch from '@edwinspire/universal-fetch';
+	import uFetch from '@rdsslab/uFetch';
 
 	let uF = new uFetch(url_paths.getEndpointBackups);
 

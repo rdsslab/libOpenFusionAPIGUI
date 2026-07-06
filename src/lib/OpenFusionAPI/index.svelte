@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import Login from '$lib/OpenFusionAPI/login/index.svelte';
 	import Application from '$lib/OpenFusionAPI/Application/index.svelte';
-	import { Notify } from '@edwinspire/svelte-components';
+	import { Notify } from '@rdsslab/svelte-components';
 	import { get } from 'svelte/store';
 	import { userStore, authEventStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import { isJwtExpiringSoon, getJwtExpiresInMinutes } from '$lib/OpenFusionAPI/Application/utils/jwtUtils.js';

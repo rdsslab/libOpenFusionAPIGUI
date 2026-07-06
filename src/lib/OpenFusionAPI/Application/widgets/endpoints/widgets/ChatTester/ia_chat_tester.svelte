@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
-	import { Input } from '@edwinspire/svelte-components';
-	import uFetch from '@edwinspire/universal-fetch';
+	import { Input } from '@rdsslab/svelte-components';
+	import uFetch from '@rdsslab/uFetch';
 	import ChatContent from './chat.svelte';
 
 	let { url = $bindable(''), init_prompts = $bindable([]) } = $props();

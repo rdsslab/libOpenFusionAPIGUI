@@ -7,13 +7,13 @@
 		Level,
 		PredictiveInput,
 		Input
-	} from '@edwinspire/svelte-components';
+	} from '@rdsslab/svelte-components';
 	import {
 		defaultValuesIntervalTask,
 		defaultApp
 	} from '../../utils/static_values.js';
 	import { url_paths } from '../../utils/paths.js';
-	import uFetch from '@edwinspire/universal-fetch';
+	import uFetch from '@rdsslab/uFetch';
 	import CellMethod from '../endpoints/columns/cellMethod.svelte';
 	import {
 		userStore,

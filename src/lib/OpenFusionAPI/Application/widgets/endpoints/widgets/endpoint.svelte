@@ -6,7 +6,7 @@
 		Level,
 		Input,
 		Notifications
-	} from '@edwinspire/svelte-components';
+	} from '@rdsslab/svelte-components';
 	import SelectEnvironment from '$lib/OpenFusionAPI/Application/widgets/common/Select.svelte';
 	import MethodSelect from '$lib/OpenFusionAPI/Application/widgets/common/methods_select.svelte';
 	import { listHandlerStore, userStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';

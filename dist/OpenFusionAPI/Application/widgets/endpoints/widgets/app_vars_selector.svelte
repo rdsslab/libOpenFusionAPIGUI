@@ -1,5 +1,5 @@
 <script>
-	import { PredictiveInput, JSONView } from '@edwinspire/svelte-components';
+	import { PredictiveInput, JSONView } from '@rdsslab/svelte-components';
 	import { listAppVars } from '../../../utils/stores.js';
 
 	let {

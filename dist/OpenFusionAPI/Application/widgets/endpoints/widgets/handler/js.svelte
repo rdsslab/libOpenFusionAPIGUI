@@ -1,5 +1,5 @@
 <script>
-	import { Tab, EditorCode } from '@edwinspire/svelte-components';
+	import { Tab, EditorCode } from '@rdsslab/svelte-components';
 	import PredefinedVars from '../js_predefined_vars.svelte';
 
 	let { endpoint = $bindable({}), onchange = () => {} } = $props();

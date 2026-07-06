@@ -7,7 +7,7 @@
 	} from '$lib/OpenFusionAPI/Application/utils/request.js';
 	import { userStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import logo from '$lib/OpenFusionAPI/img/favicon.png';
-	import { Notifications, Modal } from '@edwinspire/svelte-components';
+	import { Notifications, Modal } from '@rdsslab/svelte-components';
 	import { version } from '$lib/OpenFusionAPI/version.js';
 
 	let noty = new Notifications();

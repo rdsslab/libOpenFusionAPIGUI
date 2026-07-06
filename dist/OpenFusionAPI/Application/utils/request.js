@@ -1,5 +1,5 @@
 import { url_paths } from './paths.js';
-import uFetch from '@edwinspire/universal-fetch';
+import uFetch from '@rdsslab/uFetch';
 import { createEndpoint } from './utils.js';
 import {
 	listHandlerStore,

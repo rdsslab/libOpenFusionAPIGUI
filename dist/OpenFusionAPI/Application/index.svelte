@@ -1,5 +1,5 @@
 <script>
-	import { AppBase, DialogModal, Input } from '@edwinspire/svelte-components';
+	import { AppBase, DialogModal, Input } from '@rdsslab/svelte-components';
 	import { onDestroy, onMount } from 'svelte';
 	import Logo from '../img/favicon.png';
 	import { url_paths } from './utils/paths.js';
@@ -19,7 +19,7 @@
 		PredictiveInput,
 		OpenFusionWebsocketClient,
 		Notifications
-	} from '@edwinspire/svelte-components';
+	} from '@rdsslab/svelte-components';
 
 	import AppScreen from './widgets/basic/basic.svelte';
 	import DashBoardScreen from './widgets/dashboard/dashboard.svelte';

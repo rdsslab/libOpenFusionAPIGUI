@@ -7,7 +7,7 @@
 		Input,
 		MarkdownViewer,
 		RESTTester, Notifications
-	} from '@edwinspire/svelte-components';
+	} from '@rdsslab/svelte-components';
 	import FetchCode from './handler/fetch.svelte';
 	import JsCode from './handler/js.svelte';
 	import SoapCode from './handler/soap.svelte';

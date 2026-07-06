@@ -7,7 +7,7 @@
 		Input,
 		MarkdownViewer,
 		RESTTester, Notifications
-	} from '@edwinspire/svelte-components';
+	} from '@rdsslab/svelte-components';
 	import FetchCode from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/fetch.svelte';
 	import JsCode from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/js.svelte';
 	import SoapCode from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/soap.svelte';

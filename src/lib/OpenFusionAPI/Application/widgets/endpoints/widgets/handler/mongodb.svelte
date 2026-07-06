@@ -1,5 +1,5 @@
 <script>
-	import { Tab, EditorCode, JSONView } from '@edwinspire/svelte-components';
+	import { Tab, EditorCode, JSONView } from '@rdsslab/svelte-components';
 	import AppVarsSelector from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/params_json_selector.svelte';
 	import PredefinedVars from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/js_predefined_vars.svelte';
 	import { TimeOutChangeValue } from '$lib/OpenFusionAPI/Application/utils/utils.js';

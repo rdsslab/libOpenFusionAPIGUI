@@ -1,6 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import { Tab, EditorCode, Input } from '@edwinspire/svelte-components';
+	import { Tab, EditorCode, Input } from '@rdsslab/svelte-components';
 
 	//	import PredefinedVars from '../../../../../app/endpoint/widgets/js_predefined_vars.svelte';
 	import PredefinedVars from '../js_predefined_vars.svelte';

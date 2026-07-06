@@ -1,5 +1,5 @@
 <script module>
-	import { ColumnTypes } from '@edwinspire/svelte-components';
+	import { ColumnTypes } from '@rdsslab/svelte-components';
 	import cellPath from './cellPath.svelte';
 	import CellAccess from './cellAccess.svelte';
 	import CellMethod from './cellMethod.svelte';

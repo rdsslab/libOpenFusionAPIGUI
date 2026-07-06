@@ -1,6 +1,6 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
-	import { Tab, EditorCode, Table, ColumnTypes } from '@edwinspire/svelte-components';
+	import { Tab, EditorCode, Table, ColumnTypes } from '@rdsslab/svelte-components';
 	import AppVarsSelector from '../app_vars_selector.svelte';
 	import {
 		jsonToHtmlString,

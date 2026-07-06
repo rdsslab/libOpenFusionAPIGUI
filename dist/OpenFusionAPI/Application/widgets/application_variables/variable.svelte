@@ -5,7 +5,7 @@
 		Level,
 		copyTextToClipboard,
 		Notifications
-	} from '@edwinspire/svelte-components';
+	} from '@rdsslab/svelte-components';
 	import { equalObjs } from '../../utils/utils.js';
 	import { UpsertAppVar, DeleteAppVar } from '../../utils/request.js';
 	import { userStore } from '../../utils/stores.js';

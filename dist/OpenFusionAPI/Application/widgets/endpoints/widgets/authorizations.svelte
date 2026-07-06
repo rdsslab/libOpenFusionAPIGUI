@@ -1,7 +1,7 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
 	import { storeUsersList } from '../../../utils/stores.js';
-	import { Table, ColumnTypes } from '@edwinspire/svelte-components';
+	import { Table, ColumnTypes } from '@rdsslab/svelte-components';
 	//import { TimeOutChangeValue } from '../../../../app/utils.js';
 
 	let { users = $bindable({}) } = $props();

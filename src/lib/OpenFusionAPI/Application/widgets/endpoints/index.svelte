@@ -1,6 +1,6 @@
 <script>
 	import { onMount, onDestroy, untrack } from 'svelte';
-	import { Table, Notifications, Modal  } from '@edwinspire/svelte-components';
+	import { Table, Notifications, Modal  } from '@rdsslab/svelte-components';
 	import { isNewApp } from '$lib/OpenFusionAPI/Application/utils/utils.js';
 	import {
 		userStore,

@@ -1,5 +1,5 @@
 <script>
-	import { Tab, JSONView } from '@edwinspire/svelte-components';
+	import { Tab, JSONView } from '@rdsslab/svelte-components';
 	import AppVarsSelector from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/params_json_selector.svelte';
 
 	let { endpoint = $bindable(), onchange = () => {} } = $props();

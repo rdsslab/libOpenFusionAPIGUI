@@ -3,7 +3,7 @@
 	import { userStore, storeServerModelChanged } from '../../utils/stores.js';
 	import VarEnv from './variable.svelte';
 	import { isNewApp } from '../../utils/utils.js';
-	import { DialogModal, Notifications } from '@edwinspire/svelte-components';
+	import { DialogModal, Notifications } from '@rdsslab/svelte-components';
 	import SelectEnvironment from '../common/Select.svelte';
 	import { Environment as environment_list } from '../../utils/static_values.js';
 	import { onDestroy, onMount } from 'svelte';

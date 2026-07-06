@@ -4,7 +4,7 @@
 		Environment
 	} from '../../../utils/static_values.js';
 	import { getHandlerParams } from '../../../utils/utils.js';
-	import { copyTextToClipboard } from '@edwinspire/svelte-components';
+	import { copyTextToClipboard } from '@rdsslab/svelte-components';
 
 	let {
 		environment = $bindable('?'),

@@ -1,5 +1,5 @@
 <script>
-	import { Tab, EditorCode, JSONView } from '@edwinspire/svelte-components';
+	import { Tab, EditorCode, JSONView } from '@rdsslab/svelte-components';
 	import AppVarsSelector from '../params_json_selector.svelte';
 	import { TimeOutChangeValue } from '../../../../utils/utils.js';
 
