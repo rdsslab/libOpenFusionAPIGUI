@@ -9,8 +9,7 @@
 		Input
 	} from '@rdsslab/svelte-components';
 	import {
-		defaultValuesIntervalTask,
-		defaultApp
+		defaultValuesIntervalTask
 	} from '$lib/OpenFusionAPI/Application/utils/static_values.js';
 	import { url_paths } from '$lib/OpenFusionAPI/Application/utils/paths.js';
 	import uFetch from '@rdsslab/uFetch';
@@ -196,13 +195,8 @@
 		await loadTasks();
 	}
 
-	function fnDefaulValues() {
-		selectedRow = defaultValuesIntervalTask(selectedRow);
-	}
-
 	onMount(() => {
-		//
-		selectedRow = fnDefaulValues(defaultApp, selectedRow);
+		selectedRow = defaultValuesIntervalTask({});
 		//loadTasks();
 	});
 </script>
@@ -216,13 +210,13 @@
 	showEditButton={true}
 	oneditrow={(r) => {
 		//console.log('TABLE > ', r);
-		selectedRow = r;
+		selectedRow = defaultValuesIntervalTask(r);
 		selectedRow.enabled = r.task_enabled;
 		showEditor = true;
 	}}
 	onnewrow={() => {
 		selectedRow = defaultValuesIntervalTask({});
-		//console.log('TABLE > NEW ', selectedRow);
+		console.log('TABLE > NEW ', selectedRow, idapp);
 		showEditor = true;
 	}}
 	ondeleterow={async (r) => {
@@ -233,7 +227,7 @@
 	}}
 ></Table>
 
-{#if idapp && selectedRow}
+{#if idapp}
 	<SlideFullScreen bind:show={showEditor}>
 		<Level left={[]} right={[r01]}>
 			{#snippet r01()}

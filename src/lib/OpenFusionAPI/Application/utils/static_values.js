@@ -114,4 +114,25 @@ export const defaultEndpoint = {
 
 
 export const defaultValuesIntervalTask = (task) => {
+	const baseTask = {
+		idtask: null,
+		idendpoint: '',
+		iduser: null,
+		idapp: '',
+		enabled: true,
+		interval: 300,
+		datestart: '',
+		dateend: '',
+		next_run: '',
+		last_run: '',
+		exec_time_limit: 30,
+		failed_attempts: 0,
+		status: 0,
+		params: {}
+	};
+
+	return {
+		...baseTask,
+		...(task || {})
+	};
 };

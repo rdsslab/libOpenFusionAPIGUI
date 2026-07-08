@@ -119,4 +119,4 @@ export namespace defaultEndpoint {
         }
     }
 }
-export function defaultValuesIntervalTask(task: any): void;
+export function defaultValuesIntervalTask(task: any): any;
