@@ -54,11 +54,7 @@ declare module '$env/static/private' {
 	export const DISPLAY: string;
 	export const DriverData: string;
 	export const EDITOR: string;
-	export const EFC_13780_1262719628: string;
 	export const EFC_13780_1592913036: string;
-	export const EFC_13780_2283032206: string;
-	export const EFC_13780_2775293581: string;
-	export const EFC_13780_3789132940: string;
 	export const EFC_13780_4126798990: string;
 	export const ESET_OPTIONS: string;
 	export const EXEPATH: string;
@@ -135,6 +131,8 @@ declare module '$env/static/private' {
 	export const PSModulePath: string;
 	export const PUBLIC: string;
 	export const PWD: string;
+	export const PYTHONSTARTUP: string;
+	export const PYTHON_BASIC_REPL: string;
 	export const SESSIONNAME: string;
 	export const SHELL: string;
 	export const SHLVL: string;
@@ -262,11 +260,7 @@ declare module '$env/dynamic/private' {
 		DISPLAY: string;
 		DriverData: string;
 		EDITOR: string;
-		EFC_13780_1262719628: string;
 		EFC_13780_1592913036: string;
-		EFC_13780_2283032206: string;
-		EFC_13780_2775293581: string;
-		EFC_13780_3789132940: string;
 		EFC_13780_4126798990: string;
 		ESET_OPTIONS: string;
 		EXEPATH: string;
@@ -343,6 +337,8 @@ declare module '$env/dynamic/private' {
 		PSModulePath: string;
 		PUBLIC: string;
 		PWD: string;
+		PYTHONSTARTUP: string;
+		PYTHON_BASIC_REPL: string;
 		SESSIONNAME: string;
 		SHELL: string;
 		SHLVL: string;
