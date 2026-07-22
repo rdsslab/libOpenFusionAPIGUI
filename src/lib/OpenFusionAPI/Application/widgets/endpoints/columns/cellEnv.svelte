@@ -39,11 +39,9 @@
 <td>
 	{#if env_params}
 		<span class="icon-text">
-			
 			<span class="icon {env_params.color}">
 				<i class={env_params.icon}></i>
 			</span>
-			
 		</span>
 	{/if}
 </td>

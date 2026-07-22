@@ -184,10 +184,7 @@ export const mergeSourceOverwrite = (target, source) => {
 	if (source == null || typeof source !== 'object') return target;
 	if (target == null || typeof target !== 'object') return source;
 
-	const isPlainObject = (val) =>
-		val !== null &&
-		typeof val === 'object' &&
-		!Array.isArray(val);
+	const isPlainObject = (val) => val !== null && typeof val === 'object' && !Array.isArray(val);
 
 	// Clon superficial del target (NO se muta el original)
 	const result = { ...target };
@@ -214,5 +211,3 @@ export const mergeSourceOverwrite = (target, source) => {
 // import { copyTextToClipboard } from '@rdsslab/svelte-components';
 // ...
 // const { result, error } = await copyTextToClipboard(texto);
-
-

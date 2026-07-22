@@ -1,2 +1,3 @@
 # libFusionAPIGUI
+
 GUI for OpenFusionAPI

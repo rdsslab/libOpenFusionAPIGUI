@@ -54,7 +54,7 @@
 		headers_test: { hidden: true },
 		data_test: { hidden: true },
 		latest_updater: { hidden: true },
-		
+
 		price_by_request: { hidden: true },
 		price_kb_request: { hidden: true },
 		custom_data: { hidden: true },

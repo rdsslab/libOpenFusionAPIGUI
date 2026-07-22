@@ -1,6 +1,5 @@
 <script>
-
-let {
+	let {
 		onchange = () => {},
 		option = $bindable('NA'),
 		css_class = $bindable(' is-small '),

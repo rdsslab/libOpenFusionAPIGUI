@@ -1,6 +1,13 @@
 <script>
-	import { GetAppVars, UpsertAppVar, migrateAppVars } from '$lib/OpenFusionAPI/Application/utils/request.js';
-	import { userStore, storeServerModelChanged } from '$lib/OpenFusionAPI/Application/utils/stores.js';
+	import {
+		GetAppVars,
+		UpsertAppVar,
+		migrateAppVars
+	} from '$lib/OpenFusionAPI/Application/utils/request.js';
+	import {
+		userStore,
+		storeServerModelChanged
+	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import VarEnv from './variable.svelte';
 	import { isNewApp } from '$lib/OpenFusionAPI/Application/utils/utils.js';
 	import { DialogModal, Notifications } from '@rdsslab/svelte-components';
@@ -107,12 +114,16 @@
 				let result = migrate_data[0];
 				if (result.status === 'success') {
 					noty.push({
-						message: result.message || `Variable ${var_to_copy.name} successfully migrated/replaced in the ${var_to_copy.env_destination} environment`,
+						message:
+							result.message ||
+							`Variable ${var_to_copy.name} successfully migrated/replaced in the ${var_to_copy.env_destination} environment`,
 						color: 'success'
 					});
 				} else if (result.status === 'ignored') {
 					noty.push({
-						message: result.message || `Variable ${var_to_copy.name} is already in the ${var_to_copy.env_destination} environment`,
+						message:
+							result.message ||
+							`Variable ${var_to_copy.name} is already in the ${var_to_copy.env_destination} environment`,
 						color: 'info'
 					});
 				} else {

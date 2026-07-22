@@ -18,8 +18,6 @@
 		//	console.log('Label', l);
 		return l ? l.value : 'Unknown';
 	});
-
-
 </script>
 
 <td>

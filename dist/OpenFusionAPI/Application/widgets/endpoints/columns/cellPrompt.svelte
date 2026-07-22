@@ -10,6 +10,11 @@
 </script>
 
 <td>
-	<textarea bind:value class="textarea is-small" placeholder="Prompt" rows="2" onchange={onchangecell}
+	<textarea
+		bind:value
+		class="textarea is-small"
+		placeholder="Prompt"
+		rows="2"
+		onchange={onchangecell}
 	></textarea>
 </td>

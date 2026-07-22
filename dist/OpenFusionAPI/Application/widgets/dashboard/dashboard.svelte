@@ -7,7 +7,10 @@
 		userStore,
 		statusSystemEndpointsStore
 	} from '../../utils/stores.js';
-	import { getLogsRecordsPerMinute, restoreSystemEndpoints } from '../../utils/request.js';
+	import {
+		getLogsRecordsPerMinute,
+		restoreSystemEndpoints
+	} from '../../utils/request.js';
 	let { idapp = $bindable() } = $props();
 	let data_request = $state([]);
 

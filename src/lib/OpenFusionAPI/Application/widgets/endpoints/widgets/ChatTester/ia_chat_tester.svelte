@@ -60,7 +60,7 @@
 			//messages = [...messages];
 		} else if (response.status == 404) {
 			messages.push({ type: 'ia', prompt: 'Server not exists' });
-			} else if (response.status == 500) {
+		} else if (response.status == 500) {
 			messages.push({ type: 'ia', prompt: response.statusText });
 		} else {
 			console.log(response);

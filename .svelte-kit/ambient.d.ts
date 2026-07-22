@@ -40,9 +40,9 @@
 declare module '$env/static/private' {
 	export const ACLOCAL_PATH: string;
 	export const ALLUSERSPROFILE: string;
-	export const ANTIGRAVITY_CLI_ALIAS: string;
 	export const APPDATA: string;
 	export const CHROME_CRASHPAD_PIPE_NAME: string;
+	export const CLAUDE_CODE_SSE_PORT: string;
 	export const COLOR: string;
 	export const COLORTERM: string;
 	export const COMMONPROGRAMFILES: string;
@@ -50,11 +50,10 @@ declare module '$env/static/private' {
 	export const COMPUTERNAME: string;
 	export const COMSPEC: string;
 	export const CONFIG_SITE: string;
+	export const COPILOT_DEBUG_NONCE: string;
 	export const DISPLAY: string;
 	export const DriverData: string;
 	export const EDITOR: string;
-	export const EFC_13780_1592913036: string;
-	export const EFC_13780_4126798990: string;
 	export const ESET_OPTIONS: string;
 	export const EXEPATH: string;
 	export const GIT_ASKPASS: string;
@@ -128,6 +127,8 @@ declare module '$env/static/private' {
 	export const PSModulePath: string;
 	export const PUBLIC: string;
 	export const PWD: string;
+	export const PYTHONSTARTUP: string;
+	export const PYTHON_BASIC_REPL: string;
 	export const SESSIONNAME: string;
 	export const SHELL: string;
 	export const SHLVL: string;
@@ -153,6 +154,7 @@ declare module '$env/static/private' {
 	export const WINDIR: string;
 	export const ZES_ENABLE_SYSMAN: string;
 	export const _: string;
+	export const __COMPAT_LAYER: string;
 }
 
 /**
@@ -241,9 +243,9 @@ declare module '$env/dynamic/private' {
 	export const env: {
 		ACLOCAL_PATH: string;
 		ALLUSERSPROFILE: string;
-		ANTIGRAVITY_CLI_ALIAS: string;
 		APPDATA: string;
 		CHROME_CRASHPAD_PIPE_NAME: string;
+		CLAUDE_CODE_SSE_PORT: string;
 		COLOR: string;
 		COLORTERM: string;
 		COMMONPROGRAMFILES: string;
@@ -251,11 +253,10 @@ declare module '$env/dynamic/private' {
 		COMPUTERNAME: string;
 		COMSPEC: string;
 		CONFIG_SITE: string;
+		COPILOT_DEBUG_NONCE: string;
 		DISPLAY: string;
 		DriverData: string;
 		EDITOR: string;
-		EFC_13780_1592913036: string;
-		EFC_13780_4126798990: string;
 		ESET_OPTIONS: string;
 		EXEPATH: string;
 		GIT_ASKPASS: string;
@@ -329,6 +330,8 @@ declare module '$env/dynamic/private' {
 		PSModulePath: string;
 		PUBLIC: string;
 		PWD: string;
+		PYTHONSTARTUP: string;
+		PYTHON_BASIC_REPL: string;
 		SESSIONNAME: string;
 		SHELL: string;
 		SHLVL: string;
@@ -354,6 +357,7 @@ declare module '$env/dynamic/private' {
 		WINDIR: string;
 		ZES_ENABLE_SYSMAN: string;
 		_: string;
+		__COMPAT_LAYER: string;
 		[key: `PUBLIC_${string}`]: undefined;
 		[key: `${string}`]: string | undefined;
 	}

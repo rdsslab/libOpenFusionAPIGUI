@@ -6,7 +6,8 @@
 		EditorCode,
 		Input,
 		MarkdownViewer,
-		RESTTester, Notifications
+		RESTTester,
+		Notifications
 	} from '@rdsslab/svelte-components';
 	import FetchCode from './handler/fetch.svelte';
 	import JsCode from './handler/js.svelte';
@@ -34,7 +35,6 @@
 
 	let { showEditor = $bindable(false), onsave = (d) => {}, oncopy = () => {} } = $props();
 
-	
 	let noty = new Notifications();
 	let json_schema_in_enabled = $state(false);
 	let json_schema_in_schema = $state({});
@@ -217,16 +217,85 @@
 
 	/** Mapa de handler → tabs permitidas. Sin entrada = todas las tabs. */
 	const HANDLER_TABS = {
-		MCP:          new Set(['endpoint', 'docs', 'tester', 'backups', 'logs']),
-		NOAPPLY:      new Set(['endpoint']),
+		MCP: new Set(['endpoint', 'docs', 'tester', 'backups', 'logs']),
+		NOAPPLY: new Set(['endpoint']),
 		'No Handler': new Set(['endpoint']),
-		NA:           new Set(['endpoint']),
-		TELEGRAM_BOT: new Set(['endpoint', 'config', 'docs', 'app_vars', 'auth', 'price', 'tester', 'backups', 'logs']),
-		FUNCTION:     new Set(['endpoint', 'config', 'docs', 'auth', 'mcp', 'price', 'tester', 'backups', 'logs', 'json_schema']),
-		SOAP:         new Set(['endpoint', 'config', 'docs', 'auth', 'price', 'tester', 'backups', 'logs', 'json_schema', 'app_vars', 'mcp']),
-		SQL_BULK_I:   new Set(['endpoint', 'config', 'docs', 'auth', 'price', 'tester', 'backups', 'logs', 'json_schema', 'app_vars', 'mcp']),
-		SQL:          new Set(['endpoint', 'config', 'docs', 'auth', 'price', 'tester', 'backups', 'logs', 'json_schema', 'app_vars', 'mcp']),
-		HANA:         new Set(['endpoint', 'config', 'docs', 'auth', 'price', 'tester', 'backups', 'logs', 'json_schema', 'app_vars', 'mcp']),
+		NA: new Set(['endpoint']),
+		TELEGRAM_BOT: new Set([
+			'endpoint',
+			'config',
+			'docs',
+			'app_vars',
+			'auth',
+			'price',
+			'tester',
+			'backups',
+			'logs'
+		]),
+		FUNCTION: new Set([
+			'endpoint',
+			'config',
+			'docs',
+			'auth',
+			'mcp',
+			'price',
+			'tester',
+			'backups',
+			'logs',
+			'json_schema'
+		]),
+		SOAP: new Set([
+			'endpoint',
+			'config',
+			'docs',
+			'auth',
+			'price',
+			'tester',
+			'backups',
+			'logs',
+			'json_schema',
+			'app_vars',
+			'mcp'
+		]),
+		SQL_BULK_I: new Set([
+			'endpoint',
+			'config',
+			'docs',
+			'auth',
+			'price',
+			'tester',
+			'backups',
+			'logs',
+			'json_schema',
+			'app_vars',
+			'mcp'
+		]),
+		SQL: new Set([
+			'endpoint',
+			'config',
+			'docs',
+			'auth',
+			'price',
+			'tester',
+			'backups',
+			'logs',
+			'json_schema',
+			'app_vars',
+			'mcp'
+		]),
+		HANA: new Set([
+			'endpoint',
+			'config',
+			'docs',
+			'auth',
+			'price',
+			'tester',
+			'backups',
+			'logs',
+			'json_schema',
+			'app_vars',
+			'mcp'
+		])
 	};
 
 	let derivedtabList = $derived.by(() => {
@@ -249,7 +318,7 @@
 			endpoint.code = v.code;
 			endpoint.docs = v.docs;
 			endpoint.File = v.File;
-			
+
 			if (v.custom_data) {
 				endpoint.custom_data = v.custom_data;
 			}
@@ -318,8 +387,6 @@
 			}
 		}
 	}
-
-
 </script>
 
 {#snippet tab_docs()}
@@ -494,7 +561,10 @@
 				if (backup && backup.idendpoint == endpoint.idendpoint) {
 					let snap = $state.snapshot(backup);
 					endpoint = normalizeEndpoint(snap);
-					noty.push({ message: `Endpoint ${backup.name} loaded from backup. Save to persist.`, color: 'success' });
+					noty.push({
+						message: `Endpoint ${backup.name} loaded from backup. Save to persist.`,
+						color: 'success'
+					});
 				}
 			}}
 		></Backups>

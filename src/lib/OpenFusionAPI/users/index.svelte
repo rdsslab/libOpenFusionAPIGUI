@@ -23,7 +23,6 @@
 		methods: { decorator: { component: CellAttrs } }
 	};
 
-
 	async function getApps() {
 		// Lógica de autenticación aquí
 

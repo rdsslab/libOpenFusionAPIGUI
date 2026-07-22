@@ -10,7 +10,7 @@
 		{ value: 'Human Message', id: 'human' },
 		{ value: 'System Message', id: 'system' },
 		{ value: 'Placeholder', id: 'placeholder' },
-	//	{ value: 'Tool Message', id: 'tool', enabled: false },
+		//	{ value: 'Tool Message', id: 'tool', enabled: false },
 		{ value: 'User Message', id: 'user' }
 	];
 

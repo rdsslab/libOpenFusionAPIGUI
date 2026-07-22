@@ -13,7 +13,6 @@
 		handler = $bindable('?')
 	} = $props();
 
-
 	let handler_params = $derived.by(() => {
 		return getHandlerParams(handler);
 	});
@@ -39,8 +38,8 @@
 			<h4 class="subtitle is-5">
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
-				<div 
-					class="icon-text" 
+				<div
+					class="icon-text"
 					style="cursor: pointer;"
 					title="Copy to clipboard"
 					onclick={async () => {
@@ -76,8 +75,7 @@
 				<div class="control">
 					<div class="tags has-addons">
 						<span class="tag is-dark">Handler</span>
-						<span class="tag is-{handler_params?.css_class}">{handler_params?.value}</span
-						>
+						<span class="tag is-{handler_params?.css_class}">{handler_params?.value}</span>
 					</div>
 				</div>
 

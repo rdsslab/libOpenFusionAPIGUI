@@ -14,9 +14,12 @@
 		<h1 class="title">
 			<div><span class="span01" style="background-image: url( {flame});">OpenFusionAPI</span></div>
 		</h1>
-		
-			<div class="has-text-centered has-text-weight-bold"><span class="span01 " style="background-image: url( {flame});"><a  href="/openfusionapi">ENTER</a></span></div>
-	
+
+		<div class="has-text-centered has-text-weight-bold">
+			<span class="span01" style="background-image: url( {flame});"
+				><a href="/openfusionapi">ENTER</a></span
+			>
+		</div>
 	</div>
 </div>
 
@@ -40,7 +43,7 @@
 	.span01 {
 		height: 300px;
 		width: 100%;
-		
+
 		background-position: 0 -1000px;
 		background-clip: text;
 		-webkit-background-clip: text;

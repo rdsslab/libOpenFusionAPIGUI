@@ -1,11 +1,12 @@
 <script>
 	import { onMount, onDestroy, untrack } from 'svelte';
-	import { Table, Notifications, Modal  } from '@rdsslab/svelte-components';
+	import { Table, Notifications, Modal } from '@rdsslab/svelte-components';
 	import { isNewApp } from '$lib/OpenFusionAPI/Application/utils/utils.js';
 	import {
 		userStore,
 		statusSystemEndpointsStore,
-		storeCountResponseStatusCode, storeServerModelChanged
+		storeCountResponseStatusCode,
+		storeServerModelChanged
 	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import { endpointColumns } from '$lib/OpenFusionAPI/Application/widgets/endpoints/columns/index.svelte';
 	import {
@@ -149,7 +150,7 @@
 		let idendpoints = TableObject.GetSelectedRows().map((u) => {
 			return u.idendpoint;
 		});
-console.log('Selected endpoints for migration:', idendpoints);
+		console.log('Selected endpoints for migration:', idendpoints);
 		if (idendpoints && Array.isArray(idendpoints) && idendpoints.length > 0) {
 			selectedEndpointsForMigration = idendpoints;
 			migrateTargetEnv = '';
@@ -167,7 +168,10 @@ console.log('Selected endpoints for migration:', idendpoints);
 			return;
 		}
 		if (!migrateConfirmCheck) {
-			notify.push({ message: 'Please confirm the migration by checking the box.', color: 'warning' });
+			notify.push({
+				message: 'Please confirm the migration by checking the box.',
+				color: 'warning'
+			});
 			return;
 		}
 
@@ -177,25 +181,37 @@ console.log('Selected endpoints for migration:', idendpoints);
 			});
 
 			let migrate_data = await migrateEndpoints(payload);
-			
+
 			if (Array.isArray(migrate_data)) {
-				let successCount = migrate_data.filter(item => item.status === 'success').length;
-				let ignoredCount = migrate_data.filter(item => item.status === 'ignored').length;
+				let successCount = migrate_data.filter((item) => item.status === 'success').length;
+				let ignoredCount = migrate_data.filter((item) => item.status === 'ignored').length;
 				let errorCount = migrate_data.length - successCount - ignoredCount;
 
 				if (errorCount === 0) {
 					if (successCount > 0 && ignoredCount === 0) {
-						notify.push({ message: `Successfully migrated ${successCount} endpoints.`, color: 'success' });
+						notify.push({
+							message: `Successfully migrated ${successCount} endpoints.`,
+							color: 'success'
+						});
 					} else if (successCount > 0 && ignoredCount > 0) {
-						notify.push({ message: `Successfully migrated ${successCount} endpoints. (${ignoredCount} already existed in target env).`, color: 'success' });
+						notify.push({
+							message: `Successfully migrated ${successCount} endpoints. (${ignoredCount} already existed in target env).`,
+							color: 'success'
+						});
 					} else if (successCount === 0 && ignoredCount > 0) {
-						notify.push({ message: `All ${ignoredCount} selected endpoints are already in the target environment.`, color: 'info' });
+						notify.push({
+							message: `All ${ignoredCount} selected endpoints are already in the target environment.`,
+							color: 'info'
+						});
 					} else {
 						notify.push({ message: 'No endpoints were processed.', color: 'info' });
 					}
 				} else {
 					if (successCount > 0 || ignoredCount > 0) {
-						notify.push({ message: `Migrated ${successCount} successfully, ${ignoredCount} ignored, but ${errorCount} failed.`, color: 'warning' });
+						notify.push({
+							message: `Migrated ${successCount} successfully, ${ignoredCount} ignored, but ${errorCount} failed.`,
+							color: 'warning'
+						});
 					} else {
 						notify.push({ message: `Failed to migrate ${errorCount} endpoints.`, color: 'danger' });
 					}
@@ -235,7 +251,8 @@ console.log('Selected endpoints for migration:', idendpoints);
 		try {
 			let last_version_res = await getServerAPILastVersion($userStore.token);
 			if (last_version_res) {
-				serverAPILastVersion = last_version_res.libOpenFusionAPI?.version || last_version_res.version || '';
+				serverAPILastVersion =
+					last_version_res.libOpenFusionAPI?.version || last_version_res.version || '';
 			}
 		} catch (error) {
 			console.error(error);
@@ -248,7 +265,7 @@ console.log('Selected endpoints for migration:', idendpoints);
 
 			let freshApp = await GetEndpointsByIdapp(idapp);
 			await getListFunction(freshApp.app);
-			
+
 			if (full) {
 				await GetAppVars(idapp, true);
 				let status_sys_endp = await restoreSystemEndpoints(false);
@@ -324,7 +341,7 @@ console.log('Selected endpoints for migration:', idendpoints);
 						<span class="tag is-success">{serverAPIVersion}</span>
 					</div>
 				</div>
-				
+
 				<div class="control">
 					<div class="tags has-addons">
 						<span class="tag is-dark">DataBase</span>
@@ -347,7 +364,7 @@ console.log('Selected endpoints for migration:', idendpoints);
 			{/snippet}
 
 			{#snippet rt1()}
-				<span >
+				<span>
 					<button class="button is-small" onclick={clearcacheSelected} title="Clear Cache">
 						<span class="icon is-small">
 							<i class="fa-solid fa-eraser"></i>
@@ -358,7 +375,11 @@ console.log('Selected endpoints for migration:', idendpoints);
 			{/snippet}
 			{#snippet rt2()}
 				<span>
-					<button title="Generate Documentation" class="button is-small" onclick={exportAppDocumentation}>
+					<button
+						title="Generate Documentation"
+						class="button is-small"
+						onclick={exportAppDocumentation}
+					>
 						<span class="icon is-small">
 							<i class="fa-solid fa-file-export"></i>
 						</span>
@@ -368,7 +389,11 @@ console.log('Selected endpoints for migration:', idendpoints);
 			{/snippet}
 			{#snippet rt3()}
 				<span>
-					<button class="button is-small" onclick={openMigrateModal} title="Migrate selected endpoints to another environment">
+					<button
+						class="button is-small"
+						onclick={openMigrateModal}
+						title="Migrate selected endpoints to another environment"
+					>
 						<span class="icon is-small">
 							<i class="fa-solid fa-route"></i>
 						</span>
@@ -390,12 +415,15 @@ console.log('Selected endpoints for migration:', idendpoints);
 <Modal bind:show={showMigrateModal} bind:showCloseButton={showMigrateModal}>
 	<div class="box">
 		<h3 class="title is-4">Migrate Endpoints</h3>
-		
+
 		<div class="content">
 			<p class="has-text-weight-bold">
-				You have selected {selectedEndpointsForMigration.length} endpoint{selectedEndpointsForMigration.length === 1 ? '' : 's'} for migration.
+				You have selected {selectedEndpointsForMigration.length} endpoint{selectedEndpointsForMigration.length ===
+				1
+					? ''
+					: 's'} for migration.
 			</p>
-			
+
 			<div class="field">
 				<label class="label" for="migrate-target-environment">Target Environment</label>
 				<div class="control">
@@ -414,22 +442,28 @@ console.log('Selected endpoints for migration:', idendpoints);
 				<span class="icon">
 					<i class="fa-solid fa-triangle-exclamation"></i>
 				</span>
-				<strong>Warning:</strong> This is a risky operation. The existing code in the target environment for the selected endpoints will be completely replaced. Please proceed with caution.
+				<strong>Warning:</strong> This is a risky operation. The existing code in the target environment
+				for the selected endpoints will be completely replaced. Please proceed with caution.
 			</div>
 
 			<div class="field">
 				<div class="control">
 					<label class="checkbox">
-						<input type="checkbox" bind:checked={migrateConfirmCheck}>
-						Are you sure you want to migrate the selected endpoints to the <strong>{migrateTargetEnv ? migrateTargetEnv.toUpperCase() : 'selected'}</strong> environment?
+						<input type="checkbox" bind:checked={migrateConfirmCheck} />
+						Are you sure you want to migrate the selected endpoints to the
+						<strong>{migrateTargetEnv ? migrateTargetEnv.toUpperCase() : 'selected'}</strong> environment?
 					</label>
 				</div>
 			</div>
 		</div>
-		
+
 		<div class="buttons is-right mt-5">
 			<button class="button is-small" onclick={() => (showMigrateModal = false)}>Cancel</button>
-			<button class="button is-small is-primary" disabled={!migrateConfirmCheck || !migrateTargetEnv} onclick={confirmMigration}>
+			<button
+				class="button is-small is-primary"
+				disabled={!migrateConfirmCheck || !migrateTargetEnv}
+				onclick={confirmMigration}
+			>
 				<span class="icon">
 					<i class="fa-solid fa-check"></i>
 				</span>

@@ -72,9 +72,11 @@
 				<a href="https://www.mongodb.com/products/updates/version-release">MongoDB</a>
 				documentation.
 			</div>
-		
-			
-			<div class="content is-small">The mongose ​​instance with the connection is called <code>mongooseInstance</code> and you can use it within the code.</div>
+
+			<div class="content is-small">
+				The mongose ​​instance with the connection is called <code>mongooseInstance</code> and you can
+				use it within the code.
+			</div>
 		</div>
 	</div>
 

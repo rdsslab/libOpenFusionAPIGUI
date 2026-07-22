@@ -13,8 +13,6 @@ export const listHTTPMethods = {
 	WS: { color: 'warning', icon: 'fa-solid fa-tower-broadcast' }
 };
 
-
-
 export const Environment = [
 	{
 		id: 'dev',
@@ -111,7 +109,6 @@ export const defaultEndpoint = {
 		}
 	}
 };
-
 
 export const defaultValuesIntervalTask = (task) => {
 	const baseTask = {

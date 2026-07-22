@@ -6,6 +6,11 @@
 		GetServerAPIVersion
 	} from '../Application/utils/request.js';
 	import { userStore } from '../Application/utils/stores.js';
+	import {
+		getJwtExpiresInMinutes,
+		formatJwtTimeLeft,
+		logJwtExpiration
+	} from '../Application/utils/jwtUtils.js';
 	import logo from '../img/favicon.png';
 	import { Notifications, Modal } from '@rdsslab/svelte-components';
 	import { version } from '../version.js';
@@ -35,6 +40,40 @@
 		loadServerVersion();
 	});
 
+	/**
+	 * Muestra una notificación con la vigencia de la sesión recién iniciada.
+	 * @param {string} token
+	 */
+	function notifySessionLifetime(token) {
+		logJwtExpiration(token);
+
+		const minutesLeft = getJwtExpiresInMinutes(token);
+		const timeText = formatJwtTimeLeft(minutesLeft);
+
+		if (minutesLeft <= 0) {
+			noty.push({
+				message:
+					'Tu sesión ya expiró o el token tiene una vigencia inválida. Contacta al administrador.',
+				color: 'danger'
+			});
+		} else if (minutesLeft < 1) {
+			noty.push({
+				message: `Sesión iniciada con vigencia muy corta: ${timeText}.`,
+				color: 'danger'
+			});
+		} else if (minutesLeft < 5) {
+			noty.push({
+				message: `Sesión iniciada. Tiempo de sesión: ${timeText}.`,
+				color: 'warning'
+			});
+		} else {
+			noty.push({
+				message: `Sesión iniciada. Tiempo de sesión: ${timeText}.`,
+				color: 'success'
+			});
+		}
+	}
+
 	async function handleSubmit() {
 		try {
 			processing.waiting = true;
@@ -49,6 +88,8 @@
 				await getListHandler(data.token);
 
 				processing.waiting = false;
+
+				notifySessionLifetime(data.token);
 
 				onlogin({
 					login: data.login
@@ -102,7 +143,13 @@
 			{/if}
 
 			<!-- Form -->
-			<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="login-form">
+			<form
+				onsubmit={(e) => {
+					e.preventDefault();
+					handleSubmit();
+				}}
+				class="login-form"
+			>
 				<div class="field">
 					<label class="label has-text-grey-light is-small" for="login-username">Username</label>
 					<p class="control has-icons-left">
@@ -217,7 +264,7 @@
 	.orb-1 {
 		width: 260px;
 		height: 260px;
-		background: radial-gradient(circle, #FF6B1A, #FF3D00);
+		background: radial-gradient(circle, #ff6b1a, #ff3d00);
 		top: -60px;
 		right: -60px;
 		animation: float1 8s ease-in-out infinite;
@@ -226,7 +273,7 @@
 	.orb-2 {
 		width: 200px;
 		height: 200px;
-		background: radial-gradient(circle, #FF8C42, #FF3D00);
+		background: radial-gradient(circle, #ff8c42, #ff3d00);
 		bottom: -40px;
 		left: -40px;
 		animation: float2 10s ease-in-out infinite;
@@ -235,25 +282,40 @@
 	.orb-3 {
 		width: 140px;
 		height: 140px;
-		background: radial-gradient(circle, #FF6B1A, #FFa040);
+		background: radial-gradient(circle, #ff6b1a, #ffa040);
 		bottom: 30px;
 		right: 20px;
 		animation: float3 7s ease-in-out infinite;
 	}
 
 	@keyframes float1 {
-		0%, 100% { transform: translate(0, 0) scale(1); }
-		50%       { transform: translate(-20px, 20px) scale(1.08); }
+		0%,
+		100% {
+			transform: translate(0, 0) scale(1);
+		}
+		50% {
+			transform: translate(-20px, 20px) scale(1.08);
+		}
 	}
 
 	@keyframes float2 {
-		0%, 100% { transform: translate(0, 0) scale(1); }
-		50%       { transform: translate(18px, -15px) scale(1.06); }
+		0%,
+		100% {
+			transform: translate(0, 0) scale(1);
+		}
+		50% {
+			transform: translate(18px, -15px) scale(1.06);
+		}
 	}
 
 	@keyframes float3 {
-		0%, 100% { transform: translate(0, 0) scale(1); }
-		50%       { transform: translate(-12px, 12px) scale(1.1); }
+		0%,
+		100% {
+			transform: translate(0, 0) scale(1);
+		}
+		50% {
+			transform: translate(-12px, 12px) scale(1.1);
+		}
 	}
 
 	/* ── Card ─────────────────────────────────────────────────── */
@@ -296,7 +358,7 @@
 		width: 88px;
 		height: 88px;
 		border-radius: 50%;
-		background: linear-gradient(135deg, #FF6B1A 0%, #FF3D00 100%);
+		background: linear-gradient(135deg, #ff6b1a 0%, #ff3d00 100%);
 		padding: 4px;
 		box-sizing: border-box;
 		margin: 0 auto;
@@ -305,8 +367,13 @@
 	}
 
 	@keyframes pulse-ring {
-		0%, 100% { box-shadow: 0 0 20px rgba(255, 107, 26, 0.4); }
-		50%       { box-shadow: 0 0 44px rgba(255, 107, 26, 0.75); }
+		0%,
+		100% {
+			box-shadow: 0 0 20px rgba(255, 107, 26, 0.4);
+		}
+		50% {
+			box-shadow: 0 0 44px rgba(255, 107, 26, 0.75);
+		}
 	}
 
 	.logo-figure {
@@ -350,7 +417,7 @@
 	/* ── Divider ──────────────────────────────────────────────── */
 	.divider-line {
 		height: 1px;
-		background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);
+		background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1), transparent);
 		margin: 1.2rem 0;
 	}
 
@@ -379,7 +446,7 @@
 
 	.login-form .input:focus {
 		background: rgba(255, 255, 255, 0.1) !important;
-		border-color: #FF6B1A !important;
+		border-color: #ff6b1a !important;
 		box-shadow: 0 0 0 3px rgba(255, 107, 26, 0.22) !important;
 	}
 
@@ -419,16 +486,27 @@
 	}
 
 	@keyframes shake {
-		0%, 100% { transform: translateX(0); }
-		20%       { transform: translateX(-6px); }
-		40%       { transform: translateX(6px); }
-		60%       { transform: translateX(-4px); }
-		80%       { transform: translateX(4px); }
+		0%,
+		100% {
+			transform: translateX(0);
+		}
+		20% {
+			transform: translateX(-6px);
+		}
+		40% {
+			transform: translateX(6px);
+		}
+		60% {
+			transform: translateX(-4px);
+		}
+		80% {
+			transform: translateX(4px);
+		}
 	}
 
 	/* ── Login button ─────────────────────────────────────────── */
 	.login-btn {
-		background: linear-gradient(135deg, #FF6B1A, #FF3D00) !important;
+		background: linear-gradient(135deg, #ff6b1a, #ff3d00) !important;
 		border: none !important;
 		color: #fff !important;
 		font-weight: 600;

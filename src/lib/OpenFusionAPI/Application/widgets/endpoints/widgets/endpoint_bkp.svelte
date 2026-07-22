@@ -65,7 +65,12 @@
 		<button
 			class="button is-small {class_search}"
 			onclick={() => {
-				if (onselect && data_backup && data_backup?.data?.idendpoint == idendpoint && confirm('Are you sure to restore this backup?')) {
+				if (
+					onselect &&
+					data_backup &&
+					data_backup?.data?.idendpoint == idendpoint &&
+					confirm('Are you sure to restore this backup?')
+				) {
 					onselect(data_backup.data);
 				}
 			}}

@@ -4,5 +4,6 @@ import StartPage from '$lib/OpenFusionAPI/start_page.svelte';
 //import { SessionStorageManager, LocalStorageManager } from '$lib/OpenFusionAPI/storage.js';
 
 export {
-	OpenFusionAPIGUI, StartPage //, SessionStorageManager, LocalStorageManager
+	OpenFusionAPIGUI,
+	StartPage //, SessionStorageManager, LocalStorageManager
 };

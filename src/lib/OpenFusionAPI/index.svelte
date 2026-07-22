@@ -5,7 +5,10 @@
 	import { Notify } from '@rdsslab/svelte-components';
 	import { get } from 'svelte/store';
 	import { userStore, authEventStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';
-	import { isJwtExpiringSoon, getJwtExpiresInMinutes } from '$lib/OpenFusionAPI/Application/utils/jwtUtils.js';
+	import {
+		isJwtExpiringSoon,
+		getJwtExpiresInMinutes
+	} from '$lib/OpenFusionAPI/Application/utils/jwtUtils.js';
 
 	let page = $state('login');
 	let sessionExpired = $state(false);
@@ -27,7 +30,7 @@
 			if (event.type === 'unauthorized') {
 				// Reset del store para no repetir el mensaje
 				authEventStore.set(null);
-				
+
 				if (page === 'main') {
 					sessionExpired = true;
 					failedLogins = 0;
@@ -55,6 +58,8 @@
 			const token = userData?.token;
 
 			if (!token) return;
+
+			logJwtExpiration(token);
 
 			const minutesLeft = getJwtExpiresInMinutes(token);
 

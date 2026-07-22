@@ -164,7 +164,7 @@
 							alert('Invalid File app data');
 						} else if (
 							uploaded_file.idapp == app.idapp &&
-							confirm('This action will replace existing data. ' )
+							confirm('This action will replace existing data. ')
 						) {
 							// TODO: Aquí puedes realizar acciones con los datos JSON, por ejemplo, mostrarlos en la página.
 							let data_return = await RestoreAppBackup(uploaded_file, $userStore.token);
@@ -186,7 +186,7 @@
 							confirm(
 								'The file does not correspond to the same application. Do you want to create a new one?'
 							)
-						) { 
+						) {
 							let data_return = await RestoreAppBackup(uploaded_file);
 
 							if (data_return.idapp) {

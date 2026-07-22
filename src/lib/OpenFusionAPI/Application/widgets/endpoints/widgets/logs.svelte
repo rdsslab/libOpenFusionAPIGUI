@@ -25,7 +25,6 @@
 	let trace_id = $state('');
 
 	let columns_trace = $state({
-		
 		response_data: { hidden: false },
 		request_data: { hidden: true },
 		idapp: { hidden: true },
@@ -182,7 +181,9 @@
 					<td>
 						<details>
 							<summary class="has-text-weight-bold is-clickable mb-2">Informational</summary>
-							<p class="has-text-grey mb-3">They indicate that the request has been received and is being processed.</p>
+							<p class="has-text-grey mb-3">
+								They indicate that the request has been received and is being processed.
+							</p>
 							<div class="tags">
 								<span class="tag is-info is-light">100 Continue</span>
 								<span class="tag is-info is-light">101 Switching Protocols</span>
@@ -208,7 +209,9 @@
 					<td>
 						<details>
 							<summary class="has-text-weight-bold is-clickable mb-2">Success</summary>
-							<p class="has-text-grey mb-3">The request has been received, understood and processed correctly.</p>
+							<p class="has-text-grey mb-3">
+								The request has been received, understood and processed correctly.
+							</p>
 							<div class="tags">
 								<span class="tag is-success is-light">200 OK</span>
 								<span class="tag is-success is-light">201 Created</span>
@@ -241,7 +244,9 @@
 					<td>
 						<details>
 							<summary class="has-text-weight-bold is-clickable mb-2">Redirection</summary>
-							<p class="has-text-grey mb-3">The customer must take additional actions to complete the request.</p>
+							<p class="has-text-grey mb-3">
+								The customer must take additional actions to complete the request.
+							</p>
 							<div class="tags">
 								<span class="tag is-link is-light">300 Multiple Choices</span>
 								<span class="tag is-link is-light">301 Moved Permanently</span>
@@ -265,14 +270,18 @@
 					</td>
 					<td class="is-vcentered has-text-centered">
 						<span class="tag is-warning is-light has-text-weight-bold">
-							<span class="icon is-small mr-1"><i class="fa-solid fa-triangle-exclamation"></i></span>
+							<span class="icon is-small mr-1"
+								><i class="fa-solid fa-triangle-exclamation"></i></span
+							>
 							4XX
 						</span>
 					</td>
 					<td>
 						<details>
 							<summary class="has-text-weight-bold is-clickable mb-2">Client error</summary>
-							<p class="has-text-grey mb-3">The request contains an error or cannot be processed.</p>
+							<p class="has-text-grey mb-3">
+								The request contains an error or cannot be processed.
+							</p>
 							<div class="tags">
 								<span class="tag is-warning is-light">400 Bad Request</span>
 								<span class="tag is-warning is-light">401 Unauthorized</span>
@@ -324,7 +333,9 @@
 					<td>
 						<details>
 							<summary class="has-text-weight-bold is-clickable mb-2">Server error</summary>
-							<p class="has-text-grey mb-3">The server was unable to fulfill an apparently valid request.</p>
+							<p class="has-text-grey mb-3">
+								The server was unable to fulfill an apparently valid request.
+							</p>
 							<div class="tags">
 								<span class="tag is-danger is-light">500 Internal Server Error</span>
 								<span class="tag is-danger is-light">501 Not Implemented</span>
@@ -347,7 +358,12 @@
 {/snippet}
 
 {#snippet tab_logs()}
-	<Table bind:columns={columns_logs} bind:RawDataTable={dataLogs} right_items={[rt1, rt2, rt3]} onsearch={fetchLogs}>
+	<Table
+		bind:columns={columns_logs}
+		bind:RawDataTable={dataLogs}
+		right_items={[rt1, rt2, rt3]}
+		onsearch={fetchLogs}
+	>
 		{#snippet rt1()}
 			<div class="field has-addons has-addons-centered">
 				<span class="control">
@@ -399,9 +415,13 @@
 	</Table>
 {/snippet}
 
-
 {#snippet tab_trace_logs()}
-	<Table columns={columns_trace} bind:RawDataTable={datatraceLogs} left_items={[rt1 ]} onsearch={fetchTraceLogs}>
+	<Table
+		columns={columns_trace}
+		bind:RawDataTable={datatraceLogs}
+		left_items={[rt1]}
+		onsearch={fetchTraceLogs}
+	>
 		{#snippet rt1()}
 			<div class="field has-addons has-addons-centered">
 				<span class="control">
@@ -409,16 +429,15 @@
 					<a class="button is-static is-small"> Trace ID </a>
 				</span>
 				<span class="control">
-					<input
-						class="input is-small"
-						type="text"
-						placeholder="Trace ID"
-						bind:value={trace_id}
-					/>
+					<input class="input is-small" type="text" placeholder="Trace ID" bind:value={trace_id} />
 				</span>
 				<span class="control">
-					<button class="button is-small" onclick={fetchTraceLogs} aria-label="Search trace logs" title="Search trace logs">
-						
+					<button
+						class="button is-small"
+						onclick={fetchTraceLogs}
+						aria-label="Search trace logs"
+						title="Search trace logs"
+					>
 						<span class="icon is-small">
 							<i class="fa-solid fa-magnifying-glass"></i>
 						</span>
@@ -426,7 +445,6 @@
 				</span>
 			</div>
 		{/snippet}
-		
 	</Table>
 {/snippet}
 

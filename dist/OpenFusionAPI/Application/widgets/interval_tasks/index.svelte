@@ -8,9 +8,7 @@
 		PredictiveInput,
 		Input
 	} from '@rdsslab/svelte-components';
-	import {
-		defaultValuesIntervalTask
-	} from '../../utils/static_values.js';
+	import { defaultValuesIntervalTask } from '../../utils/static_values.js';
 	import { url_paths } from '../../utils/paths.js';
 	import uFetch from '@rdsslab/uFetch';
 	import CellMethod from '../endpoints/columns/cellMethod.svelte';
@@ -116,7 +114,6 @@
 
 	async function loadTasks() {
 		if (idapp) {
-			
 			let resp = await uF.get({ url: url_paths.getListIntervalTasksByIdApp, data: { idapp } });
 			let jresp = await resp.json();
 			//	console.log('++++>>>>>>>>>>>>>', jresp);
@@ -171,7 +168,6 @@
 
 	async function saveInterval() {
 		if (idapp) {
-			
 			let row = $state.snapshot(selectedRow);
 			console.log('saveInterval >>>>>>>>>>>>>', row);
 			let resp = await uF.post({ url: url_paths.upsertIntervalTasksByIdTask, data: row });
@@ -185,8 +181,6 @@
 		let idtasks = tasks.map((t) => {
 			return t.idtask;
 		});
-
-		
 
 		console.log('deleteTasks >>>>>>>>>>>>>', idtasks, url_paths.deleteIntervalTasksByIdTask);
 		let resp = await uF.DELETE({ url: url_paths.deleteIntervalTasksByIdTask, data: idtasks });
