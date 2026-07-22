@@ -52,9 +52,10 @@ function Notifications($$renderer, $$props) {
     $$renderer2.push(`<!--]--></div>`);
   });
 }
-const version = "2.0.3";
+const version = "2.1.1";
 function Login($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
+    let { isOverlay = false } = $$props;
     let username = "";
     let password = "";
     let processing = { waiting: false, error: null };
@@ -63,7 +64,14 @@ function Login($$renderer, $$props) {
     Modal($$renderer2, {
       show: true,
       children: ($$renderer3) => {
-        $$renderer3.push(`<div${attr_class("login-wrapper svelte-177ibf8", void 0, { "is-visible": mounted })}><div class="orb orb-1 svelte-177ibf8"></div> <div class="orb orb-2 svelte-177ibf8"></div> <div class="orb orb-3 svelte-177ibf8"></div> <div class="login-card box svelte-177ibf8"><div class="brand-header has-text-centered svelte-177ibf8"><div class="logo-ring svelte-177ibf8"><div class="logo-figure svelte-177ibf8"><img${attr("src", Logo)} alt="OpenFusionAPI" class="logo-img svelte-177ibf8"/></div></div> <h1 class="title is-4 mt-3 brand-title svelte-177ibf8">Open Fusion API</h1> <p class="subtitle is-6 brand-subtitle svelte-177ibf8"><span class="tag is-dark is-rounded svelte-177ibf8"><span class="icon is-small svelte-177ibf8"><i class="fa-solid fa-server svelte-177ibf8"></i></span> <span class="svelte-177ibf8">MCP Server</span></span></p></div> <div class="divider-line svelte-177ibf8"></div> <form class="login-form svelte-177ibf8"><div class="field svelte-177ibf8"><label class="label has-text-grey-light is-small svelte-177ibf8" for="login-username">Username</label> <p class="control has-icons-left svelte-177ibf8"><input id="login-username"${attr_class("input is-rounded svelte-177ibf8", void 0, { "is-danger": processing.error })} type="text" placeholder="Enter your username"${attr("value", username)} autocomplete="username"/> <span class="icon is-small is-left svelte-177ibf8"><i class="fa-solid fa-user svelte-177ibf8"></i></span></p></div> <div class="field svelte-177ibf8"><label class="label has-text-grey-light is-small svelte-177ibf8" for="login-password">Password</label> <p class="control has-icons-left has-icons-right svelte-177ibf8"><input id="login-password"${attr_class("input is-rounded svelte-177ibf8", void 0, { "is-danger": processing.error })}${attr("type", "password")} placeholder="Enter your password"${attr("value", password)} autocomplete="current-password"/> <span class="icon is-small is-left svelte-177ibf8"><i class="fa-solid fa-lock svelte-177ibf8"></i></span> <button type="button" class="icon is-small is-right is-clickable eye-icon svelte-177ibf8"${attr("title", "Show password")}${attr("aria-label", "Show password")}><i${attr_class(clsx("fa-solid fa-eye"), "svelte-177ibf8")}></i></button></p></div> `);
+        $$renderer3.push(`<div${attr_class("login-wrapper svelte-177ibf8", void 0, { "is-visible": mounted, "overlay-mode": isOverlay })}><div class="orb orb-1 svelte-177ibf8"></div> <div class="orb orb-2 svelte-177ibf8"></div> <div class="orb orb-3 svelte-177ibf8"></div> <div class="login-card box svelte-177ibf8"><div class="brand-header has-text-centered svelte-177ibf8"><div class="logo-ring svelte-177ibf8"><div class="logo-figure svelte-177ibf8"><img${attr("src", Logo)} alt="OpenFusionAPI" class="logo-img svelte-177ibf8"/></div></div> <h1 class="title is-4 mt-3 brand-title svelte-177ibf8">Open Fusion API</h1> <p class="subtitle is-6 brand-subtitle svelte-177ibf8"><span class="tag is-dark is-rounded svelte-177ibf8"><span class="icon is-small svelte-177ibf8"><i class="fa-solid fa-server svelte-177ibf8"></i></span> <span class="svelte-177ibf8">MCP Server</span></span></p></div> <div class="divider-line svelte-177ibf8"></div> `);
+        if (isOverlay) {
+          $$renderer3.push("<!--[0-->");
+          $$renderer3.push(`<div class="notification is-warning is-light has-text-centered svelte-177ibf8"><span class="icon svelte-177ibf8"><i class="fa-solid fa-clock-rotate-left svelte-177ibf8"></i></span> <strong class="svelte-177ibf8">Your session has expired, please log in again</strong></div>`);
+        } else {
+          $$renderer3.push("<!--[-1-->");
+        }
+        $$renderer3.push(`<!--]--> <form class="login-form svelte-177ibf8"><div class="field svelte-177ibf8"><label class="label has-text-grey-light is-small svelte-177ibf8" for="login-username">Username</label> <p class="control has-icons-left svelte-177ibf8"><input id="login-username"${attr_class("input is-rounded svelte-177ibf8", void 0, { "is-danger": processing.error })} type="text" placeholder="Enter your username"${attr("value", username)} autocomplete="username"/> <span class="icon is-small is-left svelte-177ibf8"><i class="fa-solid fa-user svelte-177ibf8"></i></span></p></div> <div class="field svelte-177ibf8"><label class="label has-text-grey-light is-small svelte-177ibf8" for="login-password">Password</label> <p class="control has-icons-left has-icons-right svelte-177ibf8"><input id="login-password"${attr_class("input is-rounded svelte-177ibf8", void 0, { "is-danger": processing.error })}${attr("type", "password")} placeholder="Enter your password"${attr("value", password)} autocomplete="current-password"/> <span class="icon is-small is-left svelte-177ibf8"><i class="fa-solid fa-lock svelte-177ibf8"></i></span> <button type="button" class="icon is-small is-right is-clickable eye-icon svelte-177ibf8"${attr("title", "Show password")}${attr("aria-label", "Show password")}><i${attr_class(clsx("fa-solid fa-eye"), "svelte-177ibf8")}></i></button></p></div> `);
         {
           $$renderer3.push("<!--[-1-->");
         }
@@ -84,7 +92,7 @@ function OpenFusionAPI($$renderer, $$props) {
     $$renderer2.push(`<!----> `);
     {
       $$renderer2.push("<!--[-1-->");
-      Login($$renderer2);
+      Login($$renderer2, {});
     }
     $$renderer2.push(`<!--]-->`);
   });

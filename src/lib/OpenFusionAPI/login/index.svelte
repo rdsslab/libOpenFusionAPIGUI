@@ -11,7 +11,7 @@
 	import { version } from '$lib/OpenFusionAPI/version.js';
 
 	let noty = new Notifications();
-	let { onlogin = () => {} } = $props();
+	let { onlogin = () => {}, onfail = () => {}, isOverlay = false } = $props();
 	let username = $state('');
 	let password = $state('');
 	let processing = $state({ waiting: false, error: null });
@@ -57,6 +57,7 @@
 				processing.error = 'Invalid credentials';
 				processing.waiting = false;
 				noty.push({ message: processing.error, color: 'danger' });
+				onfail();
 			}
 		} catch (error) {
 			console.trace(error);
@@ -68,7 +69,7 @@
 </script>
 
 <Modal show={true}>
-	<div class="login-wrapper" class:is-visible={mounted}>
+	<div class="login-wrapper" class:is-visible={mounted} class:overlay-mode={isOverlay}>
 		<!-- Animated background orbs -->
 		<div class="orb orb-1"></div>
 		<div class="orb orb-2"></div>
@@ -92,6 +93,13 @@
 			</div>
 
 			<div class="divider-line"></div>
+
+			{#if isOverlay}
+				<div class="notification is-warning is-light has-text-centered">
+					<span class="icon"><i class="fa-solid fa-clock-rotate-left"></i></span>
+					<strong>Your session has expired, please log in again</strong>
+				</div>
+			{/if}
 
 			<!-- Form -->
 			<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="login-form">
@@ -176,6 +184,11 @@
 </Modal>
 
 <style>
+	/* Overlay style override */
+	:global(.overlay-mode) {
+		background-color: rgba(25, 28, 38, 0.4);
+	}
+
 	/* ── Wrapper & Entry Animation ─────────────────────────────── */
 	.login-wrapper {
 		position: relative;

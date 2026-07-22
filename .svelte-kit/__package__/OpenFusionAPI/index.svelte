@@ -8,6 +8,8 @@
 	import { isJwtExpiringSoon, getJwtExpiresInMinutes } from './Application/utils/jwtUtils.js';
 
 	let page = $state('login');
+	let sessionExpired = $state(false);
+	let failedLogins = $state(0);
 
 	// Flag para evitar mostrar el aviso de expiración múltiples veces seguidas
 	let tokenExpiryWarningShown = false;
@@ -23,15 +25,16 @@
 			if (!event) return;
 
 			if (event.type === 'unauthorized') {
-				Notify.push({
-					message: '⛔ Sesión expirada o no autorizada (401). Por favor, vuelve a iniciar sesión.',
-					color: 'danger',
-					duration: 8000
-				});
 				// Reset del store para no repetir el mensaje
 				authEventStore.set(null);
-				// Volver a la pantalla de login
-				page = 'login';
+				
+				if (page === 'main') {
+					sessionExpired = true;
+					failedLogins = 0;
+				} else {
+					// Volver a la pantalla de login
+					page = 'login';
+				}
 			}
 		});
 
@@ -53,12 +56,18 @@
 
 			if (!token) return;
 
-			if (isJwtExpiringSoon(token, 5) && !tokenExpiryWarningShown) {
-				const minutesLeft = Math.max(0, Math.floor(getJwtExpiresInMinutes(token)));
+			const minutesLeft = getJwtExpiresInMinutes(token);
+
+			if (minutesLeft <= 0) {
+				if (page === 'main' && !sessionExpired) {
+					sessionExpired = true;
+					failedLogins = 0;
+				}
+			} else if (isJwtExpiringSoon(token, 5) && !tokenExpiryWarningShown) {
 				tokenExpiryWarningShown = true;
 
 				Notify.push({
-					message: `⚠️ Tu sesión expirará en aproximadamente ${minutesLeft} minuto${minutesLeft !== 1 ? 's' : ''}. Guarda tu trabajo.`,
+					message: `⚠️ Tu sesión expirará en aproximadamente ${Math.floor(minutesLeft)} minuto${Math.floor(minutesLeft) !== 1 ? 's' : ''}. Guarda tu trabajo.`,
 					color: 'warning',
 					duration: 120000 // 2 minutos
 				});
@@ -92,6 +101,28 @@
 			page = 'login';
 		}}
 	/>
+	{#if sessionExpired}
+		<div class="overlay-container">
+			<Login
+				isOverlay={true}
+				onlogin={(login) => {
+					if (login && login.login) {
+						sessionExpired = false;
+						failedLogins = 0;
+						startJwtWatcher();
+					}
+				}}
+				onfail={() => {
+					failedLogins++;
+					if (failedLogins >= 3) {
+						sessionExpired = false;
+						page = 'login';
+						failedLogins = 0;
+					}
+				}}
+			/>
+		</div>
+	{/if}
 {:else}
 	<Login
 		onlogin={(login) => {
@@ -105,3 +136,14 @@
 		}}
 	/>
 {/if}
+
+<style>
+	.overlay-container {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		z-index: 9999;
+	}
+</style>

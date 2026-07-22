@@ -5,7 +5,11 @@ type Index = {
 };
 declare const Index: import("svelte").Component<{
     onlogin?: Function;
+    onfail?: Function;
+    isOverlay?: boolean;
 }, {}, "">;
 type $$ComponentProps = {
     onlogin?: Function;
+    onfail?: Function;
+    isOverlay?: boolean;
 };
