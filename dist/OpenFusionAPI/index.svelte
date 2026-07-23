@@ -7,7 +7,8 @@
 	import { userStore, authEventStore } from './Application/utils/stores.js';
 	import {
 		isJwtExpiringSoon,
-		getJwtExpiresInMinutes
+		getJwtExpiresInMinutes,
+		logJwtExpiration
 	} from './Application/utils/jwtUtils.js';
 
 	let page = $state('login');

@@ -7,7 +7,8 @@
 	import { userStore, authEventStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import {
 		isJwtExpiringSoon,
-		getJwtExpiresInMinutes
+		getJwtExpiresInMinutes,
+		logJwtExpiration
 	} from '$lib/OpenFusionAPI/Application/utils/jwtUtils.js';
 
 	let page = $state('login');
