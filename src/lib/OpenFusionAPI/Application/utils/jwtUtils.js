@@ -1,4 +1,26 @@
 /**
+ * Decodifica el payload (segunda parte) de un JWT.
+ * Los segmentos de un JWT usan base64url (RFC 7515): `-`/`_` en vez de `+`/`/`
+ * y sin padding `=`. `atob` solo entiende base64 estándar, así que hay que
+ * convertir el alfabeto y restaurar el padding antes de decodificar.
+ *
+ * @param {string} token
+ * @returns {any}
+ */
+function decodeJwtPayload(token) {
+	const parts = token.split('.');
+	if (parts.length !== 3) throw new Error('Token con formato inválido');
+
+	let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+	const padding = base64.length % 4;
+	if (padding) {
+		base64 += '='.repeat(4 - padding);
+	}
+
+	return JSON.parse(atob(base64));
+}
+
+/**
  * Decodifica el payload de un JWT (sin verificar firma) y calcula
  * cuántos minutos faltan para que expire.
  *
@@ -7,10 +29,7 @@
  */
 export function getJwtExpiresInMinutes(token) {
 	try {
-		const parts = token.split('.');
-		if (parts.length !== 3) return -1;
-
-		const payload = JSON.parse(atob(parts[1]));
+		const payload = decodeJwtPayload(token);
 		if (!payload.exp) return Infinity; // Sin campo exp: no expira
 
 		const nowSeconds = Date.now() / 1000;
@@ -66,10 +85,7 @@ export function formatJwtTimeLeft(minutes) {
  */
 export function logJwtExpiration(token) {
 	try {
-		const parts = token.split('.');
-		if (parts.length !== 3) return;
-
-		const payload = JSON.parse(atob(parts[1]));
+		const payload = decodeJwtPayload(token);
 		if (!payload.exp) return;
 
 		const nowSeconds = Date.now() / 1000;
