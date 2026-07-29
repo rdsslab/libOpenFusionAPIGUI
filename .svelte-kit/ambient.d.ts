@@ -54,10 +54,14 @@ declare module '$env/static/private' {
 	export const DISPLAY: string;
 	export const DriverData: string;
 	export const EDITOR: string;
+	export const EFC_15192_1262719628: string;
+	export const EFC_15192_1592913036: string;
+	export const EFC_15192_2283032206: string;
+	export const EFC_15192_2775293581: string;
+	export const EFC_15192_3789132940: string;
+	export const EFC_15192_4126798990: string;
 	export const ESET_OPTIONS: string;
 	export const EXEPATH: string;
-	export const FPS_BROWSER_APP_PROFILE_STRING: string;
-	export const FPS_BROWSER_USER_PROFILE_STRING: string;
 	export const GIT_ASKPASS: string;
 	export const GOPATH: string;
 	export const HOME: string;
@@ -156,7 +160,6 @@ declare module '$env/static/private' {
 	export const WINDIR: string;
 	export const ZES_ENABLE_SYSMAN: string;
 	export const _: string;
-	export const __COMPAT_LAYER: string;
 }
 
 /**
@@ -259,10 +262,14 @@ declare module '$env/dynamic/private' {
 		DISPLAY: string;
 		DriverData: string;
 		EDITOR: string;
+		EFC_15192_1262719628: string;
+		EFC_15192_1592913036: string;
+		EFC_15192_2283032206: string;
+		EFC_15192_2775293581: string;
+		EFC_15192_3789132940: string;
+		EFC_15192_4126798990: string;
 		ESET_OPTIONS: string;
 		EXEPATH: string;
-		FPS_BROWSER_APP_PROFILE_STRING: string;
-		FPS_BROWSER_USER_PROFILE_STRING: string;
 		GIT_ASKPASS: string;
 		GOPATH: string;
 		HOME: string;
@@ -361,7 +368,6 @@ declare module '$env/dynamic/private' {
 		WINDIR: string;
 		ZES_ENABLE_SYSMAN: string;
 		_: string;
-		__COMPAT_LAYER: string;
 		[key: `PUBLIC_${string}`]: undefined;
 		[key: `${string}`]: string | undefined;
 	}
