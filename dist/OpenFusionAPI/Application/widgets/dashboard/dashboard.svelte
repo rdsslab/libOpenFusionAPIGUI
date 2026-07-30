@@ -162,9 +162,14 @@
 					$userStore.token
 				);
 				if (Array.isArray(summary)) {
-					data_status_summary = summary.map((row) => ({
-						name: String(row.status_code),
-						value: parseInt(row.recordCount)
+					let countByStatusCode = {};
+					for (const row of summary) {
+						const code = String(row.status_code);
+						countByStatusCode[code] = (countByStatusCode[code] || 0) + parseInt(row.recordCount);
+					}
+					data_status_summary = Object.entries(countByStatusCode).map(([name, value]) => ({
+						name,
+						value
 					}));
 				} else {
 					console.error('getLogSummaryByAppStatusCode did not return an array:', summary);
@@ -285,8 +290,19 @@
 	<div class="column is-half-desktop is-full-tablet">
 		<Chart.Base
 			title="Status Code Distribution"
-			option={{ tooltip: { trigger: 'item' }, legend: { orient: 'vertical', left: 'left' } }}
-			series={[{ type: 'pie', radius: ['40%', '70%'], data: data_status_summary }]}
+			option={{
+				tooltip: { trigger: 'item', formatter: '{b}: {c} requests ({d}%)' },
+				legend: { orient: 'vertical', left: 'left' }
+			}}
+			series={[
+				{
+					type: 'pie',
+					radius: ['40%', '70%'],
+					label: { show: false },
+					labelLine: { show: false },
+					data: data_status_summary
+				}
+			]}
 		></Chart.Base>
 		<p class="help has-text-centered">
 			Total distribution of HTTP status codes for the selected app and environment
