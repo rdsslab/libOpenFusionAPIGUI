@@ -272,7 +272,7 @@
 				statusSystemEndpointsStore.set(status_sys_endp);
 			}
 
-			let statusCodeEndpoints = await getLogSummaryByAppStatusCode(idapp);
+			let statusCodeEndpoints = await getLogSummaryByAppStatusCode({ idapp }, $userStore.token);
 
 			if (statusCodeEndpoints && Array.isArray(statusCodeEndpoints)) {
 				let dataStatus = {};

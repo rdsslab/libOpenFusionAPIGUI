@@ -435,6 +435,22 @@ export const getLogsRecordsPerMinute = async (options, token) => {
 	}
 };
 
+export const getLogsStatusClassPerMinute = async (options, token) => {
+	let uf = new uFetch();
+
+	if (options) {
+		let get_list_metrics = checkStatus(
+			await uf.get({
+				url: url_paths.getLogsStatusClassPerMinute,
+				data: options
+			})
+		);
+
+		let metrics_list = await get_list_metrics.json();
+		return metrics_list;
+	}
+};
+
 export const GetAppVars = async (idapp, setStoreListAppVars = false) => {
 	let uf = new uFetch();
 
@@ -522,15 +538,30 @@ export const restoreSystemEndpoints = async (restore) => {
 	return r;
 };
 
-export const getLogSummaryByAppStatusCode = async (idapp) => {
+export const getLogSummaryByAppStatusCode = async (options, token) => {
 	let uf = new uFetch();
 
 	let sys_res = checkStatus(
 		await uf.get({
 			url: url_paths.getLogSummaryByAppStatusCode,
-			data: { idapp: idapp }
+			data: options
 		})
 	);
 	let r = await sys_res.json();
 	return r;
+};
+
+export const getAppEndpointUsageSummary = async (options, token) => {
+	let uf = new uFetch();
+
+	if (options) {
+		let sys_res = checkStatus(
+			await uf.get({
+				url: url_paths.appEndpointUsageSummary,
+				data: options
+			})
+		);
+		let r = await sys_res.json();
+		return r;
+	}
 };

@@ -23,9 +23,11 @@ export namespace url_paths {
     let appvarsbyidapp: string;
     let appvar: string;
     let getLogsRecordsPerMinute: string;
+    let getLogsStatusClassPerMinute: string;
     let changeUserPassword: string;
     let restoreSystemEndpoints: string;
     let getLogSummaryByAppStatusCode: string;
+    let appEndpointUsageSummary: string;
     let getEndpointBackups: string;
     let APIKeys: string;
     let APIClients: string;
