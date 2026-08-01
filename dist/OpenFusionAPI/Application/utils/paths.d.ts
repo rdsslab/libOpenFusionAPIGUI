@@ -28,6 +28,7 @@ export namespace url_paths {
     let restoreSystemEndpoints: string;
     let getLogSummaryByAppStatusCode: string;
     let appEndpointUsageSummary: string;
+    let getTopErrorEndpointsByTime: string;
     let getEndpointBackups: string;
     let APIKeys: string;
     let APIClients: string;

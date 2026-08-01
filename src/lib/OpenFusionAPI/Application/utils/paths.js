@@ -28,6 +28,7 @@ export const url_paths = {
 	restoreSystemEndpoints: '/api/system/restore/prd',
 	getLogSummaryByAppStatusCode: '/api/system/log/app/summary/prd',
 	appEndpointUsageSummary: '/api/system/system/log/app/endpoints/usage/prd',
+	getTopErrorEndpointsByTime: '/api/system/system/log/errors/top/bytime/prd',
 	getEndpointBackups: '/api/system/api/endpoint/backup/prd',
 	APIKeys: '/api/system/apikey/prd',
 	APIClients: '/api/system/api_clients/prd',

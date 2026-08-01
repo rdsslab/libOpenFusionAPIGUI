@@ -12,6 +12,7 @@
 		getLogsStatusClassPerMinute,
 		getLogSummaryByAppStatusCode,
 		getAppEndpointUsageSummary,
+		getTopErrorEndpointsByTime,
 		restoreSystemEndpoints
 	} from '$lib/OpenFusionAPI/Application/utils/request.js';
 	let { idapp = $bindable() } = $props();
@@ -22,6 +23,7 @@
 	let data_status_summary = $state([]);
 	let data_top_endpoints = $state([]);
 	let data_unused_endpoints = $state([]);
+	let data_top_error_endpoints = $state([]);
 	let data_cpu = $state([]);
 	let data_memory = $state([]);
 	let cpuUsage = $state();
@@ -123,6 +125,38 @@
 		return updated;
 	}
 
+	// Igual que incrementMinutePoint, pero truncando al bucket de tiempo indicado
+	// ('hour' o 'minute') en vez de asumir siempre minuto — para series agrupadas
+	// por hora, como la de top error endpoints.
+	function incrementBucketPoint(dataArray, dateValue, granularity) {
+		const bucketDate = new Date(dateValue || Date.now());
+		if (granularity === 'hour') {
+			bucketDate.setMinutes(0, 0, 0);
+		} else {
+			bucketDate.setSeconds(0, 0);
+		}
+		const t = bucketDate.getTime();
+
+		let i = dataArray.length - 1;
+		while (i >= 0 && new Date(dataArray[i].value[0]).getTime() > t) {
+			i--;
+		}
+
+		if (i >= 0 && new Date(dataArray[i].value[0]).getTime() === t) {
+			const updated = [...dataArray];
+			updated[i] = { ...updated[i], value: [updated[i].value[0], updated[i].value[1] + 1] };
+			return updated;
+		}
+
+		const updated = [...dataArray];
+		updated.splice(i + 1, 0, {
+			name: bucketDate.toISOString(),
+			value: [bucketDate, 1],
+			other: 'Nada'
+		});
+		return updated;
+	}
+
 	function statusClassForCode(status_code) {
 		const code = Number(status_code);
 		if (code < 200) return 'info';
@@ -208,6 +242,25 @@
 					? usage.most_used.map((e) => ({ name: e.resource, value: parseInt(e.requestCount) }))
 					: [];
 				data_unused_endpoints = Array.isArray(usage?.unused) ? usage.unused : [];
+
+				let top_errors = await getTopErrorEndpointsByTime(
+					{ idapp: idapp, environment: selectedEnvironment, last_hours: 24, top: 10, granularity: 'hour' },
+					$userStore.token
+				);
+				data_top_error_endpoints = Array.isArray(top_errors?.top_error_endpoints)
+					? top_errors.top_error_endpoints.map((ep) => ({
+							idendpoint: ep.idendpoint,
+							name: `${ep.method} ${ep.resource}`,
+							data: (ep.series || []).map((s) => {
+								let bucketDate = new Date(s.bucket);
+								return {
+									name: bucketDate.toISOString(),
+									value: [bucketDate, s.count],
+									other: ep.title
+								};
+							})
+						}))
+					: [];
 			} catch (error) {
 				console.error(error);
 			}
@@ -217,6 +270,7 @@
 			data_status_summary = [];
 			data_top_endpoints = [];
 			data_unused_endpoints = [];
+			data_top_error_endpoints = [];
 		}
 	}
 
@@ -254,6 +308,14 @@
 							? { ...series, data: incrementMinutePoint(series.data, event.dateTime) }
 							: series
 					);
+
+					if (Number(event.statusCode) >= 400) {
+						data_top_error_endpoints = data_top_error_endpoints.map((series) =>
+							series.idendpoint === event.idendpoint
+								? { ...series, data: incrementBucketPoint(series.data, event.dateTime, 'hour') }
+								: series
+						);
+					}
 				}
 			}
 		});
@@ -338,6 +400,14 @@
 		></Chart.Base>
 		<p class="help has-text-centered">
 			Most-used endpoints for the selected app and environment in the last 7 days
+		</p>
+	</div>
+	<div class="column is-half-desktop is-full-tablet">
+		<Chart.TimeSeries title="Top 10 Endpoints with Most Errors (24h)" bind:series={data_top_error_endpoints}
+		></Chart.TimeSeries>
+		<p class="help has-text-centered">
+			Endpoints with the most errors (status code &gt;= 400) per hour in the last 24 hours, for
+			the selected app and environment
 		</p>
 	</div>
 	<div class="column is-half-desktop is-full-tablet">

@@ -565,3 +565,18 @@ export const getAppEndpointUsageSummary = async (options, token) => {
 		return r;
 	}
 };
+
+export const getTopErrorEndpointsByTime = async (options, token) => {
+	let uf = new uFetch();
+
+	if (options) {
+		let sys_res = checkStatus(
+			await uf.get({
+				url: url_paths.getTopErrorEndpointsByTime,
+				data: options
+			})
+		);
+		let r = await sys_res.json();
+		return r;
+	}
+};
