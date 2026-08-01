@@ -1,6 +1,6 @@
 <script>
 	import { onDestroy, onMount } from 'svelte';
-	import { Chart } from '@rdsslab/svelte-components';
+	import { Chart, BasicSelect } from '@rdsslab/svelte-components';
 	import {
 		storeEndpointOnComplete,
 		storeServerDynamicInformation,
@@ -81,22 +81,46 @@
 		}
 	}
 
-	// Trunca al minuto e incrementa el último punto del arreglo si ya corresponde a ese
-	// minuto, o agrega uno nuevo — misma agrupación que hace el backend, pero incremental.
+	// Los eventos llegan por websocket y no siempre en orden cronológico, por lo que no se
+	// puede asumir que el punto más nuevo cae al final del arreglo: hay que ubicarlo por
+	// fecha para que la gráfica de líneas no dibuje saltos hacia atrás en el tiempo.
+	function insertSortedPoint(dataArray, point) {
+		const t = new Date(point.value[0]).getTime();
+		let i = dataArray.length - 1;
+		while (i >= 0 && new Date(dataArray[i].value[0]).getTime() > t) {
+			i--;
+		}
+		const result = [...dataArray];
+		result.splice(i + 1, 0, point);
+		return result;
+	}
+
+	// Trunca al minuto e incrementa el punto del arreglo que ya corresponda a ese minuto
+	// (buscándolo, no asumiendo que es el último), o inserta uno nuevo en su posición
+	// cronológica — misma agrupación que hace el backend, pero incremental.
 	function incrementMinutePoint(dataArray, dateValue) {
 		const minuteDate = new Date(dateValue || Date.now());
 		minuteDate.setSeconds(0, 0);
+		const t = minuteDate.getTime();
 
-		const last = dataArray[dataArray.length - 1];
-		if (last && new Date(last.value[0]).getTime() === minuteDate.getTime()) {
-			last.value[1] += 1;
-			return [...dataArray];
+		let i = dataArray.length - 1;
+		while (i >= 0 && new Date(dataArray[i].value[0]).getTime() > t) {
+			i--;
 		}
 
-		return [
-			...dataArray,
-			{ name: minuteDate.toISOString(), value: [minuteDate, 1], other: 'Nada' }
-		];
+		if (i >= 0 && new Date(dataArray[i].value[0]).getTime() === t) {
+			const updated = [...dataArray];
+			updated[i] = { ...updated[i], value: [updated[i].value[0], updated[i].value[1] + 1] };
+			return updated;
+		}
+
+		const updated = [...dataArray];
+		updated.splice(i + 1, 0, {
+			name: minuteDate.toISOString(),
+			value: [minuteDate, 1],
+			other: 'Nada'
+		});
+		return updated;
 	}
 
 	function statusClassForCode(status_code) {
@@ -109,7 +133,7 @@
 	}
 
 	async function onChangeIdApp() {
-		//console.log('Busca por el idapp ' + idapp);
+		console.log('Busca por el idapp ' + idapp, selectedEnvironment);
 		if (idapp) {
 			try {
 				let data_log_pm = await getLogsRecordsPerMinute(
@@ -219,8 +243,7 @@
 					//	console.log('Llega -------->');
 					let point = formatData(event);
 					if (point) {
-						data_request.push(point);
-						data_request = [...data_request];
+						data_request = insertSortedPoint(data_request, point);
 					}
 
 					data_logs_per_minute = incrementMinutePoint(data_logs_per_minute, event.dateTime);
@@ -243,15 +266,10 @@
 </script>
 
 <div class="field is-flex is-justify-content-flex-end">
-	<div class="control">
-		<div class="select is-small">
-			<select bind:value={selectedEnvironment}>
-				<option value="dev">dev</option>
-				<option value="qa">qa</option>
-				<option value="prd">prd</option>
-			</select>
-		</div>
-	</div>
+
+<BasicSelect label="Environment" options={[{id: 'dev', value: 'Development'}, {id: 'qa', value: 'QA'}, {id: 'prd', value: 'Production', label:"Production"}]} bind:option={selectedEnvironment} class="is-small" />
+
+	
 </div>
 
 <div class="columns is-multiline is-mobile">
