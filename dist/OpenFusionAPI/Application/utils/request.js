@@ -451,6 +451,38 @@ export const getLogsStatusClassPerMinute = async (options, token) => {
 	}
 };
 
+export const getResponseTimePerMinute = async (options, token) => {
+	let uf = new uFetch();
+
+	if (options) {
+		let get_list_metrics = checkStatus(
+			await uf.get({
+				url: url_paths.getResponseTimePerMinute,
+				data: options
+			})
+		);
+
+		let metrics_list = await get_list_metrics.json();
+		return metrics_list;
+	}
+};
+
+export const getLogs = async (options, token) => {
+	let uf = new uFetch();
+
+	if (options) {
+		let get_list_logs = checkStatus(
+			await uf.get({
+				url: url_paths.getLogs,
+				data: options
+			})
+		);
+
+		let logs_list = await get_list_logs.json();
+		return logs_list;
+	}
+};
+
 export const GetAppVars = async (idapp, setStoreListAppVars = false) => {
 	let uf = new uFetch();
 

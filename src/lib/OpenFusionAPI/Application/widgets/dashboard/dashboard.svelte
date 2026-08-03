@@ -10,13 +10,14 @@
 	import {
 		getLogsRecordsPerMinute,
 		getLogsStatusClassPerMinute,
+		getLogs as getRequestLogs,
 		getLogSummaryByAppStatusCode,
 		getAppEndpointUsageSummary,
 		getTopErrorEndpointsByTime,
 		restoreSystemEndpoints
 	} from '$lib/OpenFusionAPI/Application/utils/request.js';
 	let { idapp = $bindable() } = $props();
-	let data_request = $state([]);
+	let data_request_series = $state([]);
 
 	let data_logs_per_minute = $state([]);
 	let data_status_class = $state([]);
@@ -75,10 +76,13 @@
 	function formatData(data_endpoint) {
 		if (matchesSelection(data_endpoint)) {
 			let now = new Date(data_endpoint.dateTime || Date.now());
+			let label = data_endpoint.method
+				? `${data_endpoint.method} ${data_endpoint.resource || data_endpoint.url || ''}`.trim()
+				: `Endpoint ${data_endpoint.idendpoint}`;
 			return {
 				name: now.toISOString(),
 				value: [now, data_endpoint?.responseTime],
-				other: 'Nada'
+				other: label
 			};
 		}
 	}
@@ -95,6 +99,22 @@
 		const result = [...dataArray];
 		result.splice(i + 1, 0, point);
 		return result;
+	}
+
+	// Inserta `point` (ya ordenado cronológicamente vía insertSortedPoint) en la serie de
+	// `data_request_series` correspondiente a `idendpoint`, creando la serie si el endpoint
+	// no tenía actividad en la ventana histórica cargada.
+	function upsertSeriesPoint(seriesArray, idendpoint, label, point) {
+		const index = seriesArray.findIndex((series) => series.idendpoint === idendpoint);
+		if (index === -1) {
+			return [
+				...seriesArray,
+				{ idendpoint, name: label, showSymbol: true, symbolSize: 4, data: [point] }
+			];
+		}
+		const updated = [...seriesArray];
+		updated[index] = { ...updated[index], data: insertSortedPoint(updated[index].data, point) };
+		return updated;
 	}
 
 	// Trunca al minuto e incrementa el punto del arreglo que ya corresponda a ese minuto
@@ -170,6 +190,8 @@
 		console.log('Busca por el idapp ' + idapp, selectedEnvironment);
 		if (idapp) {
 			try {
+				data_request_series = [];
+
 				let data_log_pm = await getLogsRecordsPerMinute(
 					{ idapp: idapp, last_hours: 12, environment: selectedEnvironment },
 					$userStore.token
@@ -186,6 +208,43 @@
 				} else {
 					console.error('getLogsRecordsPerMinute did not return an array:', data_log_pm);
 					data_logs_per_minute = [];
+				}
+
+				let request_logs = await getRequestLogs(
+					{
+						idapp: idapp,
+						environment: selectedEnvironment,
+						last_hours: 24,
+						lightweight: true,
+						order: 'timestamp',
+						orderDirection: 'ASC',
+						limit: 20000
+					},
+					$userStore.token
+				);
+				if (Array.isArray(request_logs)) {
+					let seriesByEndpoint = new Map();
+					for (const log of request_logs) {
+						if (!seriesByEndpoint.has(log.idendpoint)) {
+							seriesByEndpoint.set(log.idendpoint, {
+								idendpoint: log.idendpoint,
+								name: `${log.method} ${log.url}`,
+								showSymbol: true,
+								symbolSize: 4,
+								data: []
+							});
+						}
+						let now = new Date(log.timestamp || Date.now());
+						seriesByEndpoint.get(log.idendpoint).data.push({
+							name: now.toISOString(),
+							value: [now, log?.response_time],
+							other: `${log.method} ${log.url}`
+						});
+					}
+					data_request_series = Array.from(seriesByEndpoint.values());
+				} else {
+					console.error('getLogs did not return an array:', request_logs);
+					data_request_series = [];
 				}
 
 				let data_status = await getLogsStatusClassPerMinute(
@@ -265,6 +324,7 @@
 				console.error(error);
 			}
 		} else {
+			data_request_series = [];
 			data_logs_per_minute = [];
 			data_status_class = [];
 			data_status_summary = [];
@@ -289,15 +349,16 @@
 		unsubscribe_com = storeEndpointOnComplete.subscribe((event) => {
 			//	console.log(':::::> ', idapp, event);
 			if (idapp) {
-				if (Array.isArray(event)) {
-					data_request = event.map((log) => {
-						return formatData(log);
-					});
-				} else if (data_request && matchesSelection(event)) {
+				if (matchesSelection(event)) {
 					//	console.log('Llega -------->');
 					let point = formatData(event);
 					if (point) {
-						data_request = insertSortedPoint(data_request, point);
+						data_request_series = upsertSeriesPoint(
+							data_request_series,
+							event.idendpoint,
+							point.other,
+							point
+						);
 					}
 
 					data_logs_per_minute = incrementMinutePoint(data_logs_per_minute, event.dateTime);
@@ -345,13 +406,12 @@
 		<p class="help has-text-centered">Real-time server memory usage percentage</p>
 	</div>
 	<div class="column is-half-desktop is-full-tablet">
-		{#if data_request}
-			<Chart.TimeSeries title="Response Time per Request" bind:data={data_request}
-			></Chart.TimeSeries>
-			<p class="help has-text-centered">
-				Response time (ms) of each completed request for the selected app and environment
-			</p>
-		{/if}
+		<Chart.TimeSeries title="Response Time per Request" bind:series={data_request_series}
+		></Chart.TimeSeries>
+		<p class="help has-text-centered">
+			Response time (ms) of each completed request for the selected app and environment, last 24
+			hours
+		</p>
 	</div>
 	<div class="column is-half-desktop is-full-tablet">
 		<Chart.TimeSeries title="Requests per minute" bind:data={data_logs_per_minute}

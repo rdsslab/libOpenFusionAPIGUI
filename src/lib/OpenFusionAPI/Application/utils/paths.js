@@ -24,6 +24,7 @@ export const url_paths = {
 	appvar: '/api/system/app/var/prd',
 	getLogsRecordsPerMinute: '/api/system/system/log/recordsperminute/prd',
 	getLogsStatusClassPerMinute: '/api/system/system/log/statusclassperminute/prd',
+	getResponseTimePerMinute: '/api/system/system/log/responsetimeperminute/prd',
 	changeUserPassword: '/api/system/user/changepassword/prd',
 	restoreSystemEndpoints: '/api/system/restore/prd',
 	getLogSummaryByAppStatusCode: '/api/system/log/app/summary/prd',

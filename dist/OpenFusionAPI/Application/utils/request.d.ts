@@ -21,6 +21,8 @@ export function getServerAPILastVersion(token: any): Promise<any>;
 export function EndpointSave(endpoint: any): Promise<any>;
 export function getLogsRecordsPerMinute(options: any, token: any): Promise<any>;
 export function getLogsStatusClassPerMinute(options: any, token: any): Promise<any>;
+export function getResponseTimePerMinute(options: any, token: any): Promise<any>;
+export function getLogs(options: any, token: any): Promise<any>;
 export function GetAppVars(idapp: any, setStoreListAppVars?: boolean): Promise<any>;
 export function UpsertAppVar(data: any, token: any): Promise<any>;
 export function DeleteAppVar(idvar: any, token: any): Promise<any>;
