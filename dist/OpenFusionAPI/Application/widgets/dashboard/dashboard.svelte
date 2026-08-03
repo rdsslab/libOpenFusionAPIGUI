@@ -512,7 +512,7 @@
 <div class="field is-flex is-justify-content-flex-end">
 
 <div class="mr-2">
-	<Input label="Hours" type="number" min={2} step={5} bind:value={selectedHours} class="is-small" onchange={handleHoursChange} />
+	<Input label="Hours" type="number" min={2} step={5} bind:value={selectedHours}   onchange={handleHoursChange} />
 </div>
 <BasicSelect label="Environment" options={[{id: 'dev', value: 'Development'}, {id: 'qa', value: 'QA'}, {id: 'prd', value: 'Production', label:"Production"}]} bind:option={selectedEnvironment} class="is-small" />
 

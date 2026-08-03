@@ -52,7 +52,7 @@ function Notifications($$renderer, $$props) {
     $$renderer2.push(`<!--]--></div>`);
   });
 }
-const version = "3.1.6";
+const version = "3.1.7";
 function Login($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let { isOverlay = false } = $$props;
