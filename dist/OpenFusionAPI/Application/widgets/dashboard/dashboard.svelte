@@ -1,6 +1,6 @@
 <script>
 	import { onDestroy, onMount } from 'svelte';
-	import { Chart, BasicSelect } from '@rdsslab/svelte-components';
+	import { Chart, BasicSelect, Input } from '@rdsslab/svelte-components';
 	import {
 		storeEndpointOnComplete,
 		storeServerDynamicInformation,
@@ -30,6 +30,7 @@
 	let cpuUsage = $state();
 	let memoryUsage = $state();
 	let selectedEnvironment = $state('prd');
+	let selectedHours = $state(12);
 
 	const STATUS_CLASSES = [
 		{ key: 'success', name: 'Success', color: '#48c78e' },
@@ -42,8 +43,16 @@
 	$effect(() => {
 		idapp;
 		selectedEnvironment;
+		selectedHours;
 		onChangeIdApp();
 	});
+
+	// El componente Input es un passthrough al <input type="number"> nativo, sin validación
+	// propia — hay que sanear acá que sea un entero positivo mayor a 1.
+	function handleHoursChange(e) {
+		let value = Math.floor(Number(e.target.value));
+		selectedHours = Number.isFinite(value) && value > 1 ? value : 12;
+	}
 
 	function formatDataCPUUsage(data) {
 		let now = new Date();
@@ -186,14 +195,139 @@
 		return 'server_error';
 	}
 
+	// Busca o crea la entrada de `status_code` en el resumen y le suma 1 — mismo estilo que
+	// incrementMinutePoint/incrementBucketPoint, pero sin bucket de tiempo (es un total, no
+	// una serie temporal).
+	function incrementStatusSummary(dataArray, statusCode) {
+		const code = String(statusCode);
+		const index = dataArray.findIndex((d) => d.name === code);
+		if (index === -1) {
+			return [...dataArray, { name: code, value: 1 }];
+		}
+		const updated = [...dataArray];
+		updated[index] = { ...updated[index], value: updated[index].value + 1 };
+		return updated;
+	}
+
+	// Throttle leading+trailing: aplica el primer evento de inmediato, y si llegan más antes
+	// de que pase `intervalMs`, los acumula y los aplica todos juntos al cumplirse el
+	// intervalo — usado para las gráficas a nivel de endpoint (deben verse casi inmediatas,
+	// pero sin repintar más de una vez cada `intervalMs` bajo ráfaga).
+	function createLeadingTrailingThrottle(intervalMs, flush) {
+		let cooling = false;
+		let pending = false;
+		let timer = null;
+		function trigger() {
+			if (!cooling) {
+				flush();
+				cooling = true;
+				timer = setTimeout(tick, intervalMs);
+			} else {
+				pending = true;
+			}
+		}
+		function tick() {
+			if (pending) {
+				flush();
+				pending = false;
+				timer = setTimeout(tick, intervalMs);
+			} else {
+				cooling = false;
+				timer = null;
+			}
+		}
+		function cancel() {
+			if (timer) clearTimeout(timer);
+			cooling = false;
+			pending = false;
+			timer = null;
+		}
+		return { trigger, cancel };
+	}
+
+	// Throttle solo-trailing: agrupa todo lo que llegue durante `intervalMs` y lo aplica de
+	// una vez al final de la ventana, sin aplicación inmediata — usado para las gráficas
+	// agregadas, que deben actualizarse a lo sumo cada `intervalMs`.
+	function createTrailingThrottle(intervalMs, flush) {
+		let timer = null;
+		function trigger() {
+			if (!timer) {
+				timer = setTimeout(() => {
+					flush();
+					timer = null;
+				}, intervalMs);
+			}
+		}
+		function cancel() {
+			if (timer) clearTimeout(timer);
+			timer = null;
+		}
+		return { trigger, cancel };
+	}
+
+	let pendingEndpointEvents = [];
+	let pendingAggregateEvents = [];
+
+	function flushEndpointCharts() {
+		const events = pendingEndpointEvents;
+		pendingEndpointEvents = [];
+		for (const event of events) {
+			let point = formatData(event);
+			if (point) {
+				data_request_series = upsertSeriesPoint(
+					data_request_series,
+					event.idendpoint,
+					point.other,
+					point
+				);
+			}
+
+			if (Number(event.statusCode) >= 400) {
+				data_top_error_endpoints = data_top_error_endpoints.map((series) =>
+					series.idendpoint === event.idendpoint
+						? { ...series, data: incrementBucketPoint(series.data, event.dateTime, 'hour') }
+						: series
+				);
+			}
+		}
+	}
+
+	function flushAggregateCharts() {
+		const events = pendingAggregateEvents;
+		pendingAggregateEvents = [];
+		for (const event of events) {
+			data_logs_per_minute = incrementMinutePoint(data_logs_per_minute, event.dateTime);
+
+			let status_class = statusClassForCode(event.statusCode);
+			data_status_class = data_status_class.map((series, index) =>
+				STATUS_CLASSES[index].key === status_class
+					? { ...series, data: incrementMinutePoint(series.data, event.dateTime) }
+					: series
+			);
+
+			data_status_summary = incrementStatusSummary(data_status_summary, event.statusCode);
+		}
+	}
+
+	const endpointThrottle = createLeadingTrailingThrottle(2000, flushEndpointCharts);
+	const aggregateThrottle = createTrailingThrottle(5000, flushAggregateCharts);
+
 	async function onChangeIdApp() {
 		console.log('Busca por el idapp ' + idapp, selectedEnvironment);
+
+		// Descarta eventos en vuelo/atrasados de la selección anterior (app, entorno u horas)
+		// antes de recargar el histórico, para que no se apliquen sobre el nuevo conjunto.
+		pendingEndpointEvents = [];
+		pendingAggregateEvents = [];
+		endpointThrottle.cancel();
+		aggregateThrottle.cancel();
+
 		if (idapp) {
 			try {
 				data_request_series = [];
 
 				let data_log_pm = await getLogsRecordsPerMinute(
-					{ idapp: idapp, last_hours: 12, environment: selectedEnvironment },
+					{ idapp: idapp, last_hours: selectedHours, environment: selectedEnvironment },
 					$userStore.token
 				);
 				if (Array.isArray(data_log_pm)) {
@@ -214,7 +348,7 @@
 					{
 						idapp: idapp,
 						environment: selectedEnvironment,
-						last_hours: 24,
+						last_hours: selectedHours,
 						lightweight: true,
 						order: 'timestamp',
 						orderDirection: 'ASC',
@@ -248,7 +382,7 @@
 				}
 
 				let data_status = await getLogsStatusClassPerMinute(
-					{ idapp: idapp, last_hours: 24, environment: selectedEnvironment },
+					{ idapp: idapp, last_hours: selectedHours, environment: selectedEnvironment },
 					$userStore.token
 				);
 				if (Array.isArray(data_status)) {
@@ -303,7 +437,13 @@
 				data_unused_endpoints = Array.isArray(usage?.unused) ? usage.unused : [];
 
 				let top_errors = await getTopErrorEndpointsByTime(
-					{ idapp: idapp, environment: selectedEnvironment, last_hours: 24, top: 10, granularity: 'hour' },
+					{
+						idapp: idapp,
+						environment: selectedEnvironment,
+						last_hours: selectedHours,
+						top: 10,
+						granularity: 'hour'
+					},
 					$userStore.token
 				);
 				data_top_error_endpoints = Array.isArray(top_errors?.top_error_endpoints)
@@ -347,37 +487,16 @@
 		});
 
 		unsubscribe_com = storeEndpointOnComplete.subscribe((event) => {
-			//	console.log(':::::> ', idapp, event);
-			if (idapp) {
-				if (matchesSelection(event)) {
-					//	console.log('Llega -------->');
-					let point = formatData(event);
-					if (point) {
-						data_request_series = upsertSeriesPoint(
-							data_request_series,
-							event.idendpoint,
-							point.other,
-							point
-						);
-					}
-
-					data_logs_per_minute = incrementMinutePoint(data_logs_per_minute, event.dateTime);
-
-					let status_class = statusClassForCode(event.statusCode);
-					data_status_class = data_status_class.map((series, index) =>
-						STATUS_CLASSES[index].key === status_class
-							? { ...series, data: incrementMinutePoint(series.data, event.dateTime) }
-							: series
-					);
-
-					if (Number(event.statusCode) >= 400) {
-						data_top_error_endpoints = data_top_error_endpoints.map((series) =>
-							series.idendpoint === event.idendpoint
-								? { ...series, data: incrementBucketPoint(series.data, event.dateTime, 'hour') }
-								: series
-						);
-					}
-				}
+			console.log('[dashboard] request_completed event:', event, {
+				idapp,
+				selectedEnvironment,
+				matches: matchesSelection(event)
+			});
+			if (idapp && matchesSelection(event)) {
+				pendingEndpointEvents.push(event);
+				pendingAggregateEvents.push(event);
+				endpointThrottle.trigger();
+				aggregateThrottle.trigger();
 			}
 		});
 	});
@@ -385,14 +504,19 @@
 	onDestroy(() => {
 		unsubscribe_dy();
 		unsubscribe_com();
+		endpointThrottle.cancel();
+		aggregateThrottle.cancel();
 	});
 </script>
 
 <div class="field is-flex is-justify-content-flex-end">
 
+<div class="mr-2">
+	<Input label="Hours" type="number" min={2} step={5} bind:value={selectedHours} class="is-small" onchange={handleHoursChange} />
+</div>
 <BasicSelect label="Environment" options={[{id: 'dev', value: 'Development'}, {id: 'qa', value: 'QA'}, {id: 'prd', value: 'Production', label:"Production"}]} bind:option={selectedEnvironment} class="is-small" />
 
-	
+
 </div>
 
 <div class="columns is-multiline is-mobile">
@@ -409,7 +533,7 @@
 		<Chart.TimeSeries title="Response Time per Request" bind:series={data_request_series}
 		></Chart.TimeSeries>
 		<p class="help has-text-centered">
-			Response time (ms) of each completed request for the selected app and environment, last 24
+			Response time (ms) of each completed request for the selected app and environment, last {selectedHours}
 			hours
 		</p>
 	</div>
@@ -417,14 +541,14 @@
 		<Chart.TimeSeries title="Requests per minute" bind:data={data_logs_per_minute}
 		></Chart.TimeSeries>
 		<p class="help has-text-centered">
-			Number of requests received per minute over the last 12 hours
+			Number of requests received per minute over the last {selectedHours} hours
 		</p>
 	</div>
 	<div class="column is-half-desktop is-full-tablet">
-		<Chart.TimeSeries title="Requests by Status per Minute (24h)" bind:series={data_status_class}
+		<Chart.TimeSeries title="Requests by Status per Minute ({selectedHours}h)" bind:series={data_status_class}
 		></Chart.TimeSeries>
 		<p class="help has-text-centered">
-			Number of requests per minute over the last 24 hours, broken down by HTTP status class
+			Number of requests per minute over the last {selectedHours} hours, broken down by HTTP status class
 		</p>
 	</div>
 	<div class="column is-half-desktop is-full-tablet">
@@ -463,10 +587,10 @@
 		</p>
 	</div>
 	<div class="column is-half-desktop is-full-tablet">
-		<Chart.TimeSeries title="Top 10 Endpoints with Most Errors (24h)" bind:series={data_top_error_endpoints}
+		<Chart.TimeSeries title="Top 10 Endpoints with Most Errors ({selectedHours}h)" bind:series={data_top_error_endpoints}
 		></Chart.TimeSeries>
 		<p class="help has-text-centered">
-			Endpoints with the most errors (status code &gt;= 400) per hour in the last 24 hours, for
+			Endpoints with the most errors (status code &gt;= 400) per hour in the last {selectedHours} hours, for
 			the selected app and environment
 		</p>
 	</div>

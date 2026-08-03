@@ -146,6 +146,9 @@
 		});
 
 		wsClient.on('message', (m) => {
+
+			//console.log('XXXXX >>>>> ', m);
+
 			if (m && m.event_name == 'system_information') {
 				storeServerDynamicInformation.set(m.data);
 			} else if (m && m.data?.idapp == idapp) {
@@ -158,7 +161,7 @@
 				} else if (m && m.event_name == 'request_completed') {
 					let data1 = m.data;
 					data1.dateTime = m.timestamp;
-
+console.log('request_completed >>>>> ', data1);
 					storeEndpointOnComplete.set(data1);
 
 					storeCountResponseStatusCode.update((value) => {
