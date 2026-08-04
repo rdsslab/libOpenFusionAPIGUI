@@ -30,6 +30,7 @@ export const url_paths = {
 	getLogSummaryByAppStatusCode: '/api/system/log/app/summary/prd',
 	appEndpointUsageSummary: '/api/system/system/log/app/endpoints/usage/prd',
 	getTopErrorEndpointsByTime: '/api/system/system/log/errors/top/bytime/prd',
+	getTopErrorEndpoints: '/api/system/system/log/errors/top/prd',
 	getEndpointBackups: '/api/system/api/endpoint/backup/prd',
 	APIKeys: '/api/system/apikey/prd',
 	APIClients: '/api/system/api_clients/prd',

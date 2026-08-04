@@ -32,3 +32,4 @@ export function restoreSystemEndpoints(restore: any): Promise<any>;
 export function getLogSummaryByAppStatusCode(options: any, token: any): Promise<any>;
 export function getAppEndpointUsageSummary(options: any, token: any): Promise<any>;
 export function getTopErrorEndpointsByTime(options: any, token: any): Promise<any>;
+export function getTopErrorEndpoints(options: any, token: any): Promise<any>;

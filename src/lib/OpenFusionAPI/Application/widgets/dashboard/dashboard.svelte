@@ -1,6 +1,6 @@
 <script>
 	import { onDestroy, onMount } from 'svelte';
-	import { Chart, BasicSelect, Input } from '@rdsslab/svelte-components';
+	import { Chart, BasicSelect, Input, Table, ColumnTypes } from '@rdsslab/svelte-components';
 	import {
 		storeEndpointOnComplete,
 		storeServerDynamicInformation,
@@ -25,12 +25,42 @@
 	let data_top_endpoints = $state([]);
 	let data_unused_endpoints = $state([]);
 	let data_top_error_endpoints = $state([]);
+	let data_error_requests = $state([]);
+	let loading_error_requests = $state(false);
 	let data_cpu = $state([]);
 	let data_memory = $state([]);
 	let cpuUsage = $state();
 	let memoryUsage = $state();
 	let selectedEnvironment = $state('prd');
 	let selectedHours = $state(12);
+	let selectedStatusClasses = $state(['5xx']);
+
+	const STATUS_CODE_RANGES = {
+		'1xx': [100, 199],
+		'2xx': [200, 299],
+		'3xx': [300, 399],
+		'4xx': [400, 499],
+		'5xx': [500, 599]
+	};
+
+	function statusMatchesSelectedClasses(statusCode, classes) {
+		return classes.some((cls) => {
+			const [min, max] = STATUS_CODE_RANGES[cls] || [];
+			return min && statusCode >= min && statusCode <= max;
+		});
+	}
+
+	function topErrorsTooltipFormatter(params) {
+		const points = Array.isArray(params) ? params : [params];
+		return points
+			.map((p) => {
+				const date = new Date(p.value[0]);
+				const pad = (n) => String(n).padStart(2, '0');
+				const formattedDate = `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+				return `URL: ${p.seriesName}<br/>${formattedDate}<br/>Errores: ${p.value[1]}`;
+			})
+			.join('<br/><br/>');
+	}
 
 	const STATUS_CLASSES = [
 		{ key: 'success', name: 'Success', color: '#48c78e' },
@@ -45,6 +75,18 @@
 		selectedEnvironment;
 		selectedHours;
 		onChangeIdApp();
+	});
+
+	// La tabla de requests con error se recarga en su propio efecto, aparte de las gráficas, por
+	// dos razones: cambiar solo el filtro de status codes no tiene por qué volver a pedir todo el
+	// dashboard, y así la tabla deja de depender de que las demás consultas de onChangeIdApp hayan
+	// salido bien (si una fallaba, el catch se comía el resto y la tabla quedaba con datos viejos).
+	$effect(() => {
+		idapp;
+		selectedEnvironment;
+		selectedHours;
+		selectedStatusClasses;
+		loadErrorRequests();
 	});
 
 	// El componente Input es un passthrough al <input type="number"> nativo, sin validación
@@ -312,6 +354,57 @@
 	const endpointThrottle = createLeadingTrailingThrottle(2000, flushEndpointCharts);
 	const aggregateThrottle = createTrailingThrottle(5000, flushAggregateCharts);
 
+	// Consulta al backend el detalle de cada request con error, filtrado por las clases de
+	// status code seleccionadas. Se llama al cambiar filtros y, en tiempo real, desde el throttle
+	// atado al websocket (tableRefreshThrottle) — a diferencia de las gráficas, que se incrementan
+	// localmente, acá se vuelve a consultar porque cada fila es un registro completo del log.
+	// `status_code` acepta la lista de clases tal cual ('5xx', '4xx,5xx'); sin clases marcadas no
+	// se consulta, porque devolvería todos los requests y no solo los que fallaron.
+	let error_requests_request_id = 0;
+
+	async function loadErrorRequests() {
+		if (!idapp || selectedStatusClasses.length === 0) {
+			data_error_requests = [];
+			loading_error_requests = false;
+			return;
+		}
+
+		// Marcar/desmarcar clases rápido dispara varias consultas encimadas y no hay garantía de
+		// que respondan en orden: solo la más reciente puede escribir en la tabla, para que una
+		// respuesta atrasada no pise los datos del filtro que el usuario tiene puesto ahora.
+		const request_id = ++error_requests_request_id;
+		loading_error_requests = true;
+
+		try {
+			let logs = await getRequestLogs(
+				{
+					idapp: idapp,
+					environment: selectedEnvironment,
+					last_hours: selectedHours,
+					status_code: selectedStatusClasses.join(','),
+					lightweight: true,
+					order: 'timestamp',
+					orderDirection: 'DESC',
+					limit: 500
+				},
+				$userStore.token
+			);
+			if (request_id !== error_requests_request_id) return;
+			data_error_requests = Array.isArray(logs) ? logs : [];
+		} catch (error) {
+			console.error(error);
+			if (request_id === error_requests_request_id) {
+				data_error_requests = [];
+			}
+		} finally {
+			if (request_id === error_requests_request_id) {
+				loading_error_requests = false;
+			}
+		}
+	}
+
+	const tableRefreshThrottle = createTrailingThrottle(5000, loadErrorRequests);
+
 	async function onChangeIdApp() {
 		console.log('Busca por el idapp ' + idapp, selectedEnvironment);
 
@@ -497,11 +590,16 @@
 				pendingAggregateEvents.push(event);
 				endpointThrottle.trigger();
 				aggregateThrottle.trigger();
+
+				if (statusMatchesSelectedClasses(Number(event.statusCode), selectedStatusClasses)) {
+					tableRefreshThrottle.trigger();
+				}
 			}
 		});
 	});
 
 	onDestroy(() => {
+		tableRefreshThrottle.cancel();
 		unsubscribe_dy();
 		unsubscribe_com();
 		endpointThrottle.cancel();
@@ -509,7 +607,7 @@
 	});
 </script>
 
-<div class="field is-flex is-justify-content-flex-end">
+<div class="field is-flex is-justify-content-flex-end is-align-items-center">
 
 <div class="mr-2">
 	<Input label="Hours" type="number" min={2} step={5} bind:value={selectedHours}   onchange={handleHoursChange} />
@@ -518,6 +616,29 @@
 
 
 </div>
+
+{#snippet statusCodeFilter()}
+	<span class="mr-2">Status codes:</span>
+	{#each Object.keys(STATUS_CODE_RANGES) as cls}
+		<label class="checkbox mr-2">
+			<input
+				type="checkbox"
+				checked={selectedStatusClasses.includes(cls)}
+				onchange={(e) => {
+					selectedStatusClasses = e.target.checked
+						? [...selectedStatusClasses, cls]
+						: selectedStatusClasses.filter((c) => c !== cls);
+				}}
+			/>
+			{cls}
+		</label>
+	{/each}
+	{#if loading_error_requests}
+		<span class="icon is-small has-text-info" title="Loading requests…">
+			<i class="fas fa-spinner fa-pulse"></i>
+		</span>
+	{/if}
+{/snippet}
 
 <div class="columns is-multiline is-mobile">
 	<div class="column is-half-desktop is-full-tablet">
@@ -588,10 +709,49 @@
 	</div>
 	<div class="column is-half-desktop is-full-tablet">
 		<Chart.TimeSeries title="Top 10 Endpoints with Most Errors ({selectedHours}h)" bind:series={data_top_error_endpoints}
+			tooltipFormatter={topErrorsTooltipFormatter}
 		></Chart.TimeSeries>
 		<p class="help has-text-centered">
 			Endpoints with the most errors (status code &gt;= 400) per hour in the last {selectedHours} hours, for
 			the selected app and environment
+		</p>
+	</div>
+	<div class="column is-full">
+		<p class="title is-6">
+			Request Log by Status Code ({selectedStatusClasses.length
+				? selectedStatusClasses.join(', ')
+				: 'no status selected'}, last {selectedHours}h)
+		</p>
+		<Table
+			RawDataTable={data_error_requests}
+			columns={{
+				timestamp: {
+					label: 'Date/Time',
+					decorator: { component: ColumnTypes.DateTime, props: { format: 'yyyy-MM-dd HH:mm:ss' } }
+				},
+				method: { label: 'Method' },
+				url: { label: 'URL' },
+				status_code: { label: 'Status' },
+				response_time: { label: 'Time (ms)' },
+				trace_id: { label: 'Trace ID' },
+				id: { hidden: true },
+				idapp: { hidden: true },
+				idendpoint: { hidden: true },
+				log_level: { hidden: true }
+			}}
+			left_items={[statusCodeFilter]}
+			showSelectionButton={false}
+			showNewButton={false}
+			showEditButton={false}
+			showDeleteButton={false}
+			fileNameExport="requests_by_status"
+		></Table>
+		<p class="help has-text-centered">
+			One row per request received by the selected app and environment in the last {selectedHours} hours,
+			keeping only the status code classes checked above (up to the 500 most recent, newest first). Check
+			or uncheck a class to query the server again; with none checked nothing is loaded. The list also
+			refreshes on its own — at most once every 5 seconds — when a new request matching those classes
+			arrives. Copy a Trace ID to follow that request end to end in the endpoint's logs.
 		</p>
 	</div>
 	<div class="column is-half-desktop is-full-tablet">

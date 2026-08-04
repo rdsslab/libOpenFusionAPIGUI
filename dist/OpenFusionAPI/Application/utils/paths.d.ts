@@ -30,6 +30,7 @@ export namespace url_paths {
     let getLogSummaryByAppStatusCode: string;
     let appEndpointUsageSummary: string;
     let getTopErrorEndpointsByTime: string;
+    let getTopErrorEndpoints: string;
     let getEndpointBackups: string;
     let APIKeys: string;
     let APIClients: string;
