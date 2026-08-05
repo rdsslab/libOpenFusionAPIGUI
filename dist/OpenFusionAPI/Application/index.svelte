@@ -26,6 +26,7 @@
 	import AppVars from './widgets/application_variables/index.svelte';
 	import Endpoints from './widgets/endpoints/index.svelte';
 	import IntervalTasks from './widgets/interval_tasks/index.svelte';
+	import Bots from './widgets/bots/index.svelte';
 	import ApiKeys from './widgets/apikeys/index.svelte';
 	import {
 		getListApps,
@@ -100,6 +101,13 @@
 					icon: ' fa-solid fa-key ',
 					onclick: () => {
 						menu_item_selected = '/apikeys';
+					}
+				},
+				{
+					label: 'Bots',
+					icon: ' fa-solid fa-robot ',
+					onclick: () => {
+						menu_item_selected = '/bots';
 					}
 				},
 				{
@@ -374,6 +382,8 @@ console.log('request_completed >>>>> ', data1);
 			<IntervalTasks {idapp}></IntervalTasks>
 		{:else if menu_item_selected == '/apikeys'}
 			<ApiKeys bind:idapp></ApiKeys>
+		{:else if menu_item_selected == '/bots'}
+			<Bots bind:idapp></Bots>
 		{:else}
 			<DashBoardScreen {idapp}></DashBoardScreen>
 		{/if}

@@ -27,6 +27,7 @@ export namespace url_paths {
     let getResponseTimePerMinute: string;
     let changeUserPassword: string;
     let restoreSystemEndpoints: string;
+    let bots: string;
     let getLogSummaryByAppStatusCode: string;
     let appEndpointUsageSummary: string;
     let getTopErrorEndpointsByTime: string;

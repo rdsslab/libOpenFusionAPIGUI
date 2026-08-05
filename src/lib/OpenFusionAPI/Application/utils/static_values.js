@@ -133,3 +133,23 @@ export const defaultValuesIntervalTask = (task) => {
 		...(task || {})
 	};
 };
+
+export const defaultValuesBot = (bot) => {
+	const baseBot = {
+		idbot: null,
+		idapp: '',
+		name: '',
+		description: '',
+		provider: 'telegram',
+		token: '',
+		code: '',
+		enabled: true,
+		environment: 'prd',
+		params: {}
+	};
+
+	return {
+		...baseBot,
+		...(bot || {})
+	};
+};

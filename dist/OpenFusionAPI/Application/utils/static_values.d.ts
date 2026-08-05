@@ -120,3 +120,4 @@ export namespace defaultEndpoint {
     }
 }
 export function defaultValuesIntervalTask(task: any): any;
+export function defaultValuesBot(bot: any): any;

@@ -27,6 +27,7 @@ export const url_paths = {
 	getResponseTimePerMinute: '/api/system/system/log/responsetimeperminute/prd',
 	changeUserPassword: '/api/system/user/changepassword/prd',
 	restoreSystemEndpoints: '/api/system/restore/prd',
+	bots: '/api/system/bots',
 	getLogSummaryByAppStatusCode: '/api/system/log/app/summary/prd',
 	appEndpointUsageSummary: '/api/system/system/log/app/endpoints/usage/prd',
 	getTopErrorEndpointsByTime: '/api/system/system/log/errors/top/bytime/prd',
