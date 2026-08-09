@@ -121,3 +121,93 @@ export namespace defaultEndpoint {
 }
 export function defaultValuesIntervalTask(task: any): any;
 export function defaultValuesBot(bot: any): any;
+export namespace BotRuntimeStatus {
+    namespace STOPPED {
+        export let label: string;
+        let color_5: string;
+        export { color_5 as color };
+        export let background: string;
+        let icon_5: string;
+        export { icon_5 as icon };
+        export let needsAction: boolean;
+        let description_2: string;
+        export { description_2 as description };
+    }
+    namespace STARTING {
+        let label_1: string;
+        export { label_1 as label };
+        let color_6: string;
+        export { color_6 as color };
+        let background_1: string;
+        export { background_1 as background };
+        let icon_6: string;
+        export { icon_6 as icon };
+        let needsAction_1: boolean;
+        export { needsAction_1 as needsAction };
+        let description_3: string;
+        export { description_3 as description };
+    }
+    namespace RUNNING {
+        let label_2: string;
+        export { label_2 as label };
+        let color_7: string;
+        export { color_7 as color };
+        let background_2: string;
+        export { background_2 as background };
+        let icon_7: string;
+        export { icon_7 as icon };
+        let needsAction_2: boolean;
+        export { needsAction_2 as needsAction };
+        let description_4: string;
+        export { description_4 as description };
+    }
+    namespace BACKOFF {
+        let label_3: string;
+        export { label_3 as label };
+        let color_8: string;
+        export { color_8 as color };
+        let background_3: string;
+        export { background_3 as background };
+        let icon_8: string;
+        export { icon_8 as icon };
+        let needsAction_3: boolean;
+        export { needsAction_3 as needsAction };
+        let description_5: string;
+        export { description_5 as description };
+    }
+    namespace QUARANTINED {
+        let label_4: string;
+        export { label_4 as label };
+        let color_9: string;
+        export { color_9 as color };
+        let background_4: string;
+        export { background_4 as background };
+        let icon_9: string;
+        export { icon_9 as icon };
+        let needsAction_4: boolean;
+        export { needsAction_4 as needsAction };
+        let description_6: string;
+        export { description_6 as description };
+    }
+    namespace DISABLED_ERROR {
+        let label_5: string;
+        export { label_5 as label };
+        let color_10: string;
+        export { color_10 as color };
+        let background_5: string;
+        export { background_5 as background };
+        let icon_10: string;
+        export { icon_10 as icon };
+        let needsAction_5: boolean;
+        export { needsAction_5 as needsAction };
+        let description_7: string;
+        export { description_7 as description };
+    }
+}
+export namespace BotRuntimeStatusFallback { }
+/**
+ * Campos de `ofapi_bot` que escribe el runtime, no el usuario. La interfaz los muestra
+ * pero nunca los reenvía al guardar: hacerlo sobrescribiría el estado observado con una
+ * copia vieja tomada al abrir el editor.
+ */
+export const BOT_RUNTIME_FIELDS: string[];

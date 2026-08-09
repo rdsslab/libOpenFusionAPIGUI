@@ -10,9 +10,16 @@
 		EditorCode,
 		Notifications
 	} from '@rdsslab/svelte-components';
-	import { defaultValuesBot, Environment } from '../../utils/static_values.js';
+	import {
+		defaultValuesBot,
+		Environment,
+		BotRuntimeStatus,
+		BotRuntimeStatusFallback,
+		BOT_RUNTIME_FIELDS
+	} from '../../utils/static_values.js';
 	import { url_paths } from '../../utils/paths.js';
 	import uFetch from '@rdsslab/uFetch';
+	import CellBotStatus from './cellBotStatus.svelte';
 	import TextArea from '../common/textArea.svelte';
 	import { userStore, statusSystemEndpointsStore } from '../../utils/stores.js';
 	import { restoreSystemEndpoints } from '../../utils/request.js';
@@ -32,6 +39,23 @@
 		})
 	);
 
+	/** Salud del bot abierto en el editor, tal como la reportó el servidor al cargarlo. */
+	let health = $state(null);
+
+	let healthStatus = $derived(
+		health ? BotRuntimeStatus[health.runtime_status] || BotRuntimeStatusFallback : null
+	);
+
+	/** Formatea una fecha del servidor; devuelve '—' si no hay valor. */
+	function formatMoment(value) {
+		if (!value) return '—';
+		const date = new Date(value);
+		return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+	}
+
+	// Toda clave que devuelva la API y no esté declarada aquí se renderiza igual, con la
+	// etiqueta recortada a 15 caracteres (ver SetColumns en Table.svelte). Por eso los
+	// campos de estado del runtime deben declararse todos, aunque sea para ocultarlos.
 	let columns = $state({
 		idbot: { hidden: true },
 		idapp: { hidden: true },
@@ -42,25 +66,47 @@
 			decorator: {
 				component: ColumnTypes.Boolean,
 				props: {
-					ontrue: { label: 'Enabled' },
-					onfalse: { label: 'Disabled' },
-					editInline: false
+					// El decorador solo dibuja el icono con etiqueta si recibe `custom`;
+					// sin ese envoltorio cae al checkbox mudo.
+					custom: {
+						ontrue: { label: 'Enabled' },
+						onfalse: { label: 'Disabled' },
+						editInline: false
+					}
 				}
 			}
 		},
+		runtime_status: {
+			label: 'Status',
+			decorator: {
+				component: CellBotStatus
+			}
+		},
+		last_error_type: { label: 'Last error' },
 		environment: { label: 'Environment' },
-		created_at: {
+		createdAt: {
 			label: 'Created',
 			decorator: {
 				component: ColumnTypes.DateTime
 			}
 		},
-		updated_at: {
+		updatedAt: {
 			label: 'Updated',
 			decorator: {
 				component: ColumnTypes.DateTime
 			}
-		}
+		},
+		// El detalle de la salud vive en el editor; en la lista solo estorbaría.
+		provider: { hidden: true },
+		params: { hidden: true },
+		failure_count: { hidden: true },
+		last_error_message: { hidden: true },
+		last_failure_at: { hidden: true },
+		next_retry_at: { hidden: true },
+		last_started_at: { hidden: true },
+		last_healthy_at: { hidden: true },
+		disabled_by: { hidden: true },
+		disabled_reason: { hidden: true }
 	});
 
 	$effect(async () => {
@@ -137,6 +183,11 @@
 		row.idapp = idapp;
 		row.params = params;
 
+		// El estado del runtime lo escribe el servidor. Reenviar la copia que se leyó al
+		// abrir el editor lo sobrescribiría con datos ya viejos: un bot que entretanto se
+		// recuperó volvería a figurar como QUARANTINED.
+		for (const field of BOT_RUNTIME_FIELDS) delete row[field];
+
 		try {
 			// console.log('saveBot >>>>>>>>>>>>>', row);
 			let resp = await uF.post({ url: `${url_paths.bots}/prd`, data: row });
@@ -180,6 +231,7 @@
 
 	onMount(() => {
 		selectedRow = defaultValuesBot({});
+		health = null;
 		paramsString = '{}';
 	});
 </script>
@@ -195,12 +247,23 @@
 		// console.log('TABLE > EDIT ', r);
 		let fullBot = await getBot(r.idbot);
 		selectedRow = defaultValuesBot(fullBot || r);
+		health = fullBot || r;
 		paramsString = JSON.stringify(selectedRow.params || {}, null, 2);
+
+		// El servidor re-habilita solo un bot que él mismo apagó cuando cambia el token o
+		// el código, pero solo si el guardado no manda `enabled` explícito — y este editor
+		// siempre lo manda. Se deja el interruptor en verde para que corregir la causa y
+		// guardar tenga el mismo efecto aquí que por MCP, y el panel de salud explica por qué.
+		if (health?.disabled_by === 'system' && selectedRow.enabled === false) {
+			selectedRow.enabled = true;
+		}
+
 		showEditor = true;
 	}}
 	onnewrow={() => {
 		// console.log('TABLE > NEW ', idapp);
 		selectedRow = defaultValuesBot({ idapp });
+		health = null;
 		paramsString = '{}';
 		showEditor = true;
 	}}
@@ -259,6 +322,97 @@
 		</Level>
 
 		<div>
+			{#if health && healthStatus}
+				<!-- Estado observado del runtime. Va arriba porque responde antes que nada a
+				     "¿está corriendo y tengo que hacer algo?", que es lo que trae al usuario
+				     a abrir el bot. -->
+				<div class="box">
+					<div class="level is-mobile mb-2">
+						<div class="level-left">
+							<div class="level-item">
+								<span class="icon-text">
+									<span class="icon {healthStatus.color}">
+										<i class={healthStatus.icon}></i>
+									</span>
+									<span class="has-text-weight-semibold">Runtime status: {healthStatus.label}</span>
+								</span>
+							</div>
+						</div>
+						<div class="level-right">
+							<div class="level-item">
+								{#if healthStatus.needsAction}
+									<span class="tag is-danger">Needs attention</span>
+								{:else}
+									<span class="tag is-light">No action needed</span>
+								{/if}
+							</div>
+						</div>
+					</div>
+
+					<p class="help mb-3">{healthStatus.description}</p>
+
+					{#if health.disabled_by === 'system'}
+						<div class="notification is-warning is-light py-2 px-3 mb-3">
+							<span class="icon-text">
+								<span class="icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+								<span>
+									The system disabled this bot{health.disabled_reason
+										? ` (${health.disabled_reason})`
+										: ''}. Fix the token or the code and save: it has already been switched back
+									to <strong>Enabled</strong> for you.
+								</span>
+							</span>
+						</div>
+					{:else if health.disabled_by === 'user'}
+						<p class="help mb-3">
+							This bot was disabled manually. It will not start again until you enable it.
+						</p>
+					{/if}
+
+					<div class="columns is-multiline is-mobile mb-0">
+						<div class="column is-one-quarter">
+							<p class="heading">Consecutive failures</p>
+							<p>{health.failure_count ?? 0}</p>
+						</div>
+						<div class="column is-one-quarter">
+							<p class="heading">Last error type</p>
+							<p>{health.last_error_type || '—'}</p>
+						</div>
+						<div class="column is-one-quarter">
+							<p class="heading">Last failure</p>
+							<p>{formatMoment(health.last_failure_at)}</p>
+						</div>
+						<div class="column is-one-quarter">
+							<p class="heading">Next retry</p>
+							<p>{formatMoment(health.next_retry_at)}</p>
+						</div>
+						<div class="column is-one-quarter">
+							<p class="heading">Last started</p>
+							<p>{formatMoment(health.last_started_at)}</p>
+						</div>
+						<div class="column is-one-quarter">
+							<p class="heading">Last healthy</p>
+							<p>{formatMoment(health.last_healthy_at)}</p>
+						</div>
+						<div class="column is-one-quarter">
+							<p class="heading">Disabled by</p>
+							<p>{health.disabled_by || '—'}</p>
+						</div>
+						<div class="column is-one-quarter">
+							<p class="heading">Provider</p>
+							<p>{health.provider || '—'}</p>
+						</div>
+					</div>
+
+					{#if health.last_error_message}
+						<div>
+							<p class="heading">Last error message</p>
+							<pre class="is-size-7">{health.last_error_message}</pre>
+						</div>
+					{/if}
+				</div>
+			{/if}
+
 			<div class="columns">
 				<div class="column is-one-third">
 					<Input label="Name: " bind:value={selectedRow.name}></Input>

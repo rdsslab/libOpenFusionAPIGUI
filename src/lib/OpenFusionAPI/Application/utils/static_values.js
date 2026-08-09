@@ -153,3 +153,91 @@ export const defaultValuesBot = (bot) => {
 		...(bot || {})
 	};
 };
+
+/**
+ * Estado observado del runtime de un bot (columna `runtime_status` de `ofapi_bot`).
+ *
+ * Es distinto de `enabled`: `enabled` es la INTENCIÓN del usuario ("este bot debe correr")
+ * y `runtime_status` es lo que realmente está pasando. El servidor nunca apaga un bot por
+ * un fallo recuperable —red, DNS, 429 o 5xx del proveedor—: lo reintenta con backoff y
+ * luego lo pone en cuarentena sondeando indefinidamente, así que un bot en BACKOFF o
+ * QUARANTINED se recupera solo y NO requiere que nadie lo toque. Por eso cada estado
+ * declara `needsAction`: es lo que decide si la interfaz debe alarmar o tranquilizar.
+ */
+export const BotRuntimeStatus = {
+	STOPPED: {
+		label: 'Stopped',
+		color: ' has-text-grey ',
+		background: 'light',
+		icon: ' fa-solid fa-circle-stop ',
+		needsAction: false,
+		description: 'The bot is not running.'
+	},
+	STARTING: {
+		label: 'Starting',
+		color: ' has-text-info ',
+		background: 'info',
+		icon: ' fa-solid fa-play ',
+		needsAction: false,
+		description: 'The worker is starting and validating the token against the provider.'
+	},
+	RUNNING: {
+		label: 'Running',
+		color: ' has-text-success ',
+		background: 'success',
+		icon: ' fa-solid fa-circle-check ',
+		needsAction: false,
+		description: 'The bot is up and receiving updates.'
+	},
+	BACKOFF: {
+		label: 'Retrying',
+		color: ' has-text-warning ',
+		background: 'warning',
+		icon: ' fa-solid fa-clock-rotate-left ',
+		needsAction: false,
+		description:
+			'A recoverable failure (network, DNS, provider 429/5xx). The bot stays enabled and is ' +
+			'retried automatically. No action is needed.'
+	},
+	QUARANTINED: {
+		label: 'Quarantined',
+		color: ' has-text-warning ',
+		background: 'warning',
+		icon: ' fa-solid fa-hourglass-half ',
+		needsAction: false,
+		description:
+			'Recoverable failures persist, so the bot moved to slow probing (15/30/60 min). It stays ' +
+			'enabled and keeps retrying indefinitely: it recovers on its own once the cause clears.'
+	},
+	DISABLED_ERROR: {
+		label: 'Disabled (error)',
+		color: ' has-text-danger ',
+		background: 'danger',
+		icon: ' fa-solid fa-triangle-exclamation ',
+		needsAction: true,
+		description:
+			'Repeated permanent failures (revoked token or code that does not compile). Fix the token ' +
+			'or the code and save: the bot is re-enabled automatically.'
+	}
+};
+
+/** Estado a mostrar cuando el servidor todavía no reportó ninguno. */
+export const BotRuntimeStatusFallback = BotRuntimeStatus.STOPPED;
+
+/**
+ * Campos de `ofapi_bot` que escribe el runtime, no el usuario. La interfaz los muestra
+ * pero nunca los reenvía al guardar: hacerlo sobrescribiría el estado observado con una
+ * copia vieja tomada al abrir el editor.
+ */
+export const BOT_RUNTIME_FIELDS = [
+	'runtime_status',
+	'failure_count',
+	'last_error_type',
+	'last_error_message',
+	'last_failure_at',
+	'next_retry_at',
+	'last_started_at',
+	'last_healthy_at',
+	'disabled_by',
+	'disabled_reason'
+];
