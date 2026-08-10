@@ -36,6 +36,8 @@
 	let TableSelectionType = $state(0);
 	let serverAPIVersion = $state('Loading...');
 	let serverAPILastVersion = $state('');
+	let serverAPILastVersionStale = $state(false);
+	let serverAPILastVersionCheckedAt = $state(null);
 	let serverDDBB = $state('?');
 	let TableObject = $state();
 	let idendpoint_selected = $state();
@@ -249,15 +251,46 @@
 		}
 
 		try {
-			let last_version_res = await getServerAPILastVersion($userStore.token);
+			let last_version_res = await getServerAPILastVersion();
 			if (last_version_res) {
 				serverAPILastVersion =
 					last_version_res.libOpenFusionAPI?.version || last_version_res.version || '';
+				// El backend responde 200 aunque no alcance GitHub; en ese caso
+				// la versión viene del último valor conocido.
+				serverAPILastVersionStale = last_version_res.stale === true;
+				serverAPILastVersionCheckedAt = last_version_res.checked_at ?? null;
 			}
 		} catch (error) {
 			console.error(error);
 		}
 	}
+
+	/**
+	 * Normaliza una versión para poder compararla: descarta los textos de
+	 * marcador de posición y tolera espacios o un prefijo "v".
+	 */
+	function normalizeVersion(value) {
+		let v = typeof value === 'string' ? value.trim() : '';
+		if (!v || v === 'Loading...' || v === 'Unknown') return '';
+		return v.replace(/^v/i, '');
+	}
+
+	// Se avisa cuando la instalada difiere de la última publicada. Ambas deben
+	// ser versiones reales: comparar contra 'Loading...' producía un aviso falso.
+	let hayVersionDistinta = $derived.by(() => {
+		const instalada = normalizeVersion(serverAPIVersion);
+		const publicada = normalizeVersion(serverAPILastVersion);
+		return instalada !== '' && publicada !== '' && instalada !== publicada;
+	});
+
+	let avisoVersionTitulo = $derived.by(() => {
+		const base = `Versión instalada ${serverAPIVersion} · última publicada ${serverAPILastVersion}`;
+		if (!serverAPILastVersionStale) return base;
+		const fecha = serverAPILastVersionCheckedAt
+			? new Date(serverAPILastVersionCheckedAt).toLocaleString()
+			: 'desconocida';
+		return `${base}\nDato no verificado ahora: no se pudo consultar el repositorio. Última comprobación con éxito: ${fecha}`;
+	});
 
 	async function GetEndpoints(full = false) {
 		try {
@@ -348,16 +381,23 @@
 						<span class="tag is-link">{serverDDBB}</span>
 					</div>
 				</div>
-				{#if serverAPIVersion !== serverAPILastVersion && serverAPILastVersion !== ''}
+				{#if hayVersionDistinta}
 					<div class="control">
-						<div class="tags has-addons">
+						<div class="tags has-addons" title={avisoVersionTitulo}>
 							<span class="tag is-dark">
 								<span class="icon is-small mr-1 has-text-warning">
 									<i class="fa-solid fa-bell fa-shake"></i>
 								</span>
 								Update
 							</span>
-							<span class="tag is-warning">{serverAPILastVersion}</span>
+							<span class="tag is-warning">
+								{serverAPILastVersion}
+								{#if serverAPILastVersionStale}
+									<span class="icon is-small ml-1">
+										<i class="fa-solid fa-clock-rotate-left"></i>
+									</span>
+								{/if}
+							</span>
 						</div>
 					</div>
 				{/if}

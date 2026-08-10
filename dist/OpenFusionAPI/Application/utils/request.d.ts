@@ -17,7 +17,7 @@ export function getAppDocumentation(token: any, idapp: any, idendpoints: any): P
 export function migrateEndpoints(data: any): Promise<any>;
 export function migrateAppVars(data: any): Promise<any>;
 export function getServerAPIVersion(token: any): Promise<any>;
-export function getServerAPILastVersion(token: any): Promise<any>;
+export function getServerAPILastVersion(): Promise<object | null>;
 export function EndpointSave(endpoint: any): Promise<any>;
 export function getLogsRecordsPerMinute(options: any, token: any): Promise<any>;
 export function getLogsStatusClassPerMinute(options: any, token: any): Promise<any>;

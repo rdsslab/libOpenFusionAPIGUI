@@ -377,13 +377,28 @@ export const getServerAPIVersion = async (token) => {
 	return version_res;
 };
 
-export const getServerAPILastVersion = async (token) => {
+/**
+ * Última versión publicada de libOpenFusionAPI.
+ *
+ * Es información accesoria: si no se puede obtener, la GUI debe seguir
+ * funcionando. Se degrada devolviendo null en lugar de propagar el error,
+ * igual que getEnvironmentList.
+ *
+ * El backend responde 200 incluso cuando no logra alcanzar GitHub; en ese
+ * caso trae la última versión conocida con `stale: true` y `checked_at`.
+ *
+ * @returns {Promise<object|null>} null si no se pudo obtener
+ */
+export const getServerAPILastVersion = async () => {
 	let uf = new uFetch();
 
-	let version_req = checkStatus(await uf.get({ url: url_paths.serverAPIVersionLast }));
-	let version_res = await version_req.json();
-
-	return version_res;
+	try {
+		let version_req = checkStatus(await uf.get({ url: url_paths.serverAPIVersionLast }));
+		return await version_req.json();
+	} catch (error) {
+		console.error(error.message);
+		return null;
+	}
 };
 
 export const EndpointSave = async (endpoint) => {
