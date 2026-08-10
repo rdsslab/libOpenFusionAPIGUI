@@ -16,6 +16,7 @@
 		getTopErrorEndpointsByTime,
 		restoreSystemEndpoints
 	} from '../../utils/request.js';
+	import { httpStatusText } from '../../utils/httpStatus.js';
 	let { idapp = $bindable() } = $props();
 	let data_request_series = $state([]);
 
@@ -677,7 +678,17 @@
 			title="Status Code Distribution"
 			option={{
 				tooltip: { trigger: 'item', formatter: '{b}: {c} requests ({d}%)' },
-				legend: { orient: 'vertical', left: 'left' }
+				legend: {
+					orient: 'vertical',
+					left: 'left',
+					// La leyenda la dibuja ECharts sobre canvas (no es HTML), así que el tooltip
+					// nativo de la leyenda es la única forma de describir cada status code al pasar
+					// el mouse por encima.
+					tooltip: {
+						show: true,
+						formatter: (params) => `${params.name} — ${httpStatusText(params.name)}`
+					}
+				}
 			}}
 			series={[
 				{

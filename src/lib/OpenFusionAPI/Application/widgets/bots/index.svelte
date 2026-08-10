@@ -8,6 +8,7 @@
 		PredictiveInput,
 		Input,
 		EditorCode,
+		Tab,
 		Notifications
 	} from '@rdsslab/svelte-components';
 	import {
@@ -20,7 +21,7 @@
 	import { url_paths } from '$lib/OpenFusionAPI/Application/utils/paths.js';
 	import uFetch from '@rdsslab/uFetch';
 	import CellBotStatus from './cellBotStatus.svelte';
-	import TextArea from '$lib/OpenFusionAPI/Application/widgets/common/textArea.svelte';
+	import Backups from './bot_bkp.svelte';
 	import { userStore, statusSystemEndpointsStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import { restoreSystemEndpoints } from '$lib/OpenFusionAPI/Application/utils/request.js';
 
@@ -30,7 +31,6 @@
 	const uF = new uFetch();
 	let showEditor = $state(false);
 	let selectedRow = $state(defaultValuesBot({}));
-	let paramsString = $state('{}');
 	let DataTableBots = $state([]);
 
 	let optionsEnvironment = $state(
@@ -41,6 +41,45 @@
 
 	/** Salud del bot abierto en el editor, tal como la reportó el servidor al cargarlo. */
 	let health = $state(null);
+
+	/**
+	 * Pestañas del editor. `component` apunta a los snippets declarados en el marcado, y el
+	 * índice de Backups se deshabilita mientras el bot no exista todavía en la base.
+	 */
+	let activeTab = $state(0);
+	const TAB_BACKUPS = 3;
+	let tabList = $state([
+		{ name: 'general', label: 'General', component: tab_general, classIcon: 'fa-solid fa-sliders' },
+		{ name: 'params', label: 'Params (JSON)', component: tab_params, classIcon: 'fa-solid fa-code' },
+		{ name: 'code', label: 'Code', component: tab_code, classIcon: 'fa-solid fa-file-code' },
+		{
+			name: 'backups',
+			label: 'Backups',
+			component: tab_backups,
+			classIcon: 'fa-solid fa-list-check',
+			disabled: true
+		}
+	]);
+
+	/** Deja el editor abierto en General y habilita Backups solo si el bot ya está guardado. */
+	function resetTabs() {
+		activeTab = 0;
+		tabList[TAB_BACKUPS].disabled = !selectedRow.idbot;
+	}
+
+	/** `params` llega como objeto desde la API, pero se normaliza por si viniera serializado. */
+	function normalizeParams(row) {
+		if (typeof row.params === 'string') {
+			try {
+				row.params = JSON.parse(row.params || '{}');
+			} catch (error) {
+				row.params = {};
+			}
+		} else if (!row.params || typeof row.params !== 'object') {
+			row.params = {};
+		}
+		return row;
+	}
 
 	let healthStatus = $derived(
 		health ? BotRuntimeStatus[health.runtime_status] || BotRuntimeStatusFallback : null
@@ -171,17 +210,11 @@
 	async function saveBot() {
 		if (!idapp) return;
 
-		let params = {};
-		try {
-			params = paramsString ? JSON.parse(paramsString) : {};
-		} catch (error) {
-			notify.push({ message: 'Invalid JSON in Params field: ' + error.message, color: 'warning' });
-			return;
-		}
-
 		let row = $state.snapshot(selectedRow);
 		row.idapp = idapp;
-		row.params = params;
+		// El editor de Params ya entrega un objeto: EditorCode con lang="json" solo escribe en
+		// `code` cuando el texto parsea, así que aquí nunca llega JSON inválido.
+		row.params = row.params ?? {};
 
 		// El estado del runtime lo escribe el servidor. Reenviar la copia que se leyó al
 		// abrir el editor lo sobrescribiría con datos ya viejos: un bot que entretanto se
@@ -230,9 +263,9 @@
 	}
 
 	onMount(() => {
-		selectedRow = defaultValuesBot({});
+		selectedRow = normalizeParams(defaultValuesBot({}));
 		health = null;
-		paramsString = '{}';
+		resetTabs();
 	});
 </script>
 
@@ -246,9 +279,9 @@
 	oneditrow={async (r) => {
 		// console.log('TABLE > EDIT ', r);
 		let fullBot = await getBot(r.idbot);
-		selectedRow = defaultValuesBot(fullBot || r);
+		selectedRow = normalizeParams(defaultValuesBot(fullBot || r));
 		health = fullBot || r;
-		paramsString = JSON.stringify(selectedRow.params || {}, null, 2);
+		resetTabs();
 
 		// El servidor re-habilita solo un bot que él mismo apagó cuando cambia el token o
 		// el código, pero solo si el guardado no manda `enabled` explícito — y este editor
@@ -262,9 +295,9 @@
 	}}
 	onnewrow={() => {
 		// console.log('TABLE > NEW ', idapp);
-		selectedRow = defaultValuesBot({ idapp });
+		selectedRow = normalizeParams(defaultValuesBot({ idapp }));
 		health = null;
-		paramsString = '{}';
+		resetTabs();
 		showEditor = true;
 	}}
 	ondeleterow={async (r) => {
@@ -413,49 +446,71 @@
 				</div>
 			{/if}
 
-			<div class="columns">
-				<div class="column is-one-third">
-					<Input label="Name: " bind:value={selectedRow.name}></Input>
-				</div>
-				<div class="column is-one-third">
-					<Input label="Token: " type="password" bind:value={selectedRow.token}></Input>
-				</div>
-				<div class="column is-one-third">
-					<PredictiveInput
-						label="Environment"
-						classLabel="is-small"
-						classInput="is-small"
-						bind:options={optionsEnvironment}
-						bind:selectedValue={selectedRow.environment}
-					></PredictiveInput>
-				</div>
-			</div>
-
-			<div class="columns">
-				<div class="column is-one-third">
-					<Input type="boolean" label="Enabled" bind:value={selectedRow.enabled}></Input>
-				</div>
-				<div class="column is-two-thirds">
-					<Input label="Description: " bind:value={selectedRow.description}></Input>
-				</div>
-			</div>
-
-			<div class="columns">
-				<div class="column">
-					<TextArea label="Params (JSON)" bind:value={paramsString}></TextArea>
-				</div>
-			</div>
-
-			<div class="columns">
-				<div class="column">
-					<p class="help">The constant $BOT is an instance of Grammy.</p>
-					<EditorCode
-						lang="js"
-						showFormat={true}
-						bind:code={selectedRow.code}
-					></EditorCode>
-				</div>
-			</div>
+			<Tab bind:tabs={tabList} bind:active={activeTab}></Tab>
 		</div>
 	</SlideFullScreen>
 {/if}
+
+{#snippet tab_general()}
+	<div class="columns">
+		<div class="column is-one-third">
+			<Input label="Name: " bind:value={selectedRow.name}></Input>
+		</div>
+		<div class="column is-one-third">
+			<Input label="Token: " type="text" bind:value={selectedRow.token}></Input>
+		</div>
+		<div class="column is-one-third">
+			<PredictiveInput
+				label="Environment"
+				classLabel="is-small"
+				classInput="is-small"
+				bind:options={optionsEnvironment}
+				bind:selectedValue={selectedRow.environment}
+			></PredictiveInput>
+		</div>
+	</div>
+
+	<div class="columns">
+		<div class="column is-one-third">
+			<Input type="boolean" label="Enabled" bind:value={selectedRow.enabled}></Input>
+		</div>
+		<div class="column is-two-thirds">
+			<Input label="Description: " bind:value={selectedRow.description}></Input>
+		</div>
+	</div>
+{/snippet}
+
+{#snippet tab_params()}
+	<p class="help">Parameters passed to the bot at runtime.</p>
+	<EditorCode lang="json" showFormat={true} bind:code={selectedRow.params}></EditorCode>
+{/snippet}
+
+{#snippet tab_code()}
+	<p class="help">The constant $BOT is an instance of Grammy.</p>
+	<EditorCode lang="js" showFormat={true} bind:code={selectedRow.code}></EditorCode>
+{/snippet}
+
+{#snippet tab_backups()}
+	<!-- La consulta se dispara al entrar a la pestaña: montar `Backups` con el editor pediría
+	     el historial de todos los bots que se abran, y solo interesa cuando hay que deshacer algo. -->
+	{#if activeTab === TAB_BACKUPS && selectedRow.idbot}
+		<p class="help mb-3">
+			Every save and every deletion stores a version. Restoring one loads it into this form;
+			nothing changes until you press <strong>Save &amp; Deploy</strong>.
+		</p>
+		<Backups
+			bind:idbot={selectedRow.idbot}
+			onselect={(backup) => {
+				if (backup && backup.idbot == selectedRow.idbot) {
+					// El snapshot es solo configuración: `health` es estado observado del
+					// runtime y se deja como está.
+					selectedRow = normalizeParams(defaultValuesBot($state.snapshot(backup)));
+					notify.push({
+						message: `Bot ${selectedRow.name} loaded from backup. Save to persist.`,
+						color: 'success'
+					});
+				}
+			}}
+		></Backups>
+	{/if}
+{/snippet}
