@@ -119,89 +119,165 @@ export namespace defaultEndpoint {
         }
     }
 }
-export function defaultValuesIntervalTask(task: any): any;
+export function defaultValuesIntervalTask(task: any): {
+    idtask: any;
+    idendpoint: string;
+    iduser: any;
+    idapp: string;
+    enabled: boolean;
+    interval: number;
+    datestart: string;
+    dateend: string;
+    next_run: string;
+    last_run: string;
+    exec_time_limit: number;
+    failed_attempts: number;
+    status: number;
+    params: {};
+    allow_concurrent: boolean;
+    idkey: any;
+    schedule_mode: string;
+    cron: string;
+    timezone: string;
+    window_start: string;
+    window_end: string;
+    window_days: string;
+    max_failed_attempts: number;
+    history_limit: number;
+};
+/**
+ * Estados que el planificador escribe en `status`. La tabla y el editor muestran la
+ * etiqueta, nunca el número: un "3" no le dice nada a quien administra las tareas.
+ */
+export const IntervalTaskStatus: {
+    0: {
+        label: string;
+        background: string;
+        icon: string;
+        description: string;
+    };
+    1: {
+        label: string;
+        background: string;
+        icon: string;
+        description: string;
+    };
+    2: {
+        label: string;
+        background: string;
+        icon: string;
+        description: string;
+    };
+    3: {
+        label: string;
+        background: string;
+        icon: string;
+        description: string;
+    };
+    4: {
+        label: string;
+        background: string;
+        icon: string;
+        description: string;
+    };
+};
+export namespace IntervalTaskStatusFallback {
+    export let label: string;
+    export let background: string;
+    let icon_5: string;
+    export { icon_5 as icon };
+    let description_2: string;
+    export { description_2 as description };
+}
+/**
+ * Campos de `ofapi_intervaltask` que escribe el planificador, no el usuario. El editor
+ * los muestra como solo lectura y no los reenvía al guardar.
+ */
+export const INTERVAL_TASK_RUNTIME_FIELDS: string[];
 export function defaultValuesBot(bot: any): any;
 export namespace BotRuntimeStatus {
     namespace STOPPED {
-        export let label: string;
-        let color_5: string;
-        export { color_5 as color };
-        export let background: string;
-        let icon_5: string;
-        export { icon_5 as icon };
-        export let needsAction: boolean;
-        let description_2: string;
-        export { description_2 as description };
-    }
-    namespace STARTING {
         let label_1: string;
         export { label_1 as label };
-        let color_6: string;
-        export { color_6 as color };
+        let color_5: string;
+        export { color_5 as color };
         let background_1: string;
         export { background_1 as background };
         let icon_6: string;
         export { icon_6 as icon };
-        let needsAction_1: boolean;
-        export { needsAction_1 as needsAction };
+        export let needsAction: boolean;
         let description_3: string;
         export { description_3 as description };
     }
-    namespace RUNNING {
+    namespace STARTING {
         let label_2: string;
         export { label_2 as label };
-        let color_7: string;
-        export { color_7 as color };
+        let color_6: string;
+        export { color_6 as color };
         let background_2: string;
         export { background_2 as background };
         let icon_7: string;
         export { icon_7 as icon };
-        let needsAction_2: boolean;
-        export { needsAction_2 as needsAction };
+        let needsAction_1: boolean;
+        export { needsAction_1 as needsAction };
         let description_4: string;
         export { description_4 as description };
     }
-    namespace BACKOFF {
+    namespace RUNNING {
         let label_3: string;
         export { label_3 as label };
-        let color_8: string;
-        export { color_8 as color };
+        let color_7: string;
+        export { color_7 as color };
         let background_3: string;
         export { background_3 as background };
         let icon_8: string;
         export { icon_8 as icon };
-        let needsAction_3: boolean;
-        export { needsAction_3 as needsAction };
+        let needsAction_2: boolean;
+        export { needsAction_2 as needsAction };
         let description_5: string;
         export { description_5 as description };
     }
-    namespace QUARANTINED {
+    namespace BACKOFF {
         let label_4: string;
         export { label_4 as label };
-        let color_9: string;
-        export { color_9 as color };
+        let color_8: string;
+        export { color_8 as color };
         let background_4: string;
         export { background_4 as background };
         let icon_9: string;
         export { icon_9 as icon };
-        let needsAction_4: boolean;
-        export { needsAction_4 as needsAction };
+        let needsAction_3: boolean;
+        export { needsAction_3 as needsAction };
         let description_6: string;
         export { description_6 as description };
     }
-    namespace DISABLED_ERROR {
+    namespace QUARANTINED {
         let label_5: string;
         export { label_5 as label };
-        let color_10: string;
-        export { color_10 as color };
+        let color_9: string;
+        export { color_9 as color };
         let background_5: string;
         export { background_5 as background };
         let icon_10: string;
         export { icon_10 as icon };
-        let needsAction_5: boolean;
-        export { needsAction_5 as needsAction };
+        let needsAction_4: boolean;
+        export { needsAction_4 as needsAction };
         let description_7: string;
         export { description_7 as description };
+    }
+    namespace DISABLED_ERROR {
+        let label_6: string;
+        export { label_6 as label };
+        let color_10: string;
+        export { color_10 as color };
+        let background_6: string;
+        export { background_6 as background };
+        let icon_11: string;
+        export { icon_11 as icon };
+        let needsAction_5: boolean;
+        export { needsAction_5 as needsAction };
+        let description_8: string;
+        export { description_8 as description };
     }
 }
 export namespace BotRuntimeStatusFallback { }

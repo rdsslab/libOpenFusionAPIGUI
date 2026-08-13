@@ -24,3 +24,10 @@ export const storeEndpointOnStart = writable({});
 export const storeEndpointOnComplete = writable({});
 export const storeServerDynamicInformation = writable({});
 export const storeServerModelChanged = writable({});
+
+/**
+ * Última novedad publicada por el planificador de tareas: se emite al iniciar y al
+ * terminar cada ejecución, para que la tabla de interval tasks refleje el estado sin
+ * necesidad de recargar.
+ */
+export const storeIntervalTaskEvent = writable(null);

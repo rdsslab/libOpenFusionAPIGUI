@@ -16,6 +16,9 @@ export namespace url_paths {
     let getListIntervalTasksByIdApp: string;
     let upsertIntervalTasksByIdTask: string;
     let deleteIntervalTasksByIdTask: string;
+    let getIntervalTaskRuns: string;
+    let runNowIntervalTask: string;
+    let resetIntervalTaskAttempts: string;
     let getfunctions: string;
     let serverAPIVersion: string;
     let appBackup: string;

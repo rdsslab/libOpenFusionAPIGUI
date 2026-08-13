@@ -21,3 +21,9 @@ export const storeEndpointOnStart: import("svelte/store").Writable<{}>;
 export const storeEndpointOnComplete: import("svelte/store").Writable<{}>;
 export const storeServerDynamicInformation: import("svelte/store").Writable<{}>;
 export const storeServerModelChanged: import("svelte/store").Writable<{}>;
+/**
+ * Última novedad publicada por el planificador de tareas: se emite al iniciar y al
+ * terminar cada ejecución, para que la tabla de interval tasks refleje el estado sin
+ * necesidad de recargar.
+ */
+export const storeIntervalTaskEvent: import("svelte/store").Writable<any>;

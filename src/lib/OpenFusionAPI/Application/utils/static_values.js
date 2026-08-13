@@ -125,14 +125,93 @@ export const defaultValuesIntervalTask = (task) => {
 		exec_time_limit: 30,
 		failed_attempts: 0,
 		status: 0,
-		params: {}
+		params: {},
+		allow_concurrent: false,
+		idkey: null,
+		schedule_mode: 'interval',
+		cron: '',
+		timezone: '',
+		window_start: '',
+		window_end: '',
+		window_days: '',
+		max_failed_attempts: 10,
+		history_limit: 50
 	};
 
-	return {
+	// Un `undefined` que llegue en `task` no debe pisar el default: los `bind:` de los
+	// selects lanzan `props_invalid_value` si el campo enlazado queda sin valor.
+	const incoming = Object.fromEntries(
+		Object.entries(task || {}).filter(([, v]) => v !== undefined)
+	);
+
+	const merged = {
 		...baseTask,
-		...(task || {})
+		...incoming
 	};
+
+	// La API devuelve los TINYINT(1) como 1/0 e `Input type="boolean"` imprime el valor
+	// crudo, así que sin esto el editor muestra "1" y "0" en lugar de "true" y "false".
+	merged.enabled = !!merged.enabled;
+	merged.allow_concurrent = !!merged.allow_concurrent;
+
+	return merged;
 };
+
+/**
+ * Estados que el planificador escribe en `status`. La tabla y el editor muestran la
+ * etiqueta, nunca el número: un "3" no le dice nada a quien administra las tareas.
+ */
+export const IntervalTaskStatus = {
+	0: {
+		label: 'Waiting',
+		background: 'light',
+		icon: ' fa-solid fa-clock ',
+		description: 'Waiting for its next run.'
+	},
+	1: {
+		label: 'Running',
+		background: 'info',
+		icon: ' fa-solid fa-play ',
+		description: 'The task is running right now.'
+	},
+	2: {
+		label: 'OK',
+		background: 'success',
+		icon: ' fa-solid fa-circle-check ',
+		description: 'The last run finished successfully.'
+	},
+	3: {
+		label: 'Error',
+		background: 'danger',
+		icon: ' fa-solid fa-triangle-exclamation ',
+		description: 'The last run failed. Check the recorded response.'
+	},
+	4: {
+		label: 'Timeout',
+		background: 'warning',
+		icon: ' fa-solid fa-hourglass-end ',
+		description: 'The run exceeded its time limit and was aborted.'
+	}
+};
+
+export const IntervalTaskStatusFallback = {
+	label: 'Unknown',
+	background: 'light',
+	icon: ' fa-solid fa-circle-question ',
+	description: 'Unknown status.'
+};
+
+/**
+ * Campos de `ofapi_intervaltask` que escribe el planificador, no el usuario. El editor
+ * los muestra como solo lectura y no los reenvía al guardar.
+ */
+export const INTERVAL_TASK_RUNTIME_FIELDS = [
+	'status',
+	'last_run',
+	'next_run',
+	'last_exec_time',
+	'last_response'
+];
 
 export const defaultValuesBot = (bot) => {
 	const baseBot = {

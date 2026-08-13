@@ -12,6 +12,7 @@
 		storeEndpointOnStart,
 		storeServerDynamicInformation,
 		storeServerModelChanged,
+		storeIntervalTaskEvent,
 		statusSystemEndpointsStore
 	} from './utils/stores.js';
 
@@ -159,6 +160,10 @@
 
 			if (m && m.event_name == 'system_information') {
 				storeServerDynamicInformation.set(m.data);
+			} else if (m && m.event_name == 'interval_task') {
+				// Debe ir antes del filtro por idapp: el evento trae idapp, pero el widget de
+				// tareas necesita verlo aunque el usuario esté en otra aplicación abierta.
+				storeIntervalTaskEvent.set({ ...m.data, ts: m.timestamp });
 			} else if (m && m.data?.idapp == idapp) {
 				if (m && (m.event_name == 'cache_set' || m.event_name == 'cache_released')) {
 					storeCacheSize.update((value) => {

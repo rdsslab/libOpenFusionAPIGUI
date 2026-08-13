@@ -1,23 +1,35 @@
 <script>
-	import { onMount } from 'svelte';
+	import { untrack } from 'svelte';
 	import {
 		Table,
 		ColumnTypes,
 		SlideFullScreen,
 		Level,
+		Tab,
 		PredictiveInput,
-		Input
+		BasicSelect,
+		Input,
+		EditorCode
 	} from '@rdsslab/svelte-components';
-	import { defaultValuesIntervalTask } from '../../utils/static_values.js';
+	import {
+		defaultValuesIntervalTask,
+		INTERVAL_TASK_RUNTIME_FIELDS,
+		IntervalTaskStatus,
+		IntervalTaskStatusFallback
+	} from '../../utils/static_values.js';
 	import { url_paths } from '../../utils/paths.js';
 	import uFetch from '@rdsslab/uFetch';
 	import CellMethod from '../endpoints/columns/cellMethod.svelte';
+	import CellTaskStatus from './cellTaskStatus.svelte';
+	import TaskHistory from './history.svelte';
 	import {
 		userStore,
-		statusSystemEndpointsStore
+		statusSystemEndpointsStore,
+		storeIntervalTaskEvent
 	} from '../../utils/stores.js';
 	import {
 		GetEndpointsByIdapp,
+		GetAPIKeys,
 		restoreSystemEndpoints
 	} from '../../utils/request.js';
 
@@ -25,16 +37,63 @@
 
 	const uF = new uFetch();
 	let showEditor = $state(false);
-	let selectedRow = $state({ idendpoint: '?' });
+	let historyTask = $state({});
+	// Debe arrancar con la forma completa: los `bind:option` de BasicSelect fallan si el
+	// campo llega `undefined` en el primer render (SlideFullScreen monta su contenido
+	// aunque esté cerrado).
+	let selectedRow = $state(defaultValuesIntervalTask({}));
 	let optionsEndpoints = $state([]);
 	let endpoints = $state([]);
+	let optionsApiKeys = $state([]);
+
+	let activeTab = $state(0);
+	const TAB_HISTORY = 2;
+	let tabList = $state([
+		{
+			name: 'config',
+			label: 'Configuration',
+			component: tab_config,
+			classIcon: 'fa-solid fa-sliders'
+		},
+		{
+			name: 'params',
+			label: 'Parameters',
+			component: tab_params,
+			classIcon: 'fa-solid fa-code'
+		},
+		{
+			name: 'history',
+			label: 'History',
+			component: tab_history,
+			classIcon: 'fa-solid fa-clock-rotate-left',
+			disabled: true
+		}
+	]);
+
+	/** Abre siempre en Configuration; History solo existe si la tarea ya está guardada. */
+	function resetTabs() {
+		activeTab = 0;
+		tabList[TAB_HISTORY].disabled = !selectedRow.idtask;
+	}
+
+	// BasicSelect espera {id, value}: `id` es el valor guardado y `value` la etiqueta.
+	const scheduleModes = [
+		{ id: 'interval', value: 'Interval (every N seconds)' },
+		{ id: 'cron', value: 'Cron (time expression)' }
+	];
+
+	// Selección simple: las acciones por fila (Run now, Reset attempts) operan sobre una.
+	let selectionType = $state(1);
 
 	let DataTableTasks = $state([]);
+	// Toda clave que devuelva la API y no esté declarada aquí se renderiza cruda, así que
+	// los campos nuevos deben aparecer todos, aunque sea para ocultarlos.
 	let columns = $state({
 		idtask: { hidden: true },
 		idendpoint: { hidden: true },
 		iduser: { hidden: true },
 		idapp: { hidden: true },
+		idkey: { hidden: true },
 		task_enabled: {
 			label: 'Enabled Task',
 			decorator: {
@@ -59,7 +118,21 @@
 		},
 		method: { label: 'method', decorator: { component: CellMethod } },
 		url: { label: 'url' },
+		status: { label: 'Status', decorator: { component: CellTaskStatus } },
+		schedule_mode: { label: 'Mode' },
 		interval: {},
+		cron: { label: 'cron' },
+		allow_concurrent: {
+			label: 'Concurrent',
+			decorator: {
+				component: ColumnTypes.Boolean,
+				props: {
+					ontrue: { label: 'Allowed' },
+					onfalse: { label: 'Blocked' },
+					editInline: false
+				}
+			}
+		},
 		datestart: {
 			label: 'datestart',
 			decorator: {
@@ -88,14 +161,66 @@
 		params: {},
 		exec_time_limit: {},
 		failed_attempts: {},
-		status: {},
+		max_failed_attempts: { label: 'Max fails' },
 		last_exec_time: {},
 		last_response: {},
+		timezone: { hidden: true },
+		window_start: { label: 'Window from' },
+		window_end: { label: 'Window to' },
+		window_days: { label: 'Days' },
+		history_limit: { hidden: true },
+		access: { hidden: true },
 		app: { hidden: true },
 		resource: { hidden: true },
 		environment: { hidden: true },
 		app_enabled: { hidden: true }
 	});
+
+	// El panel de runtime se deriva de la fila de la tabla, no de `selectedRow`: ese es el
+	// borrador editable y refrescarlo pisaría los cambios sin guardar. `DataTableTasks` ya
+	// lo mantiene al día el efecto de websocket de más abajo, así que el estado en vivo no
+	// cuesta ninguna suscripción extra.
+	let runtime = $derived(
+		selectedRow.idtask
+			? DataTableTasks.find((t) => String(t.idtask) === String(selectedRow.idtask)) || null
+			: null
+	);
+	let runtimeStatus = $derived(
+		runtime ? IntervalTaskStatus[Number(runtime.status)] || IntervalTaskStatusFallback : null
+	);
+
+	let nextIn = $derived.by(() => {
+		if (!runtime?.next_run) return '';
+
+		const seconds = Math.round((new Date(runtime.next_run).getTime() - Date.now()) / 1000);
+		if (!Number.isFinite(seconds)) return '';
+		if (seconds <= 0) return 'now';
+		if (seconds < 60) return `${seconds}s`;
+		if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
+		return `${Math.round(seconds / 3600)}h`;
+	});
+
+	// `last_response` puede venir como objeto o como texto plano según lo que devolviera
+	// el endpoint; en el panel siempre se muestra legible.
+	let lastResponse = $derived.by(() => {
+		const value = runtime?.last_response;
+		if (value === null || value === undefined || value === '') return '';
+		if (typeof value === 'string') return value;
+
+		try {
+			return JSON.stringify(value, null, 2);
+		} catch (error) {
+			return String(value);
+		}
+	});
+
+	/** Formatea una fecha del servidor; devuelve '—' si no hay valor. */
+	function formatMoment(value) {
+		if (!value) return '—';
+
+		const date = new Date(value);
+		return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+	}
 
 	$effect(async () => {
 		idapp;
@@ -110,54 +235,76 @@
 				});
 			}
 		}
+
+		await loadApiKeys();
 	});
+
+	// El planificador publica el inicio y el final de cada ejecución: se refleja en la
+	// fila sin recargar toda la tabla. El efecto sólo debe depender del evento: leer
+	// `DataTableTasks` aquí sin `untrack` lo reactiva con su propia escritura.
+	$effect(() => {
+		const ev = $storeIntervalTaskEvent;
+		if (!ev?.idtask) return;
+
+		untrack(() => {
+			DataTableTasks = DataTableTasks.map((t) => {
+				if (String(t.idtask) !== String(ev.idtask)) return t;
+
+				return {
+					...t,
+					status: ev.status,
+					last_run: ev.started_at || t.last_run,
+					last_exec_time:
+						ev.duration_ms !== undefined && ev.duration_ms !== null
+							? Math.round(ev.duration_ms)
+							: t.last_exec_time
+				};
+			});
+
+			// El evento no trae next_run, failed_attempts ni last_response, así que el panel
+			// del editor se quedaría con valores viejos. Recargar solo con el editor abierto
+			// sobre esta misma tarea y en el evento de fin: como mucho una recarga por
+			// ejecución de la tarea que se está viendo.
+			if (
+				showEditor &&
+				Number(ev.status) !== 1 &&
+				String(ev.idtask) === String(selectedRow.idtask)
+			) {
+				loadTasks();
+			}
+		});
+	});
+
+	async function loadApiKeys() {
+		if (!idapp) {
+			optionsApiKeys = [];
+			return;
+		}
+
+		try {
+			const keys = await GetAPIKeys(idapp);
+			optionsApiKeys = [
+				{ id: null, value: '— Sin API Key —' },
+				...(Array.isArray(keys) ? keys : []).map((k) => ({
+					id: k.idkey,
+					value: `#${k.idkey} ${k.description || ''} ${k.enabled ? '' : '(disabled)'}`.trim()
+				}))
+			];
+		} catch (error) {
+			console.error('Error loading api keys:', error);
+			optionsApiKeys = [{ id: null, value: '— Sin API Key —' }];
+		}
+	}
 
 	async function loadTasks() {
 		if (idapp) {
 			let resp = await uF.get({ url: url_paths.getListIntervalTasksByIdApp, data: { idapp } });
 			let jresp = await resp.json();
-			//	console.log('++++>>>>>>>>>>>>>', jresp);
 			let status_sys_endp = await restoreSystemEndpoints(false, $userStore.token);
 			statusSystemEndpointsStore.set(status_sys_endp);
-			/**
- * 
- [
-    {
-        "idapp": "08a964fe-e605-405d-a2e1-db2cead9fbf7",
-        "app": "facturacion_electronica",
-        "enabled": true,
-        "tasks": [
-            {
-                "params": {},
-                "last_response": {
-                    "funcionando": true
-                },
-                "idtask": "3",
-                "timestamp": "1900-01-01T00:00:00.000Z",
-                "iduser": null,
-                "idapp": "08a964fe-e605-405d-a2e1-db2cead9fbf7",
-                "enabled": true,
-                "interval": "300",
-                "datestart": "2021-01-01T00:00:00.000Z",
-                "dateend": "2034-01-01T00:00:00.000Z",
-                "next_run": "2025-03-26T13:54:47.104Z",
-                "last_run": "2025-03-26T13:49:47.104Z",
-                "url": "/api/facturacion_electronica/validacion/servicio/sri/prd",
-                "method": "GET",
-                "exec_time_limit": "30",
-                "failed_attempts": 0,
-                "status": 2,
-                "last_exec_time": "4350"
-            }
-        ]
-    }
-]
- * */
 
 			if (Array.isArray(jresp)) {
-				//console.log(jresp);
 				DataTableTasks = jresp;
-				//	console.log('DataTableTasks', DataTableTasks);
 			} else {
 				DataTableTasks = [];
 			}
@@ -166,15 +313,45 @@
 		}
 	}
 
+	/** `params` llega como objeto desde la API, pero se normaliza por si viniera serializado. */
+	function normalizeParams(row) {
+		if (typeof row.params === 'string') {
+			try {
+				row.params = JSON.parse(row.params || '{}');
+			} catch (error) {
+				row.params = {};
+			}
+		} else if (!row.params || typeof row.params !== 'object') {
+			row.params = {};
+		}
+		return row;
+	}
+
 	async function saveInterval() {
 		if (idapp) {
 			let row = $state.snapshot(selectedRow);
-			console.log('saveInterval >>>>>>>>>>>>>', row);
+			row.params = row.params ?? {};
+
+			// El estado y las marcas de tiempo los escribe el planificador: reenviarlos
+			// sobrescribiría el estado real con la copia tomada al abrir el editor.
+			for (const field of INTERVAL_TASK_RUNTIME_FIELDS) delete row[field];
+
+			if (row.schedule_mode !== 'cron') row.cron = null;
+			if (row.idkey === '' || row.idkey === undefined) row.idkey = null;
+
 			let resp = await uF.post({ url: url_paths.upsertIntervalTasksByIdTask, data: row });
 			let jresp = await resp.json();
-			//console.log('saveInterval >>>>>>>>>>>>>', selectedRow, jresp);
+
+			if (!resp.ok) {
+				alert(`No se pudo guardar la tarea: ${jresp?.error || resp.statusText}`);
+				return false;
+			}
+
 			await loadTasks();
+			return true;
 		}
+
+		return false;
 	}
 
 	async function deleteTasks(tasks) {
@@ -182,44 +359,96 @@
 			return t.idtask;
 		});
 
-		console.log('deleteTasks >>>>>>>>>>>>>', idtasks, url_paths.deleteIntervalTasksByIdTask);
 		let resp = await uF.DELETE({ url: url_paths.deleteIntervalTasksByIdTask, data: idtasks });
-		let jresp = await resp.json();
-		//console.log('saveInterval >>>>>>>>>>>>>', selectedRow, jresp);
+		await resp.json();
 		await loadTasks();
 	}
 
-	onMount(() => {
-		selectedRow = defaultValuesIntervalTask({});
-		//loadTasks();
-	});
+	async function runNow(task) {
+		if (!task?.idtask) return;
+
+		const resp = await uF.post({
+			url: url_paths.runNowIntervalTask,
+			data: { idtask: task.idtask }
+		});
+		const jresp = await resp.json();
+
+		if (!jresp?.success) alert(jresp?.message || 'No se pudo programar la ejecución.');
+		await loadTasks();
+	}
+
+	async function resetAttempts(task) {
+		if (!task?.idtask) return;
+
+		const resp = await uF.post({
+			url: url_paths.resetIntervalTaskAttempts,
+			data: { idtask: task.idtask }
+		});
+		const jresp = await resp.json();
+
+		if (!jresp?.success) alert(jresp?.message || 'No se pudo reiniciar el contador.');
+		await loadTasks();
+	}
 </script>
 
 <Table
 	bind:RawDataTable={DataTableTasks}
 	bind:columns
+	bind:selectionType
 	showEditRow={true}
 	showNewButton={true}
 	showDeleteButton={true}
 	showEditButton={true}
+	right_items={[taskActions]}
 	oneditrow={(r) => {
-		//console.log('TABLE > ', r);
-		selectedRow = defaultValuesIntervalTask(r);
-		selectedRow.enabled = r.task_enabled;
+		selectedRow = normalizeParams(defaultValuesIntervalTask(r));
+		// La lista devuelve el flag como `task_enabled` y como TINYINT(1): sin `!!` el
+		// botón booleano mostraría "1" en lugar de "true".
+		selectedRow.enabled = !!r.task_enabled;
+		resetTabs();
 		showEditor = true;
 	}}
 	onnewrow={() => {
-		selectedRow = defaultValuesIntervalTask({});
-		console.log('TABLE > NEW ', selectedRow, idapp);
+		selectedRow = normalizeParams(defaultValuesIntervalTask({}));
+		resetTabs();
 		showEditor = true;
 	}}
+	onselectrows={(selected) => {
+		historyTask = selected?.rows?.length === 1 ? selected.rows[0] : {};
+	}}
 	ondeleterow={async (r) => {
-		console.log('TABLE > DELETE ', r);
 		if (r.rows.length > 0 && confirm('Are you sure you want to delete this task?')) {
 			await deleteTasks(r.rows);
 		}
 	}}
-></Table>
+>
+	{#snippet taskActions()}
+		<div class="field has-addons">
+			<p class="control">
+				<button
+					class="button is-small"
+					disabled={!historyTask?.idtask}
+					title="Ejecuta la tarea en el próximo ciclo del planificador (~10 s)"
+					onclick={() => runNow(historyTask)}
+				>
+					<span class="icon is-small"><i class="fa-solid fa-bolt"></i></span>
+					<span>Run now</span>
+				</button>
+			</p>
+			<p class="control">
+				<button
+					class="button is-small"
+					disabled={!historyTask?.idtask}
+					title="Reinicia el contador de fallos y reactiva la tarea si el backoff la deshabilitó"
+					onclick={() => resetAttempts(historyTask)}
+				>
+					<span class="icon is-small"><i class="fa-solid fa-rotate-left"></i></span>
+					<span>Reset attempts</span>
+				</button>
+			</p>
+		</div>
+	{/snippet}
+</Table>
 
 {#if idapp}
 	<SlideFullScreen bind:show={showEditor}>
@@ -230,9 +459,7 @@
 						<button
 							class="button is-small is-link"
 							onclick={async () => {
-								//	confirmSaveApp();
-								await saveInterval();
-								showEditor = false;
+								if (await saveInterval()) showEditor = false;
 							}}
 						>
 							<span class="icon is-small">
@@ -245,14 +472,11 @@
 						<button
 							class="button is-small"
 							onclick={() => {
-								//console.log('app Actual', app, app_vars);
-
 								if (
 									confirm(
 										'If you cancel, you will lose absolutely all changes made to the app. Do you want to continue?'
 									)
 								) {
-									//	getApp();
 									showEditor = false;
 								}
 							}}
@@ -267,55 +491,184 @@
 			{/snippet}
 		</Level>
 
+		{#if runtime && runtimeStatus}
+			<!-- Solo lectura: lo escribe el planificador. Se actualiza solo porque
+			     `DataTableTasks` se parchea con cada evento de websocket. -->
+			<div class="box py-3">
+				<div class="level is-mobile mb-2">
+					<div class="level-left">
+						<span class="icon-text">
+							<span class="icon"><i class={runtimeStatus.icon}></i></span>
+							<span class="has-text-weight-semibold">Runtime status</span>
+						</span>
+					</div>
+					<div class="level-right">
+						<span class="tag is-{runtimeStatus.background}">{runtimeStatus.label}</span>
+					</div>
+				</div>
+				<p class="help mb-3">{runtimeStatus.description}</p>
+
+				<div class="columns is-multiline is-mobile mb-0">
+					<div class="column is-one-quarter">
+						<p class="heading">Last run</p>
+						<p>{formatMoment(runtime.last_run)}</p>
+					</div>
+					<div class="column is-one-quarter">
+						<p class="heading">Next run</p>
+						<p>{formatMoment(runtime.next_run)}{nextIn ? ` (in ${nextIn})` : ''}</p>
+					</div>
+					<div class="column is-one-quarter">
+						<p class="heading">Last duration</p>
+						<p>{runtime.last_exec_time ? `${runtime.last_exec_time} ms` : '—'}</p>
+					</div>
+					<div class="column is-one-quarter">
+						<p class="heading">Failed attempts</p>
+						<p
+							class:has-text-danger={Number(runtime.max_failed_attempts ?? 0) > 0 &&
+								Number(runtime.failed_attempts ?? 0) >= Number(runtime.max_failed_attempts)}
+						>
+							{runtime.failed_attempts ?? 0} / {runtime.max_failed_attempts ?? 0}
+						</p>
+					</div>
+				</div>
+
+				{#if lastResponse}
+					<p class="heading">Last response</p>
+					<pre class="is-size-7 last-response">{lastResponse}</pre>
+				{/if}
+			</div>
+		{/if}
+
 		<div>
-			<PredictiveInput
-				label="Url"
-				classLabel="is-small"
-				classInput="is-small"
-				bind:options={optionsEndpoints}
-				bind:selectedValue={selectedRow.idendpoint}
-				onselect={(e) => {
-					console.log(e, selectedRow);
-				}}
-			/>
-
-			<div class="columns">
-				<div class="column is-one-third">
-					<Input type="number" label="Exec time limit: " bind:value={selectedRow.exec_time_limit}
-					></Input>
-				</div>
-				<div class="column is-one-third">
-					<Input type="number" label="Fail attemps: " bind:value={selectedRow.failed_attempts}
-					></Input>
-				</div>
-				<div class="column is-one-third">
-					<Input type="number" label="Status: " bind:value={selectedRow.status}></Input>
-				</div>
-			</div>
-
-			<div class="columns">
-				<div class="column is-one-third">
-					<Input type="datetime-local" label="Date End: " bind:value={selectedRow.dateend}></Input>
-				</div>
-				<div class="column is-one-third">
-					<Input type="datetime-local" label="Last run: " bind:value={selectedRow.last_run}></Input>
-				</div>
-				<div class="column is-one-third">
-					<Input type="datetime-local" label="Next run: " bind:value={selectedRow.next_run}></Input>
-				</div>
-			</div>
-			<div class="columns">
-				<div class="column is-one-third">
-					<Input type="boolean" label="Enabled" bind:value={selectedRow.enabled}></Input>
-				</div>
-				<div class="column is-one-third">
-					<Input type="number" label="Interval: " bind:value={selectedRow.interval}></Input>
-				</div>
-				<div class="column is-one-third">
-					<Input type="datetime-local" label="Date Start: " bind:value={selectedRow.datestart}
-					></Input>
-				</div>
-			</div>
+			<Tab bind:tabs={tabList} bind:active={activeTab}></Tab>
 		</div>
 	</SlideFullScreen>
 {/if}
+
+{#snippet tab_config()}
+	<div>
+		<PredictiveInput
+			label="Url"
+			classLabel="is-small"
+			classInput="is-small"
+			bind:options={optionsEndpoints}
+			bind:selectedValue={selectedRow.idendpoint}
+		/>
+
+		<div class="columns">
+			<div class="column is-one-third">
+				<Input type="boolean" label="Enabled" bind:value={selectedRow.enabled}></Input>
+			</div>
+			<div class="column is-one-third">
+				<!-- Con esto en false el planificador salta el ciclo mientras la ejecución
+				     anterior siga en curso, que es el comportamiento seguro por defecto. -->
+				<Input type="boolean" label="Allow concurrent" bind:value={selectedRow.allow_concurrent}
+				></Input>
+			</div>
+			<div class="column is-one-third">
+				<BasicSelect
+					label="API Key (auth)"
+					bind:options={optionsApiKeys}
+					bind:option={selectedRow.idkey}
+				/>
+			</div>
+		</div>
+
+		<div class="columns">
+			<div class="column is-one-third">
+				<BasicSelect
+					label="Schedule mode"
+					options={scheduleModes}
+					bind:option={selectedRow.schedule_mode}
+				/>
+			</div>
+			{#if selectedRow.schedule_mode === 'cron'}
+				<div class="column is-one-third">
+					<Input type="text" label="Cron: " bind:value={selectedRow.cron}></Input>
+				</div>
+			{:else}
+				<div class="column is-one-third">
+					<Input type="number" label="Interval (s): " bind:value={selectedRow.interval}></Input>
+				</div>
+			{/if}
+			<div class="column is-one-third">
+				<Input type="number" label="Exec time limit (s): " bind:value={selectedRow.exec_time_limit}
+				></Input>
+			</div>
+		</div>
+
+		<!-- La ventana la aplica el planificador en los dos modos (interval y cron), no
+		     solo en cron, así que se muestra siempre. -->
+		<p class="label is-small mb-2">Execution window (optional)</p>
+		<div class="columns">
+			<div class="column is-one-quarter">
+				<Input type="text" label="Timezone (IANA): " bind:value={selectedRow.timezone}></Input>
+			</div>
+			<div class="column is-one-quarter">
+				<Input type="text" label="Window start (HH:MM): " bind:value={selectedRow.window_start}
+				></Input>
+			</div>
+			<div class="column is-one-quarter">
+				<Input type="text" label="Window end (HH:MM): " bind:value={selectedRow.window_end}></Input>
+			</div>
+			<div class="column is-one-quarter">
+				<Input type="text" label="Days (1=Mon .. 7=Sun): " bind:value={selectedRow.window_days}
+				></Input>
+			</div>
+		</div>
+
+		<div class="columns">
+			<div class="column is-one-third">
+				<Input type="datetime-local" label="Date Start: " bind:value={selectedRow.datestart}
+				></Input>
+			</div>
+			<div class="column is-one-third">
+				<Input type="datetime-local" label="Date End: " bind:value={selectedRow.dateend}></Input>
+			</div>
+			<div class="column is-one-third"></div>
+		</div>
+
+		<p class="label is-small mb-2">Failure handling</p>
+		<div class="columns">
+			<div class="column is-one-third">
+				<Input
+					type="number"
+					label="Max failed attempts: "
+					bind:value={selectedRow.max_failed_attempts}
+				></Input>
+			</div>
+			<div class="column is-one-third">
+				<Input type="number" label="Fail attempts: " bind:value={selectedRow.failed_attempts}
+				></Input>
+			</div>
+			<div class="column is-one-third">
+				<Input type="number" label="History limit: " bind:value={selectedRow.history_limit}></Input>
+			</div>
+		</div>
+	</div>
+{/snippet}
+
+{#snippet tab_params()}
+	<!-- El planificador espera { data: {...}, headers: {...} }; con lang="json"
+	     EditorCode trabaja sobre el objeto y no propaga JSON inválido. -->
+	<EditorCode lang="json" showFormat={true} bind:code={selectedRow.params}></EditorCode>
+{/snippet}
+
+{#snippet tab_history()}
+	<!-- Tab monta todos los contenidos a la vez y solo los oculta con display:none, así
+	     que sin esta guarda el historial se montaría con la tarea vacía y no se
+	     recargaría al cambiar de tarea. -->
+	{#if activeTab === TAB_HISTORY && selectedRow.idtask}
+		<TaskHistory task={selectedRow} />
+	{/if}
+{/snippet}
+
+<style>
+	/* Una respuesta larga no debe empujar el formulario fuera de la pantalla. */
+	.last-response {
+		max-height: 12rem;
+		overflow: auto;
+		white-space: pre-wrap;
+		word-break: break-word;
+	}
+</style>
