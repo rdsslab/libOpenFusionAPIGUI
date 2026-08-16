@@ -1,3 +1,15 @@
+/**
+ * `status` conserva el resultado de la última corrida cuando esta termina. Para mostrar
+ * el estado operativo actual, toda tarea que no esté ejecutándose vuelve a Waiting.
+ */
+export function getIntervalTaskRuntimeStatus(value: any): {
+    label: string;
+    background: string;
+    icon: string;
+    description: string;
+};
+/** Resultado de la última ejecución, separado del estado operativo actual. */
+export function getIntervalTaskLastResultStatus(value: any): any;
 export const listAccessMethod: {
     value: string;
     id: number;
@@ -144,6 +156,7 @@ export function defaultValuesIntervalTask(task: any): {
     window_days: string;
     max_failed_attempts: number;
     history_limit: number;
+    note: string;
 };
 /**
  * Estados que el planificador escribe en `status`. La tabla y el editor muestran la

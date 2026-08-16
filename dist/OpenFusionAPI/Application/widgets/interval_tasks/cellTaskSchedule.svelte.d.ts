@@ -1,15 +1,13 @@
-export default CellTaskStatus;
-type CellTaskStatus = {
+export default CellTaskSchedule;
+type CellTaskSchedule = {
     $on?(type: string, callback: (e: any) => void): () => void;
     $set?(props: Partial<$$ComponentProps>): void;
 };
-declare const CellTaskStatus: import("svelte").Component<{
+declare const CellTaskSchedule: import("svelte").Component<{
     value?: any;
     row?: any;
-    currentState?: boolean;
 }, {}, "value" | "row">;
 type $$ComponentProps = {
     value?: any;
     row?: any;
-    currentState?: boolean;
 };
