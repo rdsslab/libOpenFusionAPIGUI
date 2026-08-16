@@ -1,12 +1,16 @@
 <script>
 	import {
+		getIntervalTaskLastResultStatus,
+		getIntervalTaskRuntimeStatus,
 		IntervalTaskStatus,
 		IntervalTaskStatusFallback
 	} from '$lib/OpenFusionAPI/Application/utils/static_values.js';
 
-	let { value = $bindable(), row = $bindable() } = $props();
+	let { value = $bindable(), row = $bindable(), currentState = false } = $props();
 
-	let status = $derived(IntervalTaskStatus[Number(value)] || IntervalTaskStatusFallback);
+	let recordedStatus = $derived(IntervalTaskStatus[Number(value)] || IntervalTaskStatusFallback);
+	let status = $derived(currentState ? getIntervalTaskRuntimeStatus(value) : recordedStatus);
+	let lastResultStatus = $derived(currentState ? getIntervalTaskLastResultStatus(value) : null);
 
 	// Una tarea que falla se reintenta sola con espera creciente, así que lo útil no es
 	// repetir el error sino cuándo vuelve a intentarlo.
@@ -23,6 +27,7 @@
 	let title = $derived(
 		[
 			status.description,
+			lastResultStatus ? `Último resultado: ${lastResultStatus.label}` : '',
 			row?.failed_attempts ? `Fallos consecutivos: ${row.failed_attempts}` : '',
 			row?.last_exec_time ? `Última duración: ${row.last_exec_time} ms` : ''
 		]
@@ -41,7 +46,7 @@
 		</span>
 		{#if row?.failed_attempts > 0}
 			<span class="tag is-dark">{row.failed_attempts} fails</span>
-		{:else if nextIn && Number(value) !== 1}
+		{:else if nextIn && status === IntervalTaskStatus[0]}
 			<span class="tag is-dark">next {nextIn}</span>
 		{/if}
 	</div>

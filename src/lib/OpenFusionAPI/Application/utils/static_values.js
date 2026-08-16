@@ -116,7 +116,7 @@ export const defaultValuesIntervalTask = (task) => {
 		idendpoint: '',
 		iduser: null,
 		idapp: '',
-		enabled: true,
+		enabled: false,
 		interval: 300,
 		datestart: '',
 		dateend: '',
@@ -135,7 +135,8 @@ export const defaultValuesIntervalTask = (task) => {
 		window_end: '',
 		window_days: '',
 		max_failed_attempts: 10,
-		history_limit: 50
+		history_limit: 50,
+		note: ''
 	};
 
 	// Un `undefined` que llegue en `task` no debe pisar el default: los `bind:` de los
@@ -200,6 +201,20 @@ export const IntervalTaskStatusFallback = {
 	icon: ' fa-solid fa-circle-question ',
 	description: 'Unknown status.'
 };
+
+/**
+ * `status` conserva el resultado de la última corrida cuando esta termina. Para mostrar
+ * el estado operativo actual, toda tarea que no esté ejecutándose vuelve a Waiting.
+ */
+export function getIntervalTaskRuntimeStatus(value) {
+	return Number(value) === 1 ? IntervalTaskStatus[1] : IntervalTaskStatus[0];
+}
+
+/** Resultado de la última ejecución, separado del estado operativo actual. */
+export function getIntervalTaskLastResultStatus(value) {
+	const numericStatus = Number(value);
+	return numericStatus >= 2 && numericStatus <= 4 ? IntervalTaskStatus[numericStatus] : null;
+}
 
 /**
  * Campos de `ofapi_intervaltask` que escribe el planificador, no el usuario. El editor

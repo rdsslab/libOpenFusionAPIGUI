@@ -13,14 +13,16 @@
 	} from '@rdsslab/svelte-components';
 	import {
 		defaultValuesIntervalTask,
+		getIntervalTaskLastResultStatus,
+		getIntervalTaskRuntimeStatus,
 		INTERVAL_TASK_RUNTIME_FIELDS,
-		IntervalTaskStatus,
-		IntervalTaskStatusFallback
+		IntervalTaskStatus
 	} from '$lib/OpenFusionAPI/Application/utils/static_values.js';
 	import { url_paths } from '$lib/OpenFusionAPI/Application/utils/paths.js';
 	import uFetch from '@rdsslab/uFetch';
 	import CellMethod from '$lib/OpenFusionAPI/Application/widgets/endpoints/columns/cellMethod.svelte';
 	import CellTaskStatus from '$lib/OpenFusionAPI/Application/widgets/interval_tasks/cellTaskStatus.svelte';
+	import CellTaskSchedule from '$lib/OpenFusionAPI/Application/widgets/interval_tasks/cellTaskSchedule.svelte';
 	import TaskHistory from '$lib/OpenFusionAPI/Application/widgets/interval_tasks/history.svelte';
 	import {
 		userStore,
@@ -67,6 +69,12 @@
 			component: tab_history,
 			classIcon: 'fa-solid fa-clock-rotate-left',
 			disabled: true
+		},
+		{
+			name: 'guide',
+			label: 'Guide',
+			component: tab_guide,
+			classIcon: 'fa-solid fa-book'
 		}
 	]);
 
@@ -118,10 +126,13 @@
 		},
 		method: { label: 'method', decorator: { component: CellMethod } },
 		url: { label: 'url' },
-		status: { label: 'Status', decorator: { component: CellTaskStatus } },
-		schedule_mode: { label: 'Mode' },
-		interval: {},
-		cron: { label: 'cron' },
+		status: {
+			label: 'Status',
+			decorator: { component: CellTaskStatus, props: { currentState: true } }
+		},
+		schedule_mode: { label: 'Schedule', decorator: { component: CellTaskSchedule } },
+		interval: { hidden: true },
+		cron: { hidden: true },
 		allow_concurrent: {
 			label: 'Concurrent',
 			decorator: {
@@ -169,6 +180,7 @@
 		window_end: { label: 'Window to' },
 		window_days: { label: 'Days' },
 		history_limit: { hidden: true },
+		note: { hidden: true },
 		access: { hidden: true },
 		app: { hidden: true },
 		resource: { hidden: true },
@@ -185,9 +197,8 @@
 			? DataTableTasks.find((t) => String(t.idtask) === String(selectedRow.idtask)) || null
 			: null
 	);
-	let runtimeStatus = $derived(
-		runtime ? IntervalTaskStatus[Number(runtime.status)] || IntervalTaskStatusFallback : null
-	);
+	let runtimeStatus = $derived(runtime ? getIntervalTaskRuntimeStatus(runtime.status) : null);
+	let lastResultStatus = $derived(runtime ? getIntervalTaskLastResultStatus(runtime.status) : null);
 
 	let nextIn = $derived.by(() => {
 		if (!runtime?.next_run) return '';
@@ -336,7 +347,11 @@
 			// sobrescribiría el estado real con la copia tomada al abrir el editor.
 			for (const field of INTERVAL_TASK_RUNTIME_FIELDS) delete row[field];
 
-			if (row.schedule_mode !== 'cron') row.cron = null;
+			if (row.schedule_mode === 'cron') {
+				delete row.interval;
+			} else {
+				row.cron = null;
+			}
 			if (row.idkey === '' || row.idkey === undefined) row.idkey = null;
 
 			let resp = await uF.post({ url: url_paths.upsertIntervalTasksByIdTask, data: row });
@@ -428,7 +443,7 @@
 				<button
 					class="button is-small"
 					disabled={!historyTask?.idtask}
-					title="Ejecuta la tarea en el próximo ciclo del planificador (~10 s)"
+					title="Despierta el planificador y ejecuta la tarea inmediatamente"
 					onclick={() => runNow(historyTask)}
 				>
 					<span class="icon is-small"><i class="fa-solid fa-bolt"></i></span>
@@ -503,7 +518,14 @@
 						</span>
 					</div>
 					<div class="level-right">
-						<span class="tag is-{runtimeStatus.background}">{runtimeStatus.label}</span>
+						<div class="tags">
+							<span class="tag is-{runtimeStatus.background}">{runtimeStatus.label}</span>
+							{#if lastResultStatus}
+								<span class="tag is-{lastResultStatus.background}">
+									Last result: {lastResultStatus.label}
+								</span>
+							{/if}
+						</div>
 					</div>
 				</div>
 				<p class="help mb-3">{runtimeStatus.description}</p>
@@ -549,6 +571,7 @@
 	<div>
 		<PredictiveInput
 			label="Url"
+			placeholder="Select the endpoint this task will call"
 			classLabel="is-small"
 			classInput="is-small"
 			bind:options={optionsEndpoints}
@@ -584,15 +607,29 @@
 			</div>
 			{#if selectedRow.schedule_mode === 'cron'}
 				<div class="column is-one-third">
-					<Input type="text" label="Cron: " bind:value={selectedRow.cron}></Input>
+					<Input type="text" label="Cron: " placeholder="0 7 * * 1-5" bind:value={selectedRow.cron}
+					></Input>
 				</div>
 			{:else}
 				<div class="column is-one-third">
-					<Input type="number" label="Interval (s): " bind:value={selectedRow.interval}></Input>
+					<Input
+						type="number"
+						label="Interval (s): "
+						placeholder="300"
+						min={1}
+						step={1}
+						bind:value={selectedRow.interval}
+					></Input>
 				</div>
 			{/if}
 			<div class="column is-one-third">
-				<Input type="number" label="Exec time limit (s): " bind:value={selectedRow.exec_time_limit}
+				<Input
+					type="number"
+					label="Exec time limit (s): "
+					placeholder="30"
+					min={1}
+					step={1}
+					bind:value={selectedRow.exec_time_limit}
 				></Input>
 			</div>
 		</div>
@@ -602,30 +639,67 @@
 		<p class="label is-small mb-2">Execution window (optional)</p>
 		<div class="columns">
 			<div class="column is-one-quarter">
-				<Input type="text" label="Timezone (IANA): " bind:value={selectedRow.timezone}></Input>
-			</div>
-			<div class="column is-one-quarter">
-				<Input type="text" label="Window start (HH:MM): " bind:value={selectedRow.window_start}
+				<Input
+					type="text"
+					label="Timezone (IANA): "
+					placeholder="America/Guayaquil"
+					bind:value={selectedRow.timezone}
 				></Input>
 			</div>
 			<div class="column is-one-quarter">
-				<Input type="text" label="Window end (HH:MM): " bind:value={selectedRow.window_end}></Input>
+				<Input
+					type="text"
+					label="Window start (HH:MM): "
+					placeholder="08:00"
+					pattern="^([01][0-9]|2[0-3]):[0-5][0-9]$"
+					bind:value={selectedRow.window_start}
+				></Input>
 			</div>
 			<div class="column is-one-quarter">
-				<Input type="text" label="Days (1=Mon .. 7=Sun): " bind:value={selectedRow.window_days}
+				<Input
+					type="text"
+					label="Window end (HH:MM): "
+					placeholder="18:00"
+					pattern="^([01][0-9]|2[0-3]):[0-5][0-9]$"
+					bind:value={selectedRow.window_end}
+				></Input>
+			</div>
+			<div class="column is-one-quarter">
+				<Input
+					type="text"
+					label="Days (1=Mon .. 7=Sun): "
+					placeholder="1,2,3,4,5"
+					pattern="^[1-7](,[1-7])*$"
+					bind:value={selectedRow.window_days}
 				></Input>
 			</div>
 		</div>
 
 		<div class="columns">
 			<div class="column is-one-third">
-				<Input type="datetime-local" label="Date Start: " bind:value={selectedRow.datestart}
+				<Input
+					type="datetime-local"
+					label="Date Start: "
+					placeholder="Optional start date"
+					bind:value={selectedRow.datestart}
 				></Input>
 			</div>
 			<div class="column is-one-third">
-				<Input type="datetime-local" label="Date End: " bind:value={selectedRow.dateend}></Input>
+				<Input
+					type="datetime-local"
+					label="Date End: "
+					placeholder="Optional end date"
+					bind:value={selectedRow.dateend}
+				></Input>
 			</div>
-			<div class="column is-one-third"></div>
+			<div class="column is-one-third">
+				<Input
+					type="text"
+					label="Note: "
+					placeholder="Daily customer synchronization"
+					bind:value={selectedRow.note}
+				></Input>
+			</div>
 		</div>
 
 		<p class="label is-small mb-2">Failure handling</p>
@@ -634,16 +708,23 @@
 				<Input
 					type="number"
 					label="Max failed attempts: "
+					placeholder="10"
+					min={1}
+					step={1}
 					bind:value={selectedRow.max_failed_attempts}
 				></Input>
 			</div>
 			<div class="column is-one-third">
-				<Input type="number" label="Fail attempts: " bind:value={selectedRow.failed_attempts}
+				<Input
+					type="number"
+					label="History limit: "
+					placeholder="50"
+					min={0}
+					step={1}
+					bind:value={selectedRow.history_limit}
 				></Input>
 			</div>
-			<div class="column is-one-third">
-				<Input type="number" label="History limit: " bind:value={selectedRow.history_limit}></Input>
-			</div>
+			<div class="column is-one-third"></div>
 		</div>
 	</div>
 {/snippet}
@@ -661,6 +742,37 @@
 	{#if activeTab === TAB_HISTORY && selectedRow.idtask}
 		<TaskHistory task={selectedRow} />
 	{/if}
+{/snippet}
+
+{#snippet tab_guide()}
+	<div class="content is-small">
+		<h4>How to schedule an endpoint</h4>
+		<ol>
+			<li>Select an existing endpoint and keep the new task disabled.</li>
+			<li>
+				Choose <strong>Interval</strong> for every N seconds or <strong>Cron</strong> for calendar times.
+			</li>
+			<li>Set an API Key when the endpoint is private and does not belong to the system app.</li>
+			<li>
+				Save, select the task, run it once with <strong>Run now</strong>, and inspect History.
+			</li>
+			<li>Enable it only after the test succeeds.</li>
+		</ol>
+
+		<h4>Schedule fields</h4>
+		<p>
+			A cron example for weekdays at 07:00 is <code>0 7 * * 1-5</code>. Timezone and execution
+			window are optional. Date Start and Date End restrict the task's lifetime; they do not change
+			its frequency.
+		</p>
+
+		<h4>Parameters and failures</h4>
+		<p>
+			Use <code>{JSON.stringify({ data: { id: 42 }, headers: { 'x-source': 'scheduler' } })}</code>
+			in Parameters. Failed executions use exponential backoff and the task is disabled after Max failed
+			attempts. Reset attempts only after correcting the cause.
+		</p>
+	</div>
 {/snippet}
 
 <style>
