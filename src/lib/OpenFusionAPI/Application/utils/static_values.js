@@ -210,9 +210,21 @@ export function getIntervalTaskRuntimeStatus(value) {
 	return Number(value) === 1 ? IntervalTaskStatus[1] : IntervalTaskStatus[0];
 }
 
-/** Resultado de la última ejecución, separado del estado operativo actual. */
-export function getIntervalTaskLastResultStatus(value) {
+/**
+ * Resultado de la última ejecución, separado del estado operativo actual. El payload
+ * permite corregir corridas antiguas que se guardaron como OK pese a `success: false`.
+ */
+export function getIntervalTaskLastResultStatus(value, response) {
 	const numericStatus = Number(value);
+	if (
+		numericStatus === 2 &&
+		response &&
+		typeof response === 'object' &&
+		!Array.isArray(response) &&
+		response.success === false
+	) {
+		return IntervalTaskStatus[3];
+	}
 	return numericStatus >= 2 && numericStatus <= 4 ? IntervalTaskStatus[numericStatus] : null;
 }
 

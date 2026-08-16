@@ -8,8 +8,11 @@ export function getIntervalTaskRuntimeStatus(value: any): {
     icon: string;
     description: string;
 };
-/** Resultado de la última ejecución, separado del estado operativo actual. */
-export function getIntervalTaskLastResultStatus(value: any): any;
+/**
+ * Resultado de la última ejecución, separado del estado operativo actual. El payload
+ * permite corregir corridas antiguas que se guardaron como OK pese a `success: false`.
+ */
+export function getIntervalTaskLastResultStatus(value: any, response: any): any;
 export const listAccessMethod: {
     value: string;
     id: number;

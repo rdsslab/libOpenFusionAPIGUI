@@ -8,9 +8,16 @@
 
 	let { value = $bindable(), row = $bindable(), currentState = false } = $props();
 
-	let recordedStatus = $derived(IntervalTaskStatus[Number(value)] || IntervalTaskStatusFallback);
+	let response = $derived(row?.last_response ?? row?.response);
+	let recordedStatus = $derived(
+		getIntervalTaskLastResultStatus(value, response) ||
+			IntervalTaskStatus[Number(value)] ||
+			IntervalTaskStatusFallback
+	);
 	let status = $derived(currentState ? getIntervalTaskRuntimeStatus(value) : recordedStatus);
-	let lastResultStatus = $derived(currentState ? getIntervalTaskLastResultStatus(value) : null);
+	let lastResultStatus = $derived(
+		currentState ? getIntervalTaskLastResultStatus(value, response) : null
+	);
 
 	// Una tarea que falla se reintenta sola con espera creciente, así que lo útil no es
 	// repetir el error sino cuándo vuelve a intentarlo.

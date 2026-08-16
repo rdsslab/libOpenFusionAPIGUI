@@ -39,6 +39,7 @@
 
 	const uF = new uFetch();
 	let showEditor = $state(false);
+	let runNowPending = $state(false);
 	let historyTask = $state({});
 	// Debe arrancar con la forma completa: los `bind:option` de BasicSelect fallan si el
 	// campo llega `undefined` en el primer render (SlideFullScreen monta su contenido
@@ -94,6 +95,33 @@
 	let selectionType = $state(1);
 
 	let DataTableTasks = $state([]);
+	// Un GET iniciado antes de un evento websocket puede terminar después y pisar
+	// `Running` con su snapshot viejo. Se conserva el último evento por tarea para
+	// reaplicarlo únicamente sobre respuestas que ya nacieron desactualizadas.
+	const latestRuntimeEvents = new Map();
+	let runtimeEventGeneration = 0;
+	const runtimeEventFields = [
+		'status',
+		'last_run',
+		'next_run',
+		'last_exec_time',
+		'last_response',
+		'failed_attempts',
+		'task_enabled'
+	];
+
+	function applyRuntimeEvent(task, ev) {
+		const updated = { ...task };
+		for (const field of runtimeEventFields) {
+			if (ev[field] !== undefined) updated[field] = ev[field];
+		}
+		if (ev.enabled !== undefined) updated.task_enabled = ev.enabled;
+		if (ev.started_at && ev.last_run === undefined) updated.last_run = ev.started_at;
+		if (ev.duration_ms !== undefined && ev.duration_ms !== null) {
+			updated.last_exec_time = Math.round(ev.duration_ms);
+		}
+		return updated;
+	}
 	// Toda clave que devuelva la API y no esté declarada aquí se renderiza cruda, así que
 	// los campos nuevos deben aparecer todos, aunque sea para ocultarlos.
 	let columns = $state({
@@ -198,7 +226,9 @@
 			: null
 	);
 	let runtimeStatus = $derived(runtime ? getIntervalTaskRuntimeStatus(runtime.status) : null);
-	let lastResultStatus = $derived(runtime ? getIntervalTaskLastResultStatus(runtime.status) : null);
+	let lastResultStatus = $derived(
+		runtime ? getIntervalTaskLastResultStatus(runtime.status, runtime.last_response) : null
+	);
 
 	let nextIn = $derived.by(() => {
 		if (!runtime?.next_run) return '';
@@ -258,18 +288,15 @@
 		if (!ev?.idtask) return;
 
 		untrack(() => {
+			latestRuntimeEvents.set(String(ev.idtask), {
+				...ev,
+				generation: ++runtimeEventGeneration
+			});
+
 			DataTableTasks = DataTableTasks.map((t) => {
 				if (String(t.idtask) !== String(ev.idtask)) return t;
 
-				return {
-					...t,
-					status: ev.status,
-					last_run: ev.started_at || t.last_run,
-					last_exec_time:
-						ev.duration_ms !== undefined && ev.duration_ms !== null
-							? Math.round(ev.duration_ms)
-							: t.last_exec_time
-				};
+				return applyRuntimeEvent(t, ev);
 			});
 
 			// El evento no trae next_run, failed_attempts ni last_response, así que el panel
@@ -309,13 +336,19 @@
 
 	async function loadTasks() {
 		if (idapp) {
+			const requestedGeneration = runtimeEventGeneration;
 			let resp = await uF.get({ url: url_paths.getListIntervalTasksByIdApp, data: { idapp } });
 			let jresp = await resp.json();
 			let status_sys_endp = await restoreSystemEndpoints(false, $userStore.token);
 			statusSystemEndpointsStore.set(status_sys_endp);
 
 			if (Array.isArray(jresp)) {
-				DataTableTasks = jresp;
+				DataTableTasks = jresp.map((task) => {
+					const ev = latestRuntimeEvents.get(String(task.idtask));
+					if (!ev || ev.generation <= requestedGeneration) return task;
+
+					return applyRuntimeEvent(task, ev);
+				});
 			} else {
 				DataTableTasks = [];
 			}
@@ -380,16 +413,29 @@
 	}
 
 	async function runNow(task) {
-		if (!task?.idtask) return;
+		if (!task?.idtask || runNowPending) return false;
 
-		const resp = await uF.post({
-			url: url_paths.runNowIntervalTask,
-			data: { idtask: task.idtask }
-		});
-		const jresp = await resp.json();
+		runNowPending = true;
+		try {
+			const resp = await uF.post({
+				url: url_paths.runNowIntervalTask,
+				data: { idtask: task.idtask }
+			});
+			const jresp = await resp.json();
 
-		if (!jresp?.success) alert(jresp?.message || 'No se pudo programar la ejecución.');
-		await loadTasks();
+			if (!jresp?.success) {
+				alert(jresp?.message || 'No se pudo programar la ejecución.');
+				return false;
+			}
+
+			await loadTasks();
+			return true;
+		} catch (error) {
+			alert(error?.message || 'No se pudo programar la ejecución.');
+			return false;
+		} finally {
+			runNowPending = false;
+		}
 	}
 
 	async function resetAttempts(task) {
@@ -470,6 +516,26 @@
 		<Level left={[]} right={[r01]}>
 			{#snippet r01()}
 				<div class="field has-addons">
+					{#if selectedRow.idtask}
+						<p class="control">
+							<button
+								class="button is-small is-warning"
+								class:is-loading={runNowPending}
+								disabled={runNowPending ||
+									!runtime?.task_enabled ||
+									(Number(runtime?.status) === 1 && !runtime?.allow_concurrent)}
+								title={!runtime?.task_enabled
+									? 'Enable and save the task before running it'
+									: Number(runtime?.status) === 1 && !runtime?.allow_concurrent
+										? 'The task is already running and does not allow concurrency'
+										: 'Runs the last saved configuration immediately'}
+								onclick={() => runNow(runtime)}
+							>
+								<span class="icon is-small"><i class="fa-solid fa-bolt"></i></span>
+								<span>Run now</span>
+							</button>
+						</p>
+					{/if}
 					<p class="control">
 						<button
 							class="button is-small is-link"
