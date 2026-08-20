@@ -37,6 +37,7 @@ export namespace url_paths {
     let getTopErrorEndpoints: string;
     let getEndpointBackups: string;
     let getBotBackups: string;
+    let getBotLogs: string;
     let APIKeys: string;
     let APIClients: string;
     let APIClient: string;

@@ -37,6 +37,7 @@ export const url_paths = {
 	getTopErrorEndpoints: '/api/system/system/log/errors/top/prd',
 	getEndpointBackups: '/api/system/api/endpoint/backup/prd',
 	getBotBackups: '/api/system/bots/backup/prd',
+	getBotLogs: '/api/system/bots/logs/prd',
 	APIKeys: '/api/system/apikey/prd',
 	APIClients: '/api/system/api_clients/prd',
 	APIClient: '/api/system/apiclient/prd',

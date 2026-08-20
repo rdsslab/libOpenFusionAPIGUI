@@ -13,6 +13,8 @@
 		storeServerDynamicInformation,
 		storeServerModelChanged,
 		storeIntervalTaskEvent,
+		storeBotStatusChanged,
+		storeBotChanged,
 		statusSystemEndpointsStore
 	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
 
@@ -164,6 +166,12 @@
 				// Debe ir antes del filtro por idapp: el evento trae idapp, pero el widget de
 				// tareas necesita verlo aunque el usuario esté en otra aplicación abierta.
 				storeIntervalTaskEvent.set({ ...m.data, ts: m.timestamp });
+			} else if (m && m.event_name == 'bot_status_changed') {
+				// Runtime status change (STARTING, RUNNING, STOPPED, QUARANTINED, etc.).
+				storeBotStatusChanged.set({ ...m.data, ts: m.timestamp });
+			} else if (m && m.event_name == 'bot_changed') {
+				// Structural change (create/edit/delete): the list must reload.
+				storeBotChanged.set({ ...m.data, ts: m.timestamp });
 			} else if (m && m.data?.idapp == idapp) {
 				if (m && (m.event_name == 'cache_set' || m.event_name == 'cache_released')) {
 					storeCacheSize.update((value) => {

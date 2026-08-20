@@ -1,5 +1,5 @@
 <script>
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import {
 		Table,
 		ColumnTypes,
@@ -22,7 +22,8 @@
 	import uFetch from '@rdsslab/uFetch';
 	import CellBotStatus from './cellBotStatus.svelte';
 	import Backups from './bot_bkp.svelte';
-	import { userStore, statusSystemEndpointsStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';
+	import BotLogs from './bot_logs.svelte';
+	import { userStore, statusSystemEndpointsStore, storeBotStatusChanged, storeBotChanged } from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import { restoreSystemEndpoints } from '$lib/OpenFusionAPI/Application/utils/request.js';
 
 	let { idapp = $bindable(), onchange = () => {} } = $props();
@@ -48,6 +49,7 @@
 	 */
 	let activeTab = $state(0);
 	const TAB_BACKUPS = 3;
+	const TAB_LOGS = 4;
 	let tabList = $state([
 		{ name: 'general', label: 'General', component: tab_general, classIcon: 'fa-solid fa-sliders' },
 		{ name: 'params', label: 'Params (JSON)', component: tab_params, classIcon: 'fa-solid fa-code' },
@@ -58,6 +60,13 @@
 			component: tab_backups,
 			classIcon: 'fa-solid fa-list-check',
 			disabled: true
+		},
+		{
+			name: 'logs',
+			label: 'Logs',
+			component: tab_logs,
+			classIcon: 'fa-solid fa-scroll',
+			disabled: true
 		}
 	]);
 
@@ -65,6 +74,7 @@
 	function resetTabs() {
 		activeTab = 0;
 		tabList[TAB_BACKUPS].disabled = !selectedRow.idbot;
+		tabList[TAB_LOGS].disabled = !selectedRow.idbot;
 	}
 
 	/** `params` llega como objeto desde la API, pero se normaliza por si viniera serializado. */
@@ -261,6 +271,48 @@
 			notify.push({ message: error.message || 'Failed to delete bot(s)', color: 'danger' });
 		}
 	}
+
+	// ── Real-time updates via WebSocket stores ──────────────────────────────
+
+	/**
+	 * bot_status_changed: runtime status transitions (STARTING → RUNNING → STOPPED, etc.)
+	 * arrive every ~10 s per bot. Patch the table row in-place; if the editor is open
+	 * for that bot, also refresh the health panel so the operator sees changes immediately.
+	 */
+	const unsubBotStatus = storeBotStatusChanged.subscribe((evt) => {
+		if (!evt || !evt.idbot) return;
+		const idx = DataTableBots.findIndex((r) => r.idbot === evt.idbot);
+		if (idx !== -1) {
+			// Shallow merge: only overwrite fields present in the patch.
+			const row = { ...DataTableBots[idx] };
+			for (const key of Object.keys(evt)) {
+				if (key === 'ts' || key === 'idbot' || key === 'idapp') continue;
+				row[key] = evt[key];
+			}
+			DataTableBots[idx] = row;
+		}
+		// If the editor is open for this bot, update health snapshot too.
+		if (showEditor && selectedRow.idbot === evt.idbot) {
+			health = { ...health, ...evt };
+		}
+	});
+
+	/**
+	 * bot_changed: structural change (create / edit / delete). The safest action is a
+	 * full reload; these events are infrequent (only on user action) so the traffic
+	 * cost is negligible.
+	 */
+	const unsubBotChanged = storeBotChanged.subscribe((evt) => {
+		if (!evt) return;
+		// Only reload if the changed bot belongs to the current app context.
+		if (evt.idapp && evt.idapp !== idapp) return;
+		loadBots();
+	});
+
+	onDestroy(() => {
+		unsubBotStatus();
+		unsubBotChanged();
+	});
 
 	onMount(() => {
 		selectedRow = normalizeParams(defaultValuesBot({}));
@@ -512,5 +564,14 @@
 				}
 			}}
 		></Backups>
+	{/if}
+{/snippet}
+
+{#snippet tab_logs()}
+	{#if activeTab === TAB_LOGS && selectedRow.idbot}
+		<p class="help mb-3">
+			Lifecycle events (starts, stops, errors, retries) for this bot. Default window is 24 hours.
+		</p>
+		<BotLogs bind:idbot={selectedRow.idbot}></BotLogs>
 	{/if}
 {/snippet}

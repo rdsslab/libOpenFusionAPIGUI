@@ -31,3 +31,16 @@ export const storeServerModelChanged = writable({});
  * necesidad de recargar.
  */
 export const storeIntervalTaskEvent = writable(null);
+
+/**
+ * Cambio de estado runtime de un bot (bot_status_changed).
+ * Contiene { idbot, idapp, runtime_status, failure_count, ... } para que la tabla
+ * y el editor de bots actualicen sin recarga.
+ */
+export const storeBotStatusChanged = writable(null);
+
+/**
+ * Cambio estructural en la tabla de bots (bot_changed): alta, edición o borrado.
+ * Contiene { idbot, idapp, action } para que la lista se recargue.
+ */
+export const storeBotChanged = writable(null);

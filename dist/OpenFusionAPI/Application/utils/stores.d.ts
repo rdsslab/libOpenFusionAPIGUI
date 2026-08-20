@@ -27,3 +27,14 @@ export const storeServerModelChanged: import("svelte/store").Writable<{}>;
  * necesidad de recargar.
  */
 export const storeIntervalTaskEvent: import("svelte/store").Writable<any>;
+/**
+ * Cambio de estado runtime de un bot (bot_status_changed).
+ * Contiene { idbot, idapp, runtime_status, failure_count, ... } para que la tabla
+ * y el editor de bots actualicen sin recarga.
+ */
+export const storeBotStatusChanged: import("svelte/store").Writable<any>;
+/**
+ * Cambio estructural en la tabla de bots (bot_changed): alta, edición o borrado.
+ * Contiene { idbot, idapp, action } para que la lista se recargue.
+ */
+export const storeBotChanged: import("svelte/store").Writable<any>;
