@@ -119,6 +119,35 @@ export const RestoreAppBackup = async (app) => {
 	}
 };
 
+export const GetAllAppsBackup = async (token) => {
+	let uf = new uFetch();
+
+	let request = checkStatus(await uf.get({ url: url_paths.appsBackup }));
+
+	let response = await request.json();
+
+	return response;
+};
+
+export const RestoreAllAppsBackup = async (backup) => {
+	if (backup) {
+		let uf = new uFetch();
+
+		let request = checkStatus(
+			await uf.post({
+				url: url_paths.appsBackup,
+				data: backup
+			})
+		);
+
+		let response = await request.json();
+
+		return response;
+	} else {
+		return [];
+	}
+};
+
 export const GetEndpointsByIdapp = async (idapp) => {
 	if (idapp) {
 		let app = await GetApp(idapp);

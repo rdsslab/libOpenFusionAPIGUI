@@ -34,7 +34,9 @@
 	import {
 		getListApps,
 		changeUserPassword,
-		restoreSystemEndpoints
+		restoreSystemEndpoints,
+		GetAllAppsBackup,
+		RestoreAllAppsBackup
 	} from './utils/request.js';
 
 	let notify = new Notifications();
@@ -44,6 +46,10 @@
 	let options = $state([]);
 	let menu_item_selected = $state('');
 	let show_dialog_change_pwd = $state(false);
+
+	let restore_all_file_input = $state(null);
+	let loading_full_backup = $state(false);
+	let loading_full_restore = $state(false);
 	const wsClient = new OpenFusionWebsocketClient(url_paths.wsServerEvents);
 	const defaultPasswordChange = {
 		username: '',
@@ -146,6 +152,115 @@
 		}
 	}
 
+	function downloadFullBackupFile(full_backup) {
+		const now = new Date();
+		const year = now.getFullYear();
+		const month = String(now.getMonth() + 1).padStart(2, '0');
+		const day = String(now.getDate()).padStart(2, '0');
+		const hours = String(now.getHours()).padStart(2, '0');
+		const minutes = String(now.getMinutes()).padStart(2, '0');
+
+		const jsonString = JSON.stringify(full_backup, null, 2);
+		const blob = new Blob([jsonString], { type: 'application/json' });
+		const url = window.URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `apps_full_${year}${month}${day}_${hours}${minutes}.json`;
+		a.click();
+		window.URL.revokeObjectURL(url);
+	}
+
+	async function backupAllApps() {
+		try {
+			loading_full_backup = true;
+			const full_backup = await GetAllAppsBackup($userStore.token);
+
+			if (!full_backup || !Array.isArray(full_backup.apps)) {
+				throw new Error('Invalid full backup received from server');
+			}
+
+			downloadFullBackupFile(full_backup);
+			notify.push({
+				message: `Full backup downloaded (${full_backup.count} applications)`,
+				color: 'success'
+			});
+		} catch (error) {
+			console.error(error);
+			notify.push({ message: error.message, color: 'danger' });
+		} finally {
+			loading_full_backup = false;
+		}
+	}
+
+	async function onRestoreAllFileSelected(event) {
+		const selectedFile = event.target.files[0];
+
+		if (!selectedFile) {
+			notify.push({ message: 'Invalid JSON file', color: 'warning' });
+			return;
+		}
+
+		const reader = new FileReader();
+
+		reader.onload = async (e) => {
+			let full_backup;
+
+			try {
+				full_backup = JSON.parse(e.target.result);
+			} catch (error) {
+				console.error('Error parsing the JSON file:', error);
+				notify.push({ message: error.message, color: 'danger' });
+				return;
+			}
+
+			if (!full_backup || (!Array.isArray(full_backup) && !Array.isArray(full_backup.apps))) {
+				notify.push({
+					message: 'Invalid full backup file: expected an object with an apps array',
+					color: 'danger'
+				});
+				return;
+			}
+
+			if (
+				!confirm(
+					'This action will replace the data of ALL applications included in the backup. Do you want to continue?'
+				)
+			) {
+				return;
+			}
+
+			try {
+				loading_full_restore = true;
+				const summary = await RestoreAllAppsBackup(full_backup);
+
+				if (summary && typeof summary.restored === 'number') {
+					if (summary.failed > 0) {
+						notify.push({
+							message: `Restore finished with errors: ${summary.restored} restored, ${summary.failed} failed`,
+							color: 'warning'
+						});
+					} else {
+						notify.push({
+							message: `All applications restored (${summary.restored})`,
+							color: 'success'
+						});
+					}
+					await getListAppsInternal();
+				} else {
+					notify.push({ message: 'Applications not restored', color: 'danger' });
+				}
+			} catch (error) {
+				console.error(error);
+				notify.push({ message: error.message, color: 'danger' });
+			} finally {
+				loading_full_restore = false;
+				event.target.value = '';
+			}
+		};
+
+		reader.readAsText(selectedFile);
+	}
+
 	onMount(async () => {
 		await getListAppsInternal();
 
@@ -243,6 +358,39 @@ console.log('request_completed >>>>> ', data1);
 {/snippet}
 
 {#snippet user()}
+	<input
+		hidden
+		type="file"
+		accept=".json"
+		bind:this={restore_all_file_input}
+		onchange={onRestoreAllFileSelected}
+	/>
+	<button
+		class="button is-small is-info is-outlined"
+		title="Download a full backup of all applications"
+		disabled={loading_full_backup}
+		onclick={backupAllApps}
+	>
+		<span class="icon is-small">
+			<i
+				class="fa-solid {loading_full_backup ? 'fa-spinner fa-spin' : 'fa-download'}"
+			></i>
+		</span>
+		<span>Backup All</span>
+	</button>
+	<button
+		class="button is-small is-warning is-outlined"
+		title="Restore all applications from a full backup file"
+		disabled={loading_full_restore}
+		onclick={() => restore_all_file_input.click()}
+	>
+		<span class="icon is-small">
+			<i
+				class="fa-solid {loading_full_restore ? 'fa-spinner fa-spin' : 'fa-upload'}"
+			></i>
+		</span>
+		<span>Restore All</span>
+	</button>
 	<div class="dropdown is-hoverable">
 		<div class="dropdown-trigger">
 			<button

@@ -22,6 +22,7 @@ export namespace url_paths {
     let getfunctions: string;
     let serverAPIVersion: string;
     let appBackup: string;
+    let appsBackup: string;
     let appDocumentation: string;
     let appvarsbyidapp: string;
     let appvar: string;

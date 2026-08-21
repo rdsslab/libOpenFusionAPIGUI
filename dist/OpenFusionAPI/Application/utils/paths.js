@@ -22,6 +22,7 @@ export const url_paths = {
 	getfunctions: '/api/system/api/function_names/prd',
 	serverAPIVersion: '/api/system/server/version/prd',
 	appBackup: '/api/system/app/backup/prd',
+	appsBackup: '/api/system/apps/backup/prd',
 	appDocumentation: '/api/system/app/documentation/prd',
 	appvarsbyidapp: '/api/system/app/variables/idapp/prd',
 	appvar: '/api/system/app/var/prd',
