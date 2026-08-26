@@ -11,6 +11,7 @@
 		Notifications
 	} from '@rdsslab/svelte-components';
 	import { userStore } from '../../utils/stores.js';
+	import { currentUserHasPermission, getDefaultEnvironment } from '../../utils/permissions.js';
 	import {
 		GetAPIClientsList,
 		CreateAPIClient,
@@ -18,6 +19,10 @@
 	} from '../../utils/request.js';
 
 	let notify = new Notifications();
+	const permEnv = getDefaultEnvironment();
+	const currentUser = $derived($userStore?.user);
+	const canCreate = $derived(currentUserHasPermission(currentUser, permEnv, 'apiclients', 'create'));
+	const canEdit = $derived(currentUserHasPermission(currentUser, permEnv, 'apiclients', 'edit'));
 	let showEditor = $state(false);
 	let showChangePassword = $state(false);
 	let isEditing = $state(false);
@@ -232,9 +237,9 @@
 	bind:RawDataTable={DataTableUsers}
 	bind:columns
 	showEditRow={true}
-	showNewButton={true}
+	showNewButton={canCreate}
 	showDeleteButton={false}
-	showEditButton={true}
+	showEditButton={canEdit}
 	oneditrow={(r) => {
 		openEditor(r);
 	}}

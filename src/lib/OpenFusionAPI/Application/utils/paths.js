@@ -44,5 +44,12 @@ export const url_paths = {
 	APIClient: '/api/system/apiclient/prd',
 	APIClientChangePassword: '/api/system/apiclient/changepassword/prd',
 	migrateEndpoints: '/api/system/endpoints/migrate/prd',
-	migrateAppVars: '/api/system/appvars/migrate/prd'
+	migrateAppVars: '/api/system/appvars/migrate/prd',
+
+	// Internal System Users
+	systemUsersList: '/api/system/users/list/prd',
+	systemUserCreate: '/api/system/user/create/prd',
+	systemUserUpdate: '/api/system/user/update/prd',
+	systemUserDelete: '/api/system/user/delete/prd',
+	systemUserChangePassword: '/api/system/user/changepassword/prd'
 };

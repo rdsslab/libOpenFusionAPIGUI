@@ -10,49 +10,36 @@
 		DialogModal,
 		Notifications
 	} from '@rdsslab/svelte-components';
-	import { userStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';
-	import { currentUserHasPermission, getDefaultEnvironment } from '$lib/OpenFusionAPI/Application/utils/permissions.js';
+	import { userStore } from '../../utils/stores.js';
 	import {
-		GetAPIClientsList,
-		CreateAPIClient,
-		ChangeAPIClientPassword
-	} from '$lib/OpenFusionAPI/Application/utils/request.js';
+		GetSystemUsersList,
+		CreateSystemUser,
+		UpdateSystemUser,
+		DeleteSystemUser,
+		ChangeSystemUserPassword
+	} from '../../utils/request.js';
+	import { currentUserHasPermission, getDefaultEnvironment } from '../../utils/permissions.js';
+	import PermissionEditor from './PermissionEditor.svelte';
 
 	let notify = new Notifications();
-	const permEnv = getDefaultEnvironment();
-	const currentUser = $derived($userStore?.user);
-	const canCreate = $derived(currentUserHasPermission(currentUser, permEnv, 'apiclients', 'create'));
-	const canEdit = $derived(currentUserHasPermission(currentUser, permEnv, 'apiclients', 'edit'));
 	let showEditor = $state(false);
 	let showChangePassword = $state(false);
 	let isEditing = $state(false);
 	let DataTableUsers = $state([]);
 	let selectedRow = $state(getDefaultValues());
-	let passwordData = $state({ newPassword: '', repeatNewPassword: '' });
+	let passwordData = $state({ oldPassword: '', newPassword: '', repeatNewPassword: '' });
 
-	const optionsDocumentType = [
-		{ name: 'Passport', value: 'passport' },
-		{ name: 'ID Card', value: 'id_card' },
-		{ name: 'Driver License', value: 'driver_license' },
-		{ name: 'Social Security', value: 'social_security' },
-		{ name: 'Tax ID', value: 'tax_id' },
-		{ name: 'Other', value: 'other' },
-		{ name: 'Unknown', value: 'unknown' }
-	];
-
-	const optionsStatus = [
-		{ name: 'Initial', value: 'initial' },
-		{ name: 'Active', value: 'active' },
-		{ name: 'Suspended', value: 'suspended' },
-		{ name: 'Inactive', value: 'inactive' }
-	];
+	const environment = getDefaultEnvironment();
+	const currentUser = $derived($userStore?.user);
+	const canCreate = $derived(currentUserHasPermission(currentUser, environment, 'users', 'create'));
+	const canEdit = $derived(currentUserHasPermission(currentUser, environment, 'users', 'edit'));
+	const canDelete = $derived(currentUserHasPermission(currentUser, environment, 'users', 'delete'));
 
 	let columns = $state({
-		idclient: { hidden: true },
+		iduser: { hidden: true },
 		username: { label: 'Username' },
-		name: { label: 'Name' },
+		fullname: { label: 'Name' },
 		email: { label: 'Email' },
-		status: { label: 'Status' },
 		enabled: {
 			label: 'Enabled',
 			decorator: {
@@ -66,50 +53,40 @@
 				}
 			}
 		},
-		document_type: { hidden: true },
-		document_id: { hidden: true },
-		phone: { hidden: true },
-		startAt: { hidden: true },
-		endAt: { hidden: true },
-		last_login: { hidden: true },
+		ctrl: { hidden: true },
+		start_date: { hidden: true },
+		end_date: { hidden: true },
 		exp_time: { hidden: true },
-		custom_data: { hidden: true },
-		change_password: { hidden: true },
+		last_login: {
+			label: 'Last Login',
+			decorator: { component: ColumnTypes.DateTime }
+		},
 		createdAt: {
 			label: 'Created',
-			decorator: {
-				component: ColumnTypes.DateTime
-			}
-		},
-		updatedAt: {
-			label: 'Updated',
-			decorator: {
-				component: ColumnTypes.DateTime
-			}
+			decorator: { component: ColumnTypes.DateTime }
 		}
 	});
 
 	function getDefaultValues() {
 		return {
-			idclient: '',
+			iduser: 0,
 			username: '',
 			first_name: '',
 			last_name: '',
 			email: '',
-			document_type: 'unknown',
-			document_id: '',
-			phone: '',
 			password: '',
 			repeatPassword: '',
-			startAt: new Date().toISOString().split('T')[0],
-			endAt: '',
 			enabled: true,
+			start_date: new Date().toISOString().split('T')[0],
+			end_date: '',
 			exp_time: 3600,
-			status: 'initial'
+			ctrl: { as_admin: false, env: {} }
 		};
 	}
 
-	let passwordMatch = $derived(passwordData.newPassword === passwordData.repeatNewPassword);
+	let passwordMatch = $derived(
+		passwordData.newPassword === passwordData.repeatNewPassword
+	);
 
 	$effect(async () => {
 		await loadUsers();
@@ -117,12 +94,11 @@
 
 	async function loadUsers() {
 		try {
-			let clients = await GetAPIClientsList();
-
-			if (Array.isArray(clients)) {
-				DataTableUsers = clients.map((c) => ({
-					...c,
-					name: `${c.first_name || ''} ${c.last_name || ''}`.trim()
+			let users = await GetSystemUsersList();
+			if (Array.isArray(users)) {
+				DataTableUsers = users.map((u) => ({
+					...u,
+					fullname: `${u.first_name || ''} ${u.last_name || ''}`.trim()
 				}));
 			} else {
 				DataTableUsers = [];
@@ -141,6 +117,15 @@
 			if (isEditing) {
 				delete row.password;
 				delete row.repeatPassword;
+				let result = await UpdateSystemUser(row);
+				if (result && (result.success !== false || result.iduser)) {
+					notify.push({ message: 'User updated successfully', color: 'success' });
+					showEditor = false;
+					await loadUsers();
+				} else {
+					let msg = result?.error || result?.message || 'Failed to update user';
+					notify.push({ message: msg, color: 'danger' });
+				}
 			} else {
 				if (!row.password || row.password.length === 0) {
 					notify.push({ message: 'Password is required for new users', color: 'warning' });
@@ -150,21 +135,39 @@
 					notify.push({ message: 'Passwords do not match', color: 'warning' });
 					return;
 				}
-			}
-
-			let result = await CreateAPIClient(row);
-
-			if (result && result.client) {
-				notify.push({ message: 'User saved successfully', color: 'success' });
-				showEditor = false;
-				await loadUsers();
-			} else {
-				let msg = result?.error || result?.message || 'Failed to save user';
-				notify.push({ message: msg, color: 'danger' });
+				let result = await CreateSystemUser(row);
+				if (result && result.iduser) {
+					notify.push({ message: 'User created successfully', color: 'success' });
+					showEditor = false;
+					await loadUsers();
+				} else {
+					let msg = result?.error || result?.message || 'Failed to create user';
+					notify.push({ message: msg, color: 'danger' });
+				}
 			}
 		} catch (error) {
 			console.error('saveUser error:', error);
 			notify.push({ message: error.message || 'Failed to save user', color: 'danger' });
+		}
+	}
+
+	async function deleteUser() {
+		if (!selectedRow?.iduser) return;
+		if (!confirm(`Permanently delete user "${selectedRow.username}"? This cannot be undone.`)) return;
+
+		try {
+			let result = await DeleteSystemUser({ iduser: selectedRow.iduser });
+			if (result && result.success !== false) {
+				notify.push({ message: 'User deleted', color: 'success' });
+				showEditor = false;
+				await loadUsers();
+			} else {
+				let msg = result?.error || result?.message || 'Failed to delete user';
+				notify.push({ message: msg, color: 'danger' });
+			}
+		} catch (error) {
+			console.error('deleteUser error:', error);
+			notify.push({ message: error.message || 'Failed to delete user', color: 'danger' });
 		}
 	}
 
@@ -173,22 +176,21 @@
 			notify.push({ message: 'Please fill in both password fields', color: 'warning' });
 			return;
 		}
-
 		if (passwordData.newPassword !== passwordData.repeatNewPassword) {
 			notify.push({ message: 'Passwords do not match', color: 'warning' });
 			return;
 		}
 
 		try {
-			let result = await ChangeAPIClientPassword({
+			let result = await ChangeSystemUserPassword({
 				username: selectedRow.username,
+				oldPassword: passwordData.oldPassword,
 				newPassword: passwordData.newPassword
 			});
-
 			if (result && result.success) {
 				notify.push({ message: 'Password changed successfully', color: 'success' });
 				showChangePassword = false;
-				passwordData = { newPassword: '', repeatNewPassword: '' };
+				passwordData = { oldPassword: '', newPassword: '', repeatNewPassword: '' };
 			} else {
 				let msg = result?.error || result?.message || 'Failed to change password';
 				notify.push({ message: msg, color: 'danger' });
@@ -203,21 +205,18 @@
 		if (row) {
 			isEditing = true;
 			selectedRow = {
-				idclient: row.idclient || '',
+				iduser: row.iduser || 0,
 				username: row.username || '',
 				first_name: row.first_name || '',
 				last_name: row.last_name || '',
 				email: row.email || '',
-				document_type: row.document_type || 'unknown',
-				document_id: row.document_id || '',
-				phone: row.phone || '',
 				password: '',
 				repeatPassword: '',
-				startAt: row.startAt ? new Date(row.startAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-				endAt: row.endAt ? new Date(row.endAt).toISOString().split('T')[0] : '',
 				enabled: row.enabled !== false,
+				start_date: row.start_date ? new Date(row.start_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+				end_date: row.end_date ? new Date(row.end_date).toISOString().split('T')[0] : '',
 				exp_time: row.exp_time || 3600,
-				status: row.status || 'initial'
+				ctrl: row.ctrl ? JSON.parse(JSON.stringify(row.ctrl)) : { as_admin: false, env: {} }
 			};
 		} else {
 			isEditing = false;
@@ -228,7 +227,7 @@
 
 	function openChangePassword(row) {
 		selectedRow = { ...row };
-		passwordData = { newPassword: '', repeatNewPassword: '' };
+		passwordData = { oldPassword: '', newPassword: '', repeatNewPassword: '' };
 		showChangePassword = true;
 	}
 </script>
@@ -253,35 +252,32 @@
 		<Level left={[]} right={[r01]}>
 			{#snippet r01()}
 				<div class="field has-addons">
-					<p class="control">
-						<button
-							class="button is-small is-link"
-							onclick={async () => {
-								await saveUser();
-							}}
-						>
-							<span class="icon is-small">
-								<i class="fa-solid fa-rocket"></i>
-							</span>
-							<span>Save & Deploy</span>
-						</button>
-					</p>
+					{#if canCreate || canEdit}
+						<p class="control">
+							<button class="button is-small is-link" onclick={async () => { await saveUser(); }}>
+								<span class="icon is-small"><i class="fa-solid fa-rocket"></i></span>
+								<span>Save & Deploy</span>
+							</button>
+						</p>
+					{/if}
+					{#if isEditing && canDelete}
+						<p class="control">
+							<button class="button is-small is-danger is-outlined" onclick={deleteUser}>
+								<span class="icon is-small"><i class="fa-solid fa-trash"></i></span>
+								<span>Delete</span>
+							</button>
+						</p>
+					{/if}
 					<p class="control">
 						<button
 							class="button is-small"
 							onclick={() => {
-								if (
-									confirm(
-										'If you cancel, you will lose absolutely all changes. Do you want to continue?'
-									)
-								) {
+								if (confirm('If you cancel, you will lose absolutely all changes. Do you want to continue?')) {
 									showEditor = false;
 								}
 							}}
 						>
-							<span class="icon is-small">
-								<i class="fa-solid fa-xmark"></i>
-							</span>
+							<span class="icon is-small"><i class="fa-solid fa-xmark"></i></span>
 							<span>Cancel</span>
 						</button>
 					</p>
@@ -298,11 +294,7 @@
 					<Input type="boolean" label="Enabled" bind:value={selectedRow.enabled}></Input>
 				</div>
 				<div class="column is-one-third">
-					<BasicSelect
-						label="Status"
-						bind:value={selectedRow.status}
-						options={optionsStatus}
-					></BasicSelect>
+					<Input type="number" label="Exp Time (seconds):" bind:value={selectedRow.exp_time}></Input>
 				</div>
 			</div>
 
@@ -322,30 +314,11 @@
 			</div>
 
 			<div class="columns">
-				<div class="column is-one-third">
-					<BasicSelect
-						label="Document Type"
-						bind:value={selectedRow.document_type}
-						options={optionsDocumentType}
-					></BasicSelect>
+				<div class="column is-one-half">
+					<Input type="date" label="Start Date:" bind:value={selectedRow.start_date}></Input>
 				</div>
-				<div class="column is-one-third">
-					<Input label="Document ID:" bind:value={selectedRow.document_id}></Input>
-				</div>
-				<div class="column is-one-third">
-					<Input label="Phone:" bind:value={selectedRow.phone}></Input>
-				</div>
-			</div>
-
-			<div class="columns">
-				<div class="column is-one-third">
-					<Input type="date" label="Start Date:" bind:value={selectedRow.startAt}></Input>
-				</div>
-				<div class="column is-one-third">
-					<Input type="date" label="End Date:" bind:value={selectedRow.endAt}></Input>
-				</div>
-				<div class="column is-one-third">
-					<Input type="number" label="Exp Time (seconds):" bind:value={selectedRow.exp_time}></Input>
+				<div class="column is-one-half">
+					<Input type="date" label="End Date:" bind:value={selectedRow.end_date}></Input>
 				</div>
 			</div>
 
@@ -358,32 +331,28 @@
 						<Input type="password" label="Repeat Password:" bind:value={selectedRow.repeatPassword}></Input>
 					</div>
 				</div>
-			{/if}
-
-			{#if !isEditing && selectedRow.password && selectedRow.repeatPassword && selectedRow.password !== selectedRow.repeatPassword}
-				<div class="notification is-warning is-light py-2 px-3 mb-3">
-					<span class="icon-text">
-						<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
-						<span>Passwords do not match.</span>
-					</span>
-				</div>
+				{#if selectedRow.password && selectedRow.repeatPassword && selectedRow.password !== selectedRow.repeatPassword}
+					<div class="notification is-warning is-light py-2 px-3 mb-3">
+						<span class="icon-text">
+							<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+							<span>Passwords do not match.</span>
+						</span>
+					</div>
+				{/if}
 			{/if}
 
 			{#if isEditing}
 				<div class="buttons are-small mt-4">
-					<button
-						class="button is-warning is-outlined"
-						onclick={() => {
-							openChangePassword(selectedRow);
-						}}
-					>
-						<span class="icon is-small">
-							<i class="fa-solid fa-key"></i>
-						</span>
+					<button class="button is-warning is-outlined" onclick={() => { openChangePassword(selectedRow); }}>
+						<span class="icon is-small"><i class="fa-solid fa-key"></i></span>
 						<span>Change Password</span>
 					</button>
 				</div>
 			{/if}
+
+			<hr />
+			<h6 class="title is-6">Permissions</h6>
+			<PermissionEditor bind:ctrl={selectedRow.ctrl} />
 		</div>
 	</SlideFullScreen>
 {/if}
@@ -391,12 +360,10 @@
 <DialogModal
 	title={titleModal}
 	body={bodyDialogModal}
-	onaccept={async () => {
-		await changePassword();
-	}}
+	onaccept={async () => { await changePassword(); }}
 	oncancel={() => {
 		showChangePassword = false;
-		passwordData = { newPassword: '', repeatNewPassword: '' };
+		passwordData = { oldPassword: '', newPassword: '', repeatNewPassword: '' };
 	}}
 	bind:show={showChangePassword}
 >
@@ -405,6 +372,7 @@
 	{/snippet}
 
 	{#snippet bodyDialogModal()}
+		<Input type="password" label="Current Password" bind:value={passwordData.oldPassword}></Input>
 		<Input type="password" label="New Password" bind:value={passwordData.newPassword}></Input>
 		<Input type="password" label="Repeat New Password" bind:value={passwordData.repeatNewPassword}></Input>
 		{#if !passwordMatch && passwordData.newPassword && passwordData.repeatNewPassword}

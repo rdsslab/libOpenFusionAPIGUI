@@ -8,6 +8,7 @@
 		storeCountResponseStatusCode,
 		storeServerModelChanged
 	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
+	import { currentUserHasPermission, getDefaultEnvironment } from '$lib/OpenFusionAPI/Application/utils/permissions.js';
 	import { endpointColumns } from '$lib/OpenFusionAPI/Application/widgets/endpoints/columns/index.svelte';
 	import {
 		GetEndpointsByIdapp,
@@ -30,6 +31,12 @@
 	let app = $state({ app: '', enabled: false, description: '' });
 	let showMigrateModal = $state(false);
 	let migrateTargetEnv = $state('');
+
+	const permEnv = getDefaultEnvironment();
+	const currentUser = $derived($userStore?.user);
+	const canCreate = $derived(currentUserHasPermission(currentUser, permEnv, 'endpoints', 'create'));
+	const canEdit = $derived(currentUserHasPermission(currentUser, permEnv, 'endpoints', 'edit'));
+	const canDelete = $derived(currentUserHasPermission(currentUser, permEnv, 'endpoints', 'delete'));
 	let migrateConfirmCheck = $state(false);
 	let selectedEndpointsForMigration = $state([]);
 	let showEndpointEdit = $state(false);
@@ -336,9 +343,9 @@
 	<div>
 		<Table
 			showEditRow="true"
-			showNewButton="true"
-			showEditButton="true"
-			showDeleteButton="true"
+			showNewButton={canCreate}
+			showEditButton={canEdit}
+			showDeleteButton={canDelete}
 			bind:RawDataTable={app.endpoints}
 			columns={endpointColumns}
 			bind:selectionType={TableSelectionType}

@@ -38,3 +38,7 @@ export const storeBotStatusChanged: import("svelte/store").Writable<any>;
  * Contiene { idbot, idapp, action } para que la lista se recargue.
  */
 export const storeBotChanged: import("svelte/store").Writable<any>;
+/**
+ * Lista de usuarios internos del sistema (System Users).
+ */
+export const storeSystemUsersList: import("svelte/store").Writable<any[]>;

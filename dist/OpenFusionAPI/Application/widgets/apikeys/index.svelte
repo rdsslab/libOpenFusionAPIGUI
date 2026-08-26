@@ -18,6 +18,7 @@
 		userStore,
 		statusSystemEndpointsStore
 	} from '../../utils/stores.js';
+	import { currentUserHasPermission, getDefaultEnvironment } from '../../utils/permissions.js';
 	import {
 		GetAPIKeys,
 		GetAPIClients
@@ -27,6 +28,11 @@
 	let { idapp = $bindable(), onchange = () => {} } = $props();
 
 	const uF = new uFetch();
+	const permEnv = getDefaultEnvironment();
+	const currentUser = $derived($userStore?.user);
+	const canCreate = $derived(currentUserHasPermission(currentUser, permEnv, 'apiclients', 'create'));
+	const canEdit = $derived(currentUserHasPermission(currentUser, permEnv, 'apiclients', 'edit'));
+	const canDelete = $derived(currentUserHasPermission(currentUser, permEnv, 'apiclients', 'delete'));
 	let showEditor = $state(false);
 	let selectedRow = $state({
 		idclient: '',
@@ -180,9 +186,9 @@
 	bind:columns
 	left_items={[lt01]}
 	showEditRow={true}
-	showNewButton={true}
-	showDeleteButton={true}
-	showEditButton={true}
+	showNewButton={canCreate}
+	showDeleteButton={canDelete}
+	showEditButton={canEdit}
 	oneditrow={(r) => {
 		selectedRow.enabled = r.task_enabled;
 		selectedRow.startAt = r.datestart || '';

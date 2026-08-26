@@ -44,3 +44,8 @@ export const storeBotStatusChanged = writable(null);
  * Contiene { idbot, idapp, action } para que la lista se recargue.
  */
 export const storeBotChanged = writable(null);
+
+/**
+ * Lista de usuarios internos del sistema (System Users).
+ */
+export const storeSystemUsersList = writable([]);

@@ -25,6 +25,7 @@
 	import Backups from './bot_bkp.svelte';
 	import BotLogs from './bot_logs.svelte';
 	import { userStore, statusSystemEndpointsStore, storeBotStatusChanged, storeBotChanged } from '$lib/OpenFusionAPI/Application/utils/stores.js';
+	import { currentUserHasPermission, getDefaultEnvironment } from '$lib/OpenFusionAPI/Application/utils/permissions.js';
 	import { restoreSystemEndpoints } from '$lib/OpenFusionAPI/Application/utils/request.js';
 	import AppVarsSelector from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/params_json_selector.svelte';
 
@@ -32,6 +33,11 @@
 
 	let notify = new Notifications();
 	const uF = new uFetch();
+	const permEnv = getDefaultEnvironment();
+	const currentUser = $derived($userStore?.user);
+	const canCreate = $derived(currentUserHasPermission(currentUser, permEnv, 'bots', 'create'));
+	const canEdit = $derived(currentUserHasPermission(currentUser, permEnv, 'bots', 'edit'));
+	const canDelete = $derived(currentUserHasPermission(currentUser, permEnv, 'bots', 'delete'));
 	let showEditor = $state(false);
 	let selectedRow = $state(defaultValuesBot({}));
 	let DataTableBots = $state([]);
@@ -328,9 +334,9 @@
 	bind:RawDataTable={DataTableBots}
 	bind:columns
 	showEditRow={true}
-	showNewButton={true}
-	showDeleteButton={true}
-	showEditButton={true}
+	showNewButton={canCreate}
+	showDeleteButton={canDelete}
+	showEditButton={canEdit}
 	oneditrow={async (r) => {
 		// console.log('TABLE > EDIT ', r);
 		let fullBot = await getBot(r.idbot);

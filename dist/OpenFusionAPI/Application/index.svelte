@@ -32,6 +32,7 @@
 	import Bots from './widgets/bots/index.svelte';
 	import ApiKeys from './widgets/apikeys/index.svelte';
 	import Users from './widgets/users/index.svelte';
+	import SystemUsers from './widgets/system_users/index.svelte';
 	import {
 		getListApps,
 		changeUserPassword,
@@ -39,6 +40,7 @@
 		GetAllAppsBackup,
 		RestoreAllAppsBackup
 	} from './utils/request.js';
+	import { currentUserHasPermission, getDefaultEnvironment } from './utils/permissions.js';
 
 	let notify = new Notifications();
 	let { onexit = () => {} } = $props();
@@ -65,83 +67,93 @@
 		return password_change.newPassword == password_change.repeatNewPassword;
 	});
 
-	let menu = $state([
-		{
-			title: 'Application',
-			items: [
+	const permEnv = getDefaultEnvironment();
+	const currentUser = $derived($userStore?.user);
+
+	let menu = $derived.by(() => {
+		const sections = [];
+
+		// Application section — show if user can read apps
+		if (currentUserHasPermission(currentUser, permEnv, 'apps', 'read')) {
+			const appItems = [
 				{
 					label: 'New',
 					icon: ' fa-solid fa-plus ',
-					onclick: () => {
-						idapp = 0;
-						menu_item_selected = '/basic';
-					}
+					onclick: () => { idapp = 0; menu_item_selected = '/basic'; }
 				},
 				{
 					label: 'Dashboard',
 					icon: ' fa-solid fa-chart-area ',
-					onclick: () => {
-						menu_item_selected = '/dashboard';
-					}
+					onclick: () => { menu_item_selected = '/dashboard'; }
 				},
-
 				{
 					label: 'Basic',
 					icon: ' fa-solid fa-file ',
-					onclick: () => {
-						menu_item_selected = '/basic';
-					}
-				},
-				{
+					onclick: () => { menu_item_selected = '/basic'; }
+				}
+			];
+
+			if (currentUserHasPermission(currentUser, permEnv, 'endpoints', 'read')) {
+				appItems.push({
 					label: 'Endpoints',
 					icon: ' fa-solid fa-network-wired ',
-					onclick: () => {
-						menu_item_selected = '/endpoints';
-					}
-				},
-				{
+					onclick: () => { menu_item_selected = '/endpoints'; }
+				});
+			}
+			if (currentUserHasPermission(currentUser, permEnv, 'appvars', 'read')) {
+				appItems.push({
 					label: 'Variables',
 					icon: ' fa-solid fa-square-root-variable ',
-					onclick: () => {
-						menu_item_selected = '/appvars';
-					}
-				},
-				{
+					onclick: () => { menu_item_selected = '/appvars'; }
+				});
+			}
+			if (currentUserHasPermission(currentUser, permEnv, 'apiclients', 'read')) {
+				appItems.push({
 					label: 'API Keys',
 					icon: ' fa-solid fa-key ',
-					onclick: () => {
-						menu_item_selected = '/apikeys';
-					}
-				},
-				{
+					onclick: () => { menu_item_selected = '/apikeys'; }
+				});
+			}
+			if (currentUserHasPermission(currentUser, permEnv, 'bots', 'read')) {
+				appItems.push({
 					label: 'Bots',
 					icon: ' fa-solid fa-robot ',
-					onclick: () => {
-						menu_item_selected = '/bots';
-					}
-				},
-				{
+					onclick: () => { menu_item_selected = '/bots'; }
+				});
+			}
+			if (currentUserHasPermission(currentUser, permEnv, 'interval_tasks', 'read')) {
+				appItems.push({
 					label: 'Tasks',
 					icon: ' fa-solid fa-list-check ',
-					onclick: () => {
-						menu_item_selected = '/interval_tasks';
-					}
-				}
-			]
-		},
-		{
-			title: 'Administration',
-			items: [
-				{
-					label: 'Users',
-					icon: ' fa-solid fa-users ',
-					onclick: () => {
-						menu_item_selected = '/users';
-					}
-				}
-			]
+					onclick: () => { menu_item_selected = '/interval_tasks'; }
+				});
+			}
+
+			sections.push({ title: 'Application', items: appItems });
 		}
-	]);
+
+		// Administration section
+		const adminItems = [];
+		if (currentUserHasPermission(currentUser, permEnv, 'users', 'read')) {
+			adminItems.push({
+				label: 'System Users',
+				icon: ' fa-solid fa-user-gear ',
+				onclick: () => { menu_item_selected = '/system-users'; }
+			});
+		}
+		if (currentUserHasPermission(currentUser, permEnv, 'apiclients', 'read')) {
+			adminItems.push({
+				label: 'API Clients',
+				icon: ' fa-solid fa-users ',
+				onclick: () => { menu_item_selected = '/users'; }
+			});
+		}
+		if (adminItems.length > 0) {
+			sections.push({ title: 'Administration', items: adminItems });
+		}
+
+		return sections;
+	});
 
 	async function getListAppsInternal() {
 		try {
@@ -558,6 +570,8 @@ console.log('request_completed >>>>> ', data1);
 			<ApiKeys bind:idapp></ApiKeys>
 		{:else if menu_item_selected == '/bots'}
 			<Bots bind:idapp></Bots>
+		{:else if menu_item_selected == '/system-users'}
+			<SystemUsers></SystemUsers>
 		{:else if menu_item_selected == '/users'}
 			<Users></Users>
 		{:else}

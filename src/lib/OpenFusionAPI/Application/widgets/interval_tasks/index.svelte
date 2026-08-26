@@ -29,6 +29,7 @@
 		statusSystemEndpointsStore,
 		storeIntervalTaskEvent
 	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
+	import { currentUserHasPermission, getDefaultEnvironment } from '$lib/OpenFusionAPI/Application/utils/permissions.js';
 	import {
 		GetEndpointsByIdapp,
 		GetAPIKeys,
@@ -38,6 +39,11 @@
 	let { idapp = $bindable(), onchange = () => {} } = $props();
 
 	const uF = new uFetch();
+	const permEnv = getDefaultEnvironment();
+	const currentUser = $derived($userStore?.user);
+	const canCreate = $derived(currentUserHasPermission(currentUser, permEnv, 'interval_tasks', 'create'));
+	const canEdit = $derived(currentUserHasPermission(currentUser, permEnv, 'interval_tasks', 'edit'));
+	const canDelete = $derived(currentUserHasPermission(currentUser, permEnv, 'interval_tasks', 'delete'));
 	let showEditor = $state(false);
 	let runNowPending = $state(false);
 	let historyTask = $state({});
@@ -457,9 +463,9 @@
 	bind:columns
 	bind:selectionType
 	showEditRow={true}
-	showNewButton={true}
-	showDeleteButton={true}
-	showEditButton={true}
+	showNewButton={canCreate}
+	showDeleteButton={canDelete}
+	showEditButton={canEdit}
 	right_items={[taskActions]}
 	oneditrow={(r) => {
 		selectedRow = normalizeParams(defaultValuesIntervalTask(r));

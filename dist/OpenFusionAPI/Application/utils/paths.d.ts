@@ -45,4 +45,9 @@ export namespace url_paths {
     let APIClientChangePassword: string;
     let migrateEndpoints: string;
     let migrateAppVars: string;
+    let systemUsersList: string;
+    let systemUserCreate: string;
+    let systemUserUpdate: string;
+    let systemUserDelete: string;
+    let systemUserChangePassword: string;
 }

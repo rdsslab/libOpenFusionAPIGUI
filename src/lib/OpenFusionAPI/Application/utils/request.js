@@ -713,3 +713,48 @@ export const getTopErrorEndpoints = async (options, token) => {
 		return r;
 	}
 };
+
+// ── Internal System Users ──
+
+export const GetSystemUsersList = async () => {
+	let uf = new uFetch();
+	let request = checkStatus(await uf.get({ url: url_paths.systemUsersList }));
+	let users = await request.json();
+	return Array.isArray(users) ? users : [];
+};
+
+export const CreateSystemUser = async (data) => {
+	let uf = new uFetch();
+	let request = checkStatus(
+		await uf.post({ url: url_paths.systemUserCreate, data: data })
+	);
+	let result = await request.json();
+	return result;
+};
+
+export const UpdateSystemUser = async (data) => {
+	let uf = new uFetch();
+	let request = checkStatus(
+		await uf.post({ url: url_paths.systemUserUpdate, data: data })
+	);
+	let result = await request.json();
+	return result;
+};
+
+export const DeleteSystemUser = async (data) => {
+	let uf = new uFetch();
+	let request = checkStatus(
+		await uf.post({ url: url_paths.systemUserDelete, data: data })
+	);
+	let result = await request.json();
+	return result;
+};
+
+export const ChangeSystemUserPassword = async (data) => {
+	let uf = new uFetch();
+	let request = checkStatus(
+		await uf.post({ url: url_paths.systemUserChangePassword, data: data })
+	);
+	let result = await request.json();
+	return result;
+};

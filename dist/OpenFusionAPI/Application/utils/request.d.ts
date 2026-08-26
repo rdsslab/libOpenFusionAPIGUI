@@ -38,3 +38,8 @@ export function getLogSummaryByAppStatusCode(options: any, token: any): Promise<
 export function getAppEndpointUsageSummary(options: any, token: any): Promise<any>;
 export function getTopErrorEndpointsByTime(options: any, token: any): Promise<any>;
 export function getTopErrorEndpoints(options: any, token: any): Promise<any>;
+export function GetSystemUsersList(): Promise<any[]>;
+export function CreateSystemUser(data: any): Promise<any>;
+export function UpdateSystemUser(data: any): Promise<any>;
+export function DeleteSystemUser(data: any): Promise<any>;
+export function ChangeSystemUserPassword(data: any): Promise<any>;
