@@ -31,6 +31,7 @@
 	import IntervalTasks from './widgets/interval_tasks/index.svelte';
 	import Bots from './widgets/bots/index.svelte';
 	import ApiKeys from './widgets/apikeys/index.svelte';
+	import Users from './widgets/users/index.svelte';
 	import {
 		getListApps,
 		changeUserPassword,
@@ -124,6 +125,18 @@
 					icon: ' fa-solid fa-list-check ',
 					onclick: () => {
 						menu_item_selected = '/interval_tasks';
+					}
+				}
+			]
+		},
+		{
+			title: 'Administration',
+			items: [
+				{
+					label: 'Users',
+					icon: ' fa-solid fa-users ',
+					onclick: () => {
+						menu_item_selected = '/users';
 					}
 				}
 			]
@@ -545,6 +558,8 @@ console.log('request_completed >>>>> ', data1);
 			<ApiKeys bind:idapp></ApiKeys>
 		{:else if menu_item_selected == '/bots'}
 			<Bots bind:idapp></Bots>
+		{:else if menu_item_selected == '/users'}
+			<Users></Users>
 		{:else}
 			<DashBoardScreen {idapp}></DashBoardScreen>
 		{/if}

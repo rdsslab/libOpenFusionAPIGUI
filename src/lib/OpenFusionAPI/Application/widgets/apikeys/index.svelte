@@ -8,8 +8,6 @@
 		PredictiveInput,
 		Input,
 		TextArea,
-		DialogModal,
-		BasicSelect,
 		Notifications
 	} from '@rdsslab/svelte-components';
 
@@ -22,8 +20,7 @@
 	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import {
 		GetAPIKeys,
-		GetAPIClients,
-		saveAPIClient
+		GetAPIClients
 	} from '$lib/OpenFusionAPI/Application/utils/request.js';
 	import CellToken from './cellToken.svelte';
 
@@ -47,9 +44,7 @@
 		return d.toISOString().split('T')[0];
 	};
 	let notify = new Notifications();
-	let new_user = $state({ startAt: todayISO(), endAt: nextMonthISO() });
 	let optionsClients = $state([{ name: 'dsdf', value: 'dsdf' }]);
-	let show_dialog_new_user = $state(false);
 	let DataTableAPIs = $state([]);
 	let columns = $state({
 		idkey: { hidden: true },
@@ -172,10 +167,6 @@
 		};
 	}
 
-	let new_user_compare_verify = $derived.by(() => {
-		return new_user.newPassword == new_user.repeatNewPassword;
-	});
-
 	onMount(() => {
 		//
 		//selectedRow = fnDefaulValues(defaultApp, selectedRow);
@@ -216,18 +207,6 @@
 >
 	{#snippet lt01()}
 		<div class="buttons are-small">
-			<button
-				class="button is-link is-outlined"
-				onclick={() => {
-					new_user = { startAt: todayISO(), endAt: nextMonthISO() };
-					show_dialog_new_user = true;
-				}}
-			>
-				<span class="icon">
-					<i class="fa-solid fa-user"></i>
-				</span>
-				<span>New User API</span>
-			</button>
 		</div>
 	{/snippet}
 </Table>
@@ -310,65 +289,4 @@
 	</SlideFullScreen>
 {/if}
 
-<DialogModal
-	title={titleModal}
-	body={bodyDialogModal}
-	onaccept={async () => {
-		if (new_user.newPassword == new_user.repeatNewPassword) {
-			let result = await saveAPIClient(new_user);
-			if (result?.client?.idclient) {
-				show_dialog_new_user = false;
-				notify.push({ message: 'User API created successfully', color: 'success' });
-				await loadAPIKeys();
-			} else {
-				notify.push({ message: result.error, color: 'danger' });
-			}
-		} else {
-			notify.push({ message: 'You must repeat the new password twice.', color: 'danger' });
-		}
-	}}
-	oncancel={() => {
-		new_user = { ...defaultPasswordChange };
-	}}
-	bind:show={show_dialog_new_user}
->
-	{#snippet titleModal()}
-		<span>{`New User API`}</span>
-	{/snippet}
 
-	{#snippet bodyDialogModal()}
-		<Input label="Username" type="text" bind:value={new_user.username}></Input>
-		<Input label="First Name" type="text" bind:value={new_user.first_name}></Input>
-		<Input label="Last Name" type="text" bind:value={new_user.last_name}></Input>
-
-		<Input label="Email" type="email" bind:value={new_user.email}></Input>
-		<BasicSelect
-			label="Document Type"
-			bind:value={new_user.document_type}
-			options={[
-				{ name: 'Passport', value: 'passport' },
-				{ name: 'National ID', value: 'id_card' },
-				{ name: 'Driver License', value: 'driver_license' },
-				{ name: 'Social Security', value: 'social_security' },
-				{ name: 'Tax ID', value: 'tax_id' },
-				{ name: 'Other', value: 'other' }
-			]}
-		></BasicSelect>
-		<Input label="Document ID" type="text" bind:value={new_user.document_id}></Input>
-		<Input label="Phone" type="text" bind:value={new_user.phone}></Input>
-		<Input label="StartAt	" type="date" bind:value={new_user.startAt}></Input>
-		<Input label="EndAt" type="date" bind:value={new_user.endAt}></Input>
-		<Input label="Password" type="password" bind:value={new_user.password}></Input>
-		<Input label="Repeat Password" type="password" bind:value={new_user.repeatPassword}></Input>
-		<div>
-			{#if !new_user_compare_verify}
-				<span class="icon-text has-text-warning is-small">
-					<span class="icon">
-						<i class="fas fa-exclamation-triangle"></i>
-					</span>
-					<span>You must repeat the new password twice.</span>
-				</span>
-			{/if}
-		</div>
-	{/snippet}
-</DialogModal>

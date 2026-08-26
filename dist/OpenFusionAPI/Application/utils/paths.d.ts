@@ -42,6 +42,7 @@ export namespace url_paths {
     let APIKeys: string;
     let APIClients: string;
     let APIClient: string;
+    let APIClientChangePassword: string;
     let migrateEndpoints: string;
     let migrateAppVars: string;
 }

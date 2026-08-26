@@ -227,6 +227,48 @@ export const saveAPIClient = async (data) => {
 	return apiKeys;
 };
 
+export const GetAPIClientsList = async (filters = {}) => {
+	let uf = new uFetch(url_paths.APIClients);
+
+	let request = checkStatus(
+		await uf.get({
+			data: filters
+		})
+	);
+
+	let clients = await request.json();
+
+	return clients;
+};
+
+export const CreateAPIClient = async (data) => {
+	let uf = new uFetch(url_paths.APIClient);
+
+	let request = checkStatus(
+		await uf.post({
+			data: data
+		})
+	);
+
+	let result = await request.json();
+
+	return result;
+};
+
+export const ChangeAPIClientPassword = async (data) => {
+	let uf = new uFetch(url_paths.APIClientChangePassword);
+
+	let request = checkStatus(
+		await uf.post({
+			data: data
+		})
+	);
+
+	let result = await request.json();
+
+	return result;
+};
+
 export const getListHandler = async (/** @type {string} */ token) => {
 	let f = new uFetch();
 

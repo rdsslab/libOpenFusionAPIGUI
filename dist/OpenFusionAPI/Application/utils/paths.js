@@ -42,6 +42,7 @@ export const url_paths = {
 	APIKeys: '/api/system/apikey/prd',
 	APIClients: '/api/system/api_clients/prd',
 	APIClient: '/api/system/apiclient/prd',
+	APIClientChangePassword: '/api/system/apiclient/changepassword/prd',
 	migrateEndpoints: '/api/system/endpoints/migrate/prd',
 	migrateAppVars: '/api/system/appvars/migrate/prd'
 };
