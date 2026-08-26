@@ -9,7 +9,8 @@
 		Input,
 		EditorCode,
 		Tab,
-		Notifications
+		Notifications,
+		TextArea
 	} from '@rdsslab/svelte-components';
 	import {
 		defaultValuesBot,
@@ -25,6 +26,7 @@
 	import BotLogs from './bot_logs.svelte';
 	import { userStore, statusSystemEndpointsStore, storeBotStatusChanged, storeBotChanged } from '../../utils/stores.js';
 	import { restoreSystemEndpoints } from '../../utils/request.js';
+	import AppVarsSelector from '../endpoints/widgets/params_json_selector.svelte';
 
 	let { idapp = $bindable(), onchange = () => {} } = $props();
 
@@ -33,6 +35,7 @@
 	let showEditor = $state(false);
 	let selectedRow = $state(defaultValuesBot({}));
 	let DataTableBots = $state([]);
+	let customToken = $state('');
 
 	let optionsEnvironment = $state(
 		Environment.map((e) => {
@@ -506,10 +509,10 @@
 {#snippet tab_general()}
 	<div class="columns">
 		<div class="column is-one-third">
-			<Input label="Name: " bind:value={selectedRow.name}></Input>
+			<Input label="Name:" bind:value={selectedRow.name}></Input>
 		</div>
 		<div class="column is-one-third">
-			<Input label="Token: " type="text" bind:value={selectedRow.token}></Input>
+			<Input type="boolean" label="Enabled" bind:value={selectedRow.enabled}></Input>
 		</div>
 		<div class="column is-one-third">
 			<PredictiveInput
@@ -523,11 +526,28 @@
 	</div>
 
 	<div class="columns">
-		<div class="column is-one-third">
-			<Input type="boolean" label="Enabled" bind:value={selectedRow.enabled}></Input>
+		<div class="column is-full">
+			<AppVarsSelector
+				label="Token:"
+				freeTyping={true}
+				placeholder="Bot Token or $_VAR_NAME"
+				bind:environment={selectedRow.environment}
+				bind:custom={customToken}
+				bind:appvar={selectedRow.token}
+				onselect={(selected) => {
+					if (selected.appvar) {
+						selectedRow.token = selected.appvar;
+					} else {
+						selectedRow.token = selected.custom;
+					}
+				}}
+			></AppVarsSelector>
 		</div>
-		<div class="column is-two-thirds">
-			<Input label="Description: " bind:value={selectedRow.description}></Input>
+	</div>
+
+	<div class="columns">
+		<div class="column is-full">
+			<TextArea label="Description:" bind:value={selectedRow.description}></TextArea>
 		</div>
 	</div>
 {/snippet}
