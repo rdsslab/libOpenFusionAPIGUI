@@ -90,8 +90,7 @@
       "_index.js",
       "_exports.js",
       "_root.js",
-      "_utils2.js",
-      "_index2.js"
+      "_utils2.js"
     ]
   },
   "node_modules/@sveltejs/kit/src/runtime/components/svelte-5/layout.svelte": {
@@ -133,7 +132,7 @@
       "_index2.js"
     ],
     "css": [
-      "_app/immutable/assets/_page.C4To7SSL.css"
+      "_app/immutable/assets/_page.BnOytjnu.css"
     ],
     "assets": [
       "_app/immutable/assets/fa-brands-400.Bs6tcqqs.woff2",

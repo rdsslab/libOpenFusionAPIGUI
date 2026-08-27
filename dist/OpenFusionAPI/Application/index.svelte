@@ -379,7 +379,7 @@ console.log('request_completed >>>>> ', data1);
 </script>
 
 {#snippet logoIcon()}
-	<img src={Logo} alt="Open Fusion API" />
+	<img src={Logo} alt="Open Fusion API" style="width: 32px; height: 32px; object-fit: contain; display: block; margin: auto;" />
 {/snippet}
 
 {#snippet user()}
