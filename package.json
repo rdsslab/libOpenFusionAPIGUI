@@ -71,7 +71,7 @@
   "types": "./dist/index.d.ts",
   "type": "module",
   "dependencies": {
-    "@rdsslab/svelte-components": "https://github.com/rdsslab/svelte-components.git",
+    "@rdsslab/svelte-components": "https://github.com/rdsslab/svelte-components.git#8188532b3176e5a7f0b1e8745d3853a557a29755",
     "@rdsslab/uFetch": "https://github.com/rdsslab/uFetch.git",
     "@fortawesome/fontawesome-free": "^7.0.0",
     "bulma": "^1.0.4",
