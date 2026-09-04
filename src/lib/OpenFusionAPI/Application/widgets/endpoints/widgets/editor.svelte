@@ -153,7 +153,10 @@
 
 			if (response && response.idapp == app.idapp) {
 				deploying.show = false;
-				showEditor = false;
+				noty.push({
+					message: 'Endpoint saved and deployed successfully.',
+					color: 'success'
+				});
 				onsave();
 			} else {
 				deploying.error = true;
@@ -415,21 +418,57 @@
 {/snippet}
 
 {#snippet tab_json_schema()}
-	<Input
-		label="Enabled"
-		type="checkbox"
-		bind:value={endpoint.json_schema.in.enabled}
-		placeholder="Enabled"
-	/>
+	{#snippet json_schema_in()}
+		<Input
+			label="Enabled"
+			type="checkbox"
+			bind:value={endpoint.json_schema.in.enabled}
+			placeholder="Enabled"
+		/>
 
-	<EditorCode
-		lang="json"
-		showFormat={true}
-		bind:code={endpoint.json_schema.in.schema}
-		onchange={(datajs) => {
-			//	json_schema_in = datajs.code;
-		}}
-	></EditorCode>
+		<EditorCode
+			lang="json"
+			showFormat={true}
+			bind:code={endpoint.json_schema.in.schema}
+			onchange={(datajs) => {
+				//	json_schema_in = datajs.code;
+			}}
+		></EditorCode>
+	{/snippet}
+
+	{#snippet json_schema_out()}
+		<Input
+			label="Enabled"
+			type="checkbox"
+			bind:value={endpoint.json_schema.out.enabled}
+			placeholder="Enabled"
+		/>
+
+		<EditorCode
+			lang="json"
+			showFormat={true}
+			bind:code={endpoint.json_schema.out.schema}
+			onchange={(datajs) => {
+				//	json_schema_out = datajs.code;
+			}}
+		></EditorCode>
+	{/snippet}
+
+	<Tab
+		tabs={[
+			{
+				label: 'In',
+				isActive: true,
+				component: json_schema_in,
+				classIcon: ' fa-solid fa-arrow-right-to-bracket '
+			},
+			{
+				label: 'Out',
+				component: json_schema_out,
+				classIcon: ' fa-solid fa-arrow-right-from-bracket '
+			}
+		]}
+	></Tab>
 
 	<div class="block">
 		<div class="content is-small">
