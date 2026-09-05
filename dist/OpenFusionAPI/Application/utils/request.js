@@ -255,6 +255,20 @@ export const CreateAPIClient = async (data) => {
 	return result;
 };
 
+export const UpdateAPIClient = async (data) => {
+	let uf = new uFetch(url_paths.APIClientUpdate);
+
+	let request = checkStatus(
+		await uf.post({
+			data: data
+		})
+	);
+
+	let result = await request.json();
+
+	return result;
+};
+
 export const ChangeAPIClientPassword = async (data) => {
 	let uf = new uFetch(url_paths.APIClientChangePassword);
 

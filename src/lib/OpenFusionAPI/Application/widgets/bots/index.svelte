@@ -378,9 +378,17 @@
 						<button
 							class="button is-small is-link"
 							onclick={async () => {
+								if (
+									!confirm(
+										'Are you sure you want to save and deploy this bot?'
+									)
+								) {
+									return;
+								}
+								// saveBot() ya notifica el resultado; el editor permanece abierto
+								// tanto si el guardado tuvo éxito como si falló.
 								try {
 									await saveBot();
-									showEditor = false;
 								} catch (error) {
 									// Error already notified; keep editor open for correction
 								}
@@ -396,13 +404,7 @@
 						<button
 							class="button is-small"
 							onclick={() => {
-								if (
-									confirm(
-										'If you cancel, you will lose absolutely all changes made to the bot. Do you want to continue?'
-									)
-								) {
-									showEditor = false;
-								}
+								showEditor = false;
 							}}
 						>
 							<span class="icon is-small">

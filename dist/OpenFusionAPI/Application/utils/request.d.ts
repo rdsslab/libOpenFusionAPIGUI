@@ -12,6 +12,7 @@ export function GetAPIClients(data: any): Promise<any>;
 export function saveAPIClient(data: any): Promise<any>;
 export function GetAPIClientsList(filters?: {}): Promise<any>;
 export function CreateAPIClient(data: any): Promise<any>;
+export function UpdateAPIClient(data: any): Promise<any>;
 export function ChangeAPIClientPassword(data: any): Promise<any>;
 export function getListHandler(token: string): Promise<void>;
 export function getListMethods(token: string): Promise<void>;

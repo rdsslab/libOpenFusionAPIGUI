@@ -15,6 +15,7 @@
 	import {
 		GetAPIClientsList,
 		CreateAPIClient,
+		UpdateAPIClient,
 		ChangeAPIClientPassword
 	} from '../../utils/request.js';
 
@@ -31,20 +32,20 @@
 	let passwordData = $state({ newPassword: '', repeatNewPassword: '' });
 
 	const optionsDocumentType = [
-		{ name: 'Passport', value: 'passport' },
-		{ name: 'ID Card', value: 'id_card' },
-		{ name: 'Driver License', value: 'driver_license' },
-		{ name: 'Social Security', value: 'social_security' },
-		{ name: 'Tax ID', value: 'tax_id' },
-		{ name: 'Other', value: 'other' },
-		{ name: 'Unknown', value: 'unknown' }
+		{ id: 'passport', value: 'Passport' },
+		{ id: 'id_card', value: 'ID Card' },
+		{ id: 'driver_license', value: 'Driver License' },
+		{ id: 'social_security', value: 'Social Security' },
+		{ id: 'tax_id', value: 'Tax ID' },
+		{ id: 'other', value: 'Other' },
+		{ id: 'unknown', value: 'Unknown' }
 	];
 
 	const optionsStatus = [
-		{ name: 'Initial', value: 'initial' },
-		{ name: 'Active', value: 'active' },
-		{ name: 'Suspended', value: 'suspended' },
-		{ name: 'Inactive', value: 'inactive' }
+		{ id: 'initial', value: 'Initial' },
+		{ id: 'active', value: 'Active' },
+		{ id: 'suspended', value: 'Suspended' },
+		{ id: 'inactive', value: 'Inactive' }
 	];
 
 	let columns = $state({
@@ -141,6 +142,15 @@
 			if (isEditing) {
 				delete row.password;
 				delete row.repeatPassword;
+
+				let result = await UpdateAPIClient(row);
+				if (result && (result.success !== false || result.idclient)) {
+					notify.push({ message: 'Client updated successfully', color: 'success' });
+					await loadUsers();
+				} else {
+					let msg = result?.error || result?.message || 'Failed to update client';
+					notify.push({ message: msg, color: 'danger' });
+				}
 			} else {
 				if (!row.password || row.password.length === 0) {
 					notify.push({ message: 'Password is required for new users', color: 'warning' });
@@ -150,21 +160,19 @@
 					notify.push({ message: 'Passwords do not match', color: 'warning' });
 					return;
 				}
-			}
 
-			let result = await CreateAPIClient(row);
-
-			if (result && result.client) {
-				notify.push({ message: 'User saved successfully', color: 'success' });
-				showEditor = false;
-				await loadUsers();
-			} else {
-				let msg = result?.error || result?.message || 'Failed to save user';
-				notify.push({ message: msg, color: 'danger' });
+				let result = await CreateAPIClient(row);
+				if (result && result.client) {
+					notify.push({ message: 'Client created successfully', color: 'success' });
+					await loadUsers();
+				} else {
+					let msg = result?.error || result?.message || 'Failed to create client';
+					notify.push({ message: msg, color: 'danger' });
+				}
 			}
 		} catch (error) {
 			console.error('saveUser error:', error);
-			notify.push({ message: error.message || 'Failed to save user', color: 'danger' });
+			notify.push({ message: error.message || 'Failed to save client', color: 'danger' });
 		}
 	}
 
@@ -257,6 +265,7 @@
 						<button
 							class="button is-small is-link"
 							onclick={async () => {
+								if (!confirm('Are you sure you want to save and deploy this client?')) return;
 								await saveUser();
 							}}
 						>
@@ -270,13 +279,7 @@
 						<button
 							class="button is-small"
 							onclick={() => {
-								if (
-									confirm(
-										'If you cancel, you will lose absolutely all changes. Do you want to continue?'
-									)
-								) {
-									showEditor = false;
-								}
+								showEditor = false;
 							}}
 						>
 							<span class="icon is-small">
@@ -300,7 +303,7 @@
 				<div class="column is-one-third">
 					<BasicSelect
 						label="Status"
-						bind:value={selectedRow.status}
+						bind:option={selectedRow.status}
 						options={optionsStatus}
 					></BasicSelect>
 				</div>
@@ -325,7 +328,7 @@
 				<div class="column is-one-third">
 					<BasicSelect
 						label="Document Type"
-						bind:value={selectedRow.document_type}
+						bind:option={selectedRow.document_type}
 						options={optionsDocumentType}
 					></BasicSelect>
 				</div>

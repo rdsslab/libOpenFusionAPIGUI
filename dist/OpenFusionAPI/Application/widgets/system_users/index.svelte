@@ -120,7 +120,6 @@
 				let result = await UpdateSystemUser(row);
 				if (result && (result.success !== false || result.iduser)) {
 					notify.push({ message: 'User updated successfully', color: 'success' });
-					showEditor = false;
 					await loadUsers();
 				} else {
 					let msg = result?.error || result?.message || 'Failed to update user';
@@ -138,7 +137,6 @@
 				let result = await CreateSystemUser(row);
 				if (result && result.iduser) {
 					notify.push({ message: 'User created successfully', color: 'success' });
-					showEditor = false;
 					await loadUsers();
 				} else {
 					let msg = result?.error || result?.message || 'Failed to create user';
@@ -254,7 +252,13 @@
 				<div class="field has-addons">
 					{#if canCreate || canEdit}
 						<p class="control">
-							<button class="button is-small is-link" onclick={async () => { await saveUser(); }}>
+							<button
+							class="button is-small is-link"
+							onclick={async () => {
+								if (!confirm('Are you sure you want to save and deploy this user?')) return;
+								await saveUser();
+							}}
+						>
 								<span class="icon is-small"><i class="fa-solid fa-rocket"></i></span>
 								<span>Save & Deploy</span>
 							</button>
@@ -272,9 +276,7 @@
 						<button
 							class="button is-small"
 							onclick={() => {
-								if (confirm('If you cancel, you will lose absolutely all changes. Do you want to continue?')) {
-									showEditor = false;
-								}
+								showEditor = false;
 							}}
 						>
 							<span class="icon is-small"><i class="fa-solid fa-xmark"></i></span>

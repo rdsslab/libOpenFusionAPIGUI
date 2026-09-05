@@ -9,7 +9,8 @@
 		PredictiveInput,
 		BasicSelect,
 		Input,
-		EditorCode
+		EditorCode,
+		Notifications
 	} from '@rdsslab/svelte-components';
 	import {
 		defaultValuesIntervalTask,
@@ -39,6 +40,7 @@
 	let { idapp = $bindable(), onchange = () => {} } = $props();
 
 	const uF = new uFetch();
+	const notify = new Notifications();
 	const permEnv = getDefaultEnvironment();
 	const currentUser = $derived($userStore?.user);
 	const canCreate = $derived(currentUserHasPermission(currentUser, permEnv, 'interval_tasks', 'create'));
@@ -397,11 +399,15 @@
 			let jresp = await resp.json();
 
 			if (!resp.ok) {
-				alert(`No se pudo guardar la tarea: ${jresp?.error || resp.statusText}`);
+				notify.push({
+					message: `No se pudo guardar la tarea: ${jresp?.error || resp.statusText}`,
+					color: 'danger'
+				});
 				return false;
 			}
 
 			await loadTasks();
+			notify.push({ message: 'Tarea guardada correctamente', color: 'success' });
 			return true;
 		}
 
@@ -546,7 +552,10 @@
 						<button
 							class="button is-small is-link"
 							onclick={async () => {
-								if (await saveInterval()) showEditor = false;
+								if (!confirm('Are you sure you want to save and deploy this task?')) return;
+								// saveInterval() notifica el resultado; el editor permanece abierto
+								// tanto si el guardado tuvo éxito como si falló.
+								await saveInterval();
 							}}
 						>
 							<span class="icon is-small">
@@ -559,13 +568,7 @@
 						<button
 							class="button is-small"
 							onclick={() => {
-								if (
-									confirm(
-										'If you cancel, you will lose absolutely all changes made to the app. Do you want to continue?'
-									)
-								) {
-									showEditor = false;
-								}
+								showEditor = false;
 							}}
 						>
 							<span class="icon is-small">

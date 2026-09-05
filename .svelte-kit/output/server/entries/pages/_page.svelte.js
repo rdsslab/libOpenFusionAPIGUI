@@ -1,21 +1,44 @@
 import "clsx";
-import { a6 as attr_class, a7 as bind_props, a8 as ensure_array_like, a9 as stringify, e as escape_html, aa as attr, ab as clsx } from "../../chunks/index.js";
+import { a8 as ssr_context, a9 as attr_class, aa as bind_props, ab as ensure_array_like, ac as stringify, ad as attr_style, e as escape_html, a7 as derived, ae as attr, af as clsx } from "../../chunks/index.js";
 import "@rdsslab/uFetch";
 import "events";
+import "xlsx-js-style";
 import "prettier-plugin-sql";
 import "marked";
 import "echarts";
 import { w as writable } from "../../chunks/index2.js";
+function onDestroy(fn) {
+  /** @type {SSRContext} */
+  ssr_context.r.on_destroy(fn);
+}
 const Logo = "data:image/png;base64,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";
+let notifications_store = writable([]);
 function Modal($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
-    let { show = false, children, showCloseButton = false } = $$props;
-    $$renderer2.push(`<div${attr_class("modal", void 0, { "is-active": show })}><div class="modal-background"></div> <div class="modal-content">`);
+    let {
+      show = false,
+      children,
+      showCloseButton = false,
+      closeOnEscape = true,
+      closeOnBackground = true
+    } = $$props;
+    const isBrowser = typeof document !== "undefined";
+    function handleKeydown(e) {
+      if (e.key === "Escape" && show && closeOnEscape) {
+        show = false;
+        e.stopPropagation();
+      }
+    }
+    onDestroy(() => {
+      if (!isBrowser) return;
+      document.body.style.overflow = "";
+      document.removeEventListener("keydown", handleKeydown);
+    });
+    $$renderer2.push(`<div${attr_class("modal", void 0, { "is-active": show })} role="dialog" aria-modal="true"><div class="modal-background"></div> <div class="modal-content">`);
     children?.($$renderer2);
     $$renderer2.push(`<!----></div> `);
     if (showCloseButton) {
-      $$renderer2.push("<!--[0-->");
-      $$renderer2.push(`<button class="modal-close is-large" aria-label="close"></button>`);
+      $$renderer2.push(`<!--[0--><button class="modal-close is-large" aria-label="close"></button>`);
     } else {
       $$renderer2.push("<!--[-1-->");
     }
@@ -23,36 +46,59 @@ function Modal($$renderer, $$props) {
     bind_props($$props, { show, showCloseButton });
   });
 }
-let notifications_store = writable([]);
 function Notifications($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let list_notify = [];
     notifications_store.subscribe((value) => {
       list_notify = value;
     });
-    $$renderer2.push(`<div class="bottom-right svelte-qo16om"><!--[-->`);
+    let visibleCount = derived(() => list_notify.filter((n) => !n.hidden).length);
+    let overflowCount = derived(() => Math.max(0, visibleCount() - 5));
+    const ICONS = {
+      success: "fa-check-circle",
+      danger: "fa-exclamation-circle",
+      warning: "fa-exclamation-triangle",
+      info: "fa-info-circle"
+    };
+    const COLOR_MAP = {
+      success: "#23d160",
+      danger: "#ff3860",
+      warning: "#ffdd57",
+      info: "#3e8ed0"
+    };
+    function getIcon(color) {
+      return ICONS[color] || ICONS.info;
+    }
+    function getAccentColor(color) {
+      return COLOR_MAP[color] || COLOR_MAP.info;
+    }
+    $$renderer2.push(`<div class="notifications-container svelte-qo16om" role="alert" aria-live="polite"><!--[-->`);
     const each_array = ensure_array_like(list_notify);
     for (let $$index = 0, $$length = each_array.length; $$index < $$length; $$index++) {
       let s = each_array[$$index];
       if (!s.hidden) {
-        $$renderer2.push("<!--[0-->");
-        $$renderer2.push(`<article${attr_class(`message is-small is-${stringify(s.color)}`, "svelte-qo16om")}>`);
+        $$renderer2.push(`<!--[0--><div${attr_class(`notification-toast is-${stringify(s.color)}`, "svelte-qo16om")} role="status"><div class="notification-accent svelte-qo16om"${attr_style(`background-color: ${stringify(getAccentColor(s.color))};`)}></div> <div class="notification-icon svelte-qo16om"><i${attr_class(`fas ${stringify(getIcon(s.color))}`, "svelte-qo16om")}${attr_style(`color: ${stringify(getAccentColor(s.color))};`)}></i></div> <div class="notification-content svelte-qo16om">`);
         if (s.title) {
-          $$renderer2.push("<!--[0-->");
-          $$renderer2.push(`<div class="message-header"><p>${escape_html(s.title)}</p> <button class="delete is-small" aria-label="delete"></button></div>`);
+          $$renderer2.push(`<!--[0--><div class="notification-title svelte-qo16om">${escape_html(s.title)}</div>`);
         } else {
           $$renderer2.push("<!--[-1-->");
         }
-        $$renderer2.push(`<!--]--> <div class="message-body">${escape_html(s.message)}</div></article>`);
+        $$renderer2.push(`<!--]--> <div class="notification-message svelte-qo16om">${escape_html(s.message)}</div> <div class="notification-progress svelte-qo16om"><div class="notification-progress-bar svelte-qo16om"${attr_style(`width: ${stringify(Math.max(0, s._remaining / s.timeout * 100))}%;`)}></div></div></div> <button class="notification-close svelte-qo16om" aria-label="Close notification"><i class="fas fa-times"></i></button></div>`);
       } else {
         $$renderer2.push("<!--[-1-->");
       }
       $$renderer2.push(`<!--]-->`);
     }
+    $$renderer2.push(`<!--]--> `);
+    if (overflowCount() > 0) {
+      $$renderer2.push(`<!--[0--><div class="notification-overflow svelte-qo16om">+${escape_html(overflowCount())} more</div>`);
+    } else {
+      $$renderer2.push("<!--[-1-->");
+    }
     $$renderer2.push(`<!--]--></div>`);
   });
 }
-const version = "7.0.2";
+const version = "8.0.3";
 function Login($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let { isOverlay = false } = $$props;
@@ -66,8 +112,7 @@ function Login($$renderer, $$props) {
       children: ($$renderer3) => {
         $$renderer3.push(`<div${attr_class("login-wrapper svelte-177ibf8", void 0, { "is-visible": mounted, "overlay-mode": isOverlay })}><div class="orb orb-1 svelte-177ibf8"></div> <div class="orb orb-2 svelte-177ibf8"></div> <div class="orb orb-3 svelte-177ibf8"></div> <div class="login-card box svelte-177ibf8"><div class="brand-header has-text-centered svelte-177ibf8"><div class="logo-ring svelte-177ibf8"><div class="logo-figure svelte-177ibf8"><img${attr("src", Logo)} alt="OpenFusionAPI" class="logo-img svelte-177ibf8"/></div></div> <h1 class="title is-4 mt-3 brand-title svelte-177ibf8">Open Fusion API</h1> <p class="subtitle is-6 brand-subtitle svelte-177ibf8"><span class="tag is-dark is-rounded svelte-177ibf8"><span class="icon is-small svelte-177ibf8"><i class="fa-solid fa-server svelte-177ibf8"></i></span> <span class="svelte-177ibf8">MCP Server</span></span></p></div> <div class="divider-line svelte-177ibf8"></div> `);
         if (isOverlay) {
-          $$renderer3.push("<!--[0-->");
-          $$renderer3.push(`<div class="notification is-warning is-light has-text-centered svelte-177ibf8"><span class="icon svelte-177ibf8"><i class="fa-solid fa-clock-rotate-left svelte-177ibf8"></i></span> <strong class="svelte-177ibf8">Your session has expired, please log in again</strong></div>`);
+          $$renderer3.push(`<!--[0--><div class="notification is-warning is-light has-text-centered svelte-177ibf8"><span class="icon svelte-177ibf8"><i class="fa-solid fa-clock-rotate-left svelte-177ibf8"></i></span> <strong class="svelte-177ibf8">Your session has expired, please log in again</strong></div>`);
         } else {
           $$renderer3.push("<!--[-1-->");
         }
@@ -77,8 +122,7 @@ function Login($$renderer, $$props) {
         }
         $$renderer3.push(`<!--]--> <div class="field mt-4 svelte-177ibf8"><p class="control svelte-177ibf8"><button type="submit"${attr_class("button is-fullwidth is-rounded login-btn svelte-177ibf8", void 0, { "is-loading": processing.waiting })}${attr("disabled", !username, true)}>`);
         {
-          $$renderer3.push("<!--[0-->");
-          $$renderer3.push(`<span class="icon svelte-177ibf8"><i class="fa-solid fa-right-to-bracket svelte-177ibf8"></i></span> <span class="svelte-177ibf8">Sign In</span>`);
+          $$renderer3.push(`<!--[0--><span class="icon svelte-177ibf8"><i class="fa-solid fa-right-to-bracket svelte-177ibf8"></i></span> <span class="svelte-177ibf8">Sign In</span>`);
         }
         $$renderer3.push(`<!--]--></button></p></div></form> <p class="version-tag has-text-centered has-text-grey svelte-177ibf8"><span class="icon is-small svelte-177ibf8"><i class="fa-solid fa-code-branch svelte-177ibf8"></i></span> GUI v${escape_html(version)} <span class="version-separator svelte-177ibf8">|</span> <span class="icon is-small svelte-177ibf8"><i class="fa-solid fa-server svelte-177ibf8"></i></span> Server v${escape_html(serverVersion)}</p></div></div>`);
       },

@@ -22,8 +22,22 @@
 	} = $props();
 
 	let new_var_name = $state('');
+	let search_var = $state('');
 	let classAnimationCopyName = $state('');
 	let appVarsInternal = $state({});
+
+	let appVarsFiltered = $derived.by(() => {
+		let term = search_var.trim().toLowerCase();
+		if (!term || !Array.isArray(appVars) || appVars.length === 0) return appVars;
+		return appVars.filter((item) => {
+			let name = item && item.name ? String(item.name).toLowerCase() : '';
+			let value =
+				item && item.value != null && item.value !== ''
+					? String(item.value).toLowerCase()
+					: '';
+			return name.includes(term) || value.includes(term);
+		});
+	});
 
 	/*
 	let idapp = $derived.by(() => {
@@ -238,8 +252,31 @@
 								confirm('Are you sure you want Save & Deloy the variable ' + appvar.name + '?')
 							) {
 								// Guardar la variable y emitir evento indicando cambios realizados
-								let avr = await UpsertAppVar(appvar, $userStore.token);
-								appvar.idvar = avr.idvar;
+								try {
+									let avr = await UpsertAppVar(appvar, $userStore.token);
+									if (avr && avr.idvar) {
+										appvar.idvar = avr.idvar;
+										noty.push({
+											message: `Variable ${appvar.name} saved and deployed successfully.`,
+											color: 'success'
+										});
+									} else {
+										noty.push({
+											message: `Error saving variable ${appvar.name}: ${
+												avr?.message || avr?.error || 'Unknown error'
+											}`,
+											color: 'danger'
+										});
+									}
+								} catch (error) {
+									console.error(error);
+									noty.push({
+										message: `Error saving variable ${appvar.name}: ${
+											error.message || 'Unknown error'
+										}`,
+										color: 'danger'
+									});
+								}
 							}
 						}}
 					>
@@ -256,10 +293,31 @@
 						onclick={async () => {
 							if (confirm('Are you sure you want to remove the variable ' + appvar.name + '?')) {
 								// Eliminar de base de datos y emitir evento indicando cambios realizados
-								let req = await DeleteAppVar(appvar.idvar);
-								if (req) {
-									appVars = appVars.filter((item) => {
-										return item.idvar != appvar.idvar;
+								try {
+									let req = await DeleteAppVar(appvar.idvar);
+									if (req && req.success !== false && !req.error) {
+										appVars = appVars.filter((item) => {
+											return item.idvar != appvar.idvar;
+										});
+										noty.push({
+											message: `Variable ${appvar.name} deleted successfully.`,
+											color: 'success'
+										});
+									} else {
+										noty.push({
+											message: `Error deleting variable ${appvar.name}: ${
+												req?.message || req?.error || 'Unknown error'
+											}`,
+											color: 'danger'
+										});
+									}
+								} catch (error) {
+									console.error(error);
+									noty.push({
+										message: `Error deleting variable ${appvar.name}: ${
+											error.message || 'Unknown error'
+										}`,
+										color: 'danger'
 									});
 								}
 							}
@@ -284,8 +342,8 @@
 
 			{#snippet r01()}
 				<div>
-					{#if !isReadOnly}
-						<div class="field has-addons">
+					<div class="field has-addons">
+						{#if !isReadOnly}
 							<div class="control">
 								<button class="button is-small is-static"> $_VAR_ </button>
 							</div>
@@ -324,13 +382,29 @@
 									New
 								</button>
 							</div>
+						{/if}
+
+						<div class="control">
+							<input
+								class="input is-small"
+								type="text"
+								placeholder="Search variable"
+								bind:value={search_var}
+							/>
 						</div>
-					{/if}
+						<div class="control">
+							<button class="button is-small is-static" title="Search" type="button">
+								<span class="icon is-small">
+									<i class="fa-solid fa-magnifying-glass"></i>
+								</span>
+							</button>
+						</div>
+					</div>
 				</div>
 			{/snippet}
 		</Level>
 
-		{#each appVars as av, i}
+		{#each appVarsFiltered as av, i}
 			<EditorCode
 				showSelectLang={true}
 				left={left_Editor}
@@ -353,7 +427,16 @@
 				{/snippet}
 			</EditorCode>
 			<hr class="reset_margin" />
-		{/each}
+			{:else}
+				{#if search_var.trim()}
+					<div class="icon-text" style="margin-top: 10px;">
+						<span class="icon has-text-warning">
+							<i class="fa-solid fa-magnifying-glass"></i>
+						</span>
+						<span> No variables match the search criteria. </span>
+					</div>
+				{/if}
+			{/each}
 	</div>
 {/if}
 
