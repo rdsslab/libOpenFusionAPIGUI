@@ -2,6 +2,17 @@ export function getEnvironmentList(token: any): Promise<any>;
 export function GetApp(idapp: any, token: any): Promise<any>;
 export function LoginRequest(username: any, password: any): Promise<any>;
 export function GetServerAPIVersion(): Promise<any>;
+export function GetRecoveryOptions(environment?: string): Promise<any>;
+export function ForgotPassword(data: {
+    username: string;
+    channel?: string;
+    environment?: string;
+}): Promise<any>;
+export function ConfirmResetPassword(data: {
+    username: string;
+    otp: string;
+    newPassword: string;
+}): Promise<any>;
 export function GetAppBackup(idapp: any, token: any): Promise<any>;
 export function RestoreAppBackup(app: any): Promise<any>;
 export function GetAllAppsBackup(token: any): Promise<any>;

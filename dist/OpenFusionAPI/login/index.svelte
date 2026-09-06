@@ -4,7 +4,10 @@
 		getListHandler,
 		LoginRequest,
 		GetServerAPIVersion,
-		ChangeSystemUserPassword
+		ChangeSystemUserPassword,
+		GetRecoveryOptions,
+		ForgotPassword,
+		ConfirmResetPassword
 	} from '../Application/utils/request.js';
 	import { userStore } from '../Application/utils/stores.js';
 	import {
@@ -12,8 +15,15 @@
 		formatJwtTimeLeft,
 		logJwtExpiration
 	} from '../Application/utils/jwtUtils.js';
+	import { getDefaultEnvironment } from '../Application/utils/permissions.js';
 	import logo from '../img/favicon.png';
-	import { Notifications, Modal, DialogModal, Input } from '@rdsslab/svelte-components';
+	import {
+		Notifications,
+		Modal,
+		DialogModal,
+		Input,
+		BasicSelect
+	} from '@rdsslab/svelte-components';
 	import { version } from '../version.js';
 
 	let noty = new Notifications();
@@ -32,6 +42,41 @@
 		changePwd.newPassword.length > 0 && changePwd.newPassword === changePwd.repeat
 	);
 
+	// ── Recuperación / reset de clave (OTP por email o Telegram) ──
+	const environment = getDefaultEnvironment();
+	let recoveryOptions = $state(null);
+	let showRecovery = $state(false);
+	let recoveryStep = $state('request');
+	let recoveryBusy = $state(false);
+	let recoveryError = $state('');
+	let recoveryInfo = $state('');
+	let recovery = $state({ username: '', channel: 'auto', otp: '', newPassword: '', repeat: '' });
+
+	const recoveryEnabled = $derived(
+		recoveryOptions && (recoveryOptions.email?.enabled || recoveryOptions.telegram?.enabled)
+	);
+
+	const recoveryChannels = $derived.by(() => {
+		const opts = [];
+		const email = !!recoveryOptions?.email?.enabled;
+		const telegram = !!recoveryOptions?.telegram?.enabled;
+		if (email && telegram)
+			opts.push({ id: 'auto', value: 'Auto (email / Telegram)', enabled: true });
+		if (email) opts.push({ id: 'email', value: 'Email', enabled: true });
+		if (telegram) opts.push({ id: 'telegram', value: 'Telegram', enabled: true });
+		return opts;
+	});
+
+	const recoveryPwdMatch = $derived(
+		recovery.newPassword.length > 0 && recovery.newPassword === recovery.repeat
+	);
+
+	$effect(() => {
+		if (recoveryChannels.length > 0 && !recoveryChannels.some((c) => c.id === recovery.channel)) {
+			recovery.channel = recoveryChannels[0].id;
+		}
+	});
+
 	import { onMount } from 'svelte';
 
 	async function loadServerVersion() {
@@ -46,7 +91,112 @@
 	onMount(() => {
 		setTimeout(() => (mounted = true), 50);
 		loadServerVersion();
+		loadRecoveryOptions();
 	});
+
+	async function loadRecoveryOptions() {
+		try {
+			const res = await GetRecoveryOptions(environment);
+			if (res && (res.email || res.telegram)) {
+				recoveryOptions = res;
+			}
+		} catch (error) {
+			// Endpoint no disponible (servidor antiguo): se oculta la opción.
+			recoveryOptions = null;
+		}
+	}
+
+	function openRecovery() {
+		recoveryError = '';
+		recoveryInfo = '';
+		recoveryStep = 'request';
+		if (!recovery.username && username) recovery.username = username;
+		showRecovery = true;
+	}
+
+	function closeRecovery() {
+		showRecovery = false;
+		recoveryStep = 'request';
+		recoveryError = '';
+		recoveryInfo = '';
+	}
+
+	async function submitRecoveryRequest() {
+		recoveryError = '';
+		recoveryInfo = '';
+		const name = String(recovery.username || '').trim();
+		if (!name) {
+			recoveryError = 'Please enter your username.';
+			return;
+		}
+		if (recoveryBusy) return;
+		recoveryBusy = true;
+		try {
+			const channel =
+				recovery.channel === 'email' || recovery.channel === 'telegram'
+					? recovery.channel
+					: undefined;
+			const data = await ForgotPassword({
+				username: name,
+				environment,
+				...(channel ? { channel } : {})
+			});
+			recoveryInfo =
+				typeof data?.message === 'string'
+					? data.message
+					: 'If the account exists and the selected channel is available, you will receive a verification code.';
+			recoveryStep = 'code';
+		} catch (error) {
+			console.trace(error);
+			recoveryError = error.message || 'The code could not be sent. Try again later.';
+		} finally {
+			recoveryBusy = false;
+		}
+	}
+
+	async function submitRecoveryConfirm() {
+		recoveryError = '';
+		const name = String(recovery.username || '').trim();
+		const otp = String(recovery.otp || '').trim();
+		if (!name || !otp) {
+			recoveryError = 'Please enter the 6-digit verification code.';
+			return;
+		}
+		if (!recovery.newPassword || !recovery.repeat) {
+			recoveryError = 'Please enter and repeat the new password.';
+			return;
+		}
+		if (recovery.newPassword !== recovery.repeat) {
+			recoveryError = 'Passwords do not match.';
+			return;
+		}
+		if (recoveryBusy) return;
+		recoveryBusy = true;
+		try {
+			const data = await ConfirmResetPassword({
+				username: name,
+				otp,
+				newPassword: recovery.newPassword
+			});
+			if (data && (data.success === true || data.error === undefined)) {
+				recovery = { username: '', channel: 'auto', otp: '', newPassword: '', repeat: '' };
+				recoveryStep = 'request';
+				showRecovery = false;
+				password = '';
+				noty.push({
+					message: data?.message || 'Password updated. Log in with your new password.',
+					color: 'success'
+				});
+			} else {
+				recoveryError = data?.error || data?.message || 'The code is invalid or has expired.';
+			}
+		} catch (error) {
+			console.trace(error);
+			recoveryError = error.message || 'The password could not be updated.';
+		} finally {
+			recoveryBusy = false;
+		}
+	}
 
 	/**
 	 * Shows a notification with the lifetime of the session just started.
@@ -288,6 +438,15 @@
 				</div>
 			</form>
 
+			{#if recoveryEnabled}
+				<div class="field has-text-centered mt-2">
+					<button type="button" class="button is-ghost is-small forgot-btn" onclick={openRecovery}>
+						<span class="icon is-small"><i class="fa-solid fa-key"></i></span>
+						<span>Forgot your password?</span>
+					</button>
+				</div>
+			{/if}
+
 			<p class="version-tag has-text-centered has-text-grey">
 				<span class="icon is-small"><i class="fa-solid fa-code-branch"></i></span>
 				GUI v{version}
@@ -300,12 +459,95 @@
 </Modal>
 
 <DialogModal
+	title={recoveryTitle}
+	body={recoveryBody}
+	closeOnEscape={!recoveryBusy}
+	closeOnBackground={!recoveryBusy}
+	label_accept={recoveryStep === 'request' ? 'Send code' : 'Update password'}
+	onaccept={async () => {
+		if (recoveryStep === 'request') await submitRecoveryRequest();
+		else await submitRecoveryConfirm();
+	}}
+	oncancel={closeRecovery}
+	bind:show={showRecovery}
+>
+	{#snippet recoveryTitle()}
+		<span class="has-text-info">
+			<i class="fa-solid fa-key"></i> Password recovery
+		</span>
+	{/snippet}
+
+	{#snippet recoveryBody()}
+		{#if recoveryStep === 'request'}
+			<p class="mb-2">
+				Enter your username and we will send a one-time verification code to your registered email
+				or Telegram.
+			</p>
+			<Input label="Username:" bind:value={recovery.username}></Input>
+			{#if recoveryChannels.length > 1}
+				<div class="mt-2">
+					<BasicSelect
+						label="Delivery channel"
+						options={recoveryChannels}
+						bind:option={recovery.channel}
+						isExpanded
+					></BasicSelect>
+				</div>
+			{/if}
+		{:else}
+			<p class="mb-2">
+				Enter the 6-digit code you received and choose your new password (minimum 8 characters).
+			</p>
+			<Input label="Username:" bind:value={recovery.username} disabled={true}></Input>
+			<Input
+				label="Verification code:"
+				type="text"
+				maxlength="6"
+				placeholder="123456"
+				bind:value={recovery.otp}
+			></Input>
+			<Input label="New password:" type="password" bind:value={recovery.newPassword}></Input>
+			<Input label="Repeat new password:" type="password" bind:value={recovery.repeat}></Input>
+			{#if recovery.newPassword && !recoveryPwdMatch}
+				<div class="notification is-danger is-light py-2 px-3 mt-2">
+					<span class="icon-text">
+						<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+						<span>Passwords do not match.</span>
+					</span>
+				</div>
+			{/if}
+		{/if}
+
+		{#if recoveryInfo}
+			<div class="notification is-info is-light py-2 px-3 mt-2">
+				<span class="icon-text">
+					<span class="icon"><i class="fa-solid fa-circle-info"></i></span>
+					<span>{recoveryInfo}</span>
+				</span>
+			</div>
+		{/if}
+		{#if recoveryError}
+			<div class="notification is-danger is-light py-2 px-3 mt-2">
+				<span class="icon-text">
+					<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+					<span>{recoveryError}</span>
+				</span>
+			</div>
+		{/if}
+	{/snippet}
+</DialogModal>
+
+<DialogModal
 	title={forcedChangeTitle}
 	body={forcedChangeBody}
 	closeOnEscape={false}
 	closeOnBackground={false}
-	onaccept={async () => { await submitForcedChange(); }}
-	oncancel={() => { cancelForcedChange(); }}
+	onaccept={async () => {
+		await submitForcedChange();
+	}}
+	oncancel={() => {
+		cancelForcedChange();
+	}}
 	bind:show={mustChangePassword}
 >
 	{#snippet forcedChangeTitle()}
@@ -642,6 +884,18 @@
 	.login-btn:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	/* ── Forgot password link ─────────────────────────────────── */
+	.forgot-btn {
+		color: rgba(255, 255, 255, 0.45) !important;
+		font-size: 0.78rem;
+		letter-spacing: 0.02em;
+	}
+
+	.forgot-btn:hover {
+		color: #ff6b1a !important;
+		background: transparent !important;
 	}
 
 	/* ── Version tag ──────────────────────────────────────────── */

@@ -81,6 +81,38 @@ export const GetServerAPIVersion = async () => {
 	return version_res;
 };
 
+// ── Recuperación de contraseña (endpoints públicos de la app system) ──────
+
+/**
+ * Canales de recuperación habilitados globalmente para el environment.
+ * @param {string} environment
+ */
+export const GetRecoveryOptions = async (environment = 'prd') => {
+	let uf = new uFetch();
+	let res = await uf.get({ url: url_paths.userRecoveryOptions, data: { environment } });
+	return await res.json();
+};
+
+/**
+ * Solicita un OTP de 6 dígitos (email o Telegram).
+ * @param {{ username: string, channel?: string, environment?: string }} data
+ */
+export const ForgotPassword = async (data) => {
+	let uf = new uFetch();
+	let res = await uf.post({ url: url_paths.userForgotPassword, data });
+	return await res.json();
+};
+
+/**
+ * Canjea el OTP y actualiza la clave.
+ * @param {{ username: string, otp: string, newPassword: string }} data
+ */
+export const ConfirmResetPassword = async (data) => {
+	let uf = new uFetch();
+	let res = await uf.post({ url: url_paths.userResetPasswordConfirm, data });
+	return await res.json();
+};
+
 export const GetAppBackup = async (idapp, token) => {
 	if (idapp) {
 		let uf = new uFetch();

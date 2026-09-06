@@ -56,5 +56,8 @@ export const url_paths = {
 	systemUserUpdate: '/api/system/user/update/prd',
 	systemUserDelete: '/api/system/user/delete/prd',
 	systemUserChangePassword: '/api/system/user/changepassword/prd',
-	systemUserResetPassword: '/api/system/user/resetpassword/prd'
+	systemUserResetPassword: '/api/system/user/resetpassword/prd',
+	userRecoveryOptions: '/api/system/user/recovery/options/prd',
+	userForgotPassword: '/api/system/user/forgotpassword/prd',
+	userResetPasswordConfirm: '/api/system/user/resetpassword/confirm/prd'
 };

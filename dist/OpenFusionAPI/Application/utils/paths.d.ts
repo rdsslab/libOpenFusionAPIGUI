@@ -55,4 +55,7 @@ export namespace url_paths {
     let systemUserDelete: string;
     let systemUserChangePassword: string;
     let systemUserResetPassword: string;
+    let userRecoveryOptions: string;
+    let userForgotPassword: string;
+    let userResetPasswordConfirm: string;
 }
