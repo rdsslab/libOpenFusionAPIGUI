@@ -36,6 +36,9 @@ export namespace url_paths {
     let appEndpointUsageSummary: string;
     let getTopErrorEndpointsByTime: string;
     let getTopErrorEndpoints: string;
+    let getTraceSummary: string;
+    let getTraceErrorsOnly: string;
+    let getTraceSlowestHops: string;
     let getEndpointBackups: string;
     let getBotBackups: string;
     let getBotLogs: string;
@@ -51,4 +54,5 @@ export namespace url_paths {
     let systemUserUpdate: string;
     let systemUserDelete: string;
     let systemUserChangePassword: string;
+    let systemUserResetPassword: string;
 }

@@ -11,12 +11,14 @@
 		Notifications
 	} from '@rdsslab/svelte-components';
 	import { userStore } from '../../utils/stores.js';
+	import { syncCurrentUserCtrl } from '../../utils/stores.js';
 	import {
 		GetSystemUsersList,
 		CreateSystemUser,
 		UpdateSystemUser,
 		DeleteSystemUser,
-		ChangeSystemUserPassword
+		ChangeSystemUserPassword,
+		ResetSystemUserPassword
 	} from '../../utils/request.js';
 	import { currentUserHasPermission, getDefaultEnvironment } from '../../utils/permissions.js';
 	import PermissionEditor from './PermissionEditor.svelte';
@@ -24,10 +26,12 @@
 	let notify = new Notifications();
 	let showEditor = $state(false);
 	let showChangePassword = $state(false);
+	let showResetPassword = $state(false);
 	let isEditing = $state(false);
 	let DataTableUsers = $state([]);
 	let selectedRow = $state(getDefaultValues());
 	let passwordData = $state({ oldPassword: '', newPassword: '', repeatNewPassword: '' });
+	let resetPwdData = $state({ newPassword: '', repeat: '' });
 
 	const environment = getDefaultEnvironment();
 	const currentUser = $derived($userStore?.user);
@@ -100,6 +104,7 @@
 					...u,
 					fullname: `${u.first_name || ''} ${u.last_name || ''}`.trim()
 				}));
+				syncCurrentUserCtrl(users);
 			} else {
 				DataTableUsers = [];
 			}
@@ -115,7 +120,17 @@
 			let row = $state.snapshot(selectedRow);
 
 			if (isEditing) {
-				delete row.password;
+				let hasPwd = row.password && row.password.length > 0;
+				if (hasPwd && row.password !== row.repeatPassword) {
+					notify.push({ message: 'Passwords do not match', color: 'warning' });
+					return;
+				}
+				if (hasPwd) {
+					// Clave definitiva asignada por el admin: sin forzar cambio.
+					row.change_password = false;
+				} else {
+					delete row.password;
+				}
 				delete row.repeatPassword;
 				let result = await UpdateSystemUser(row);
 				if (result && (result.success !== false || result.iduser)) {
@@ -199,6 +214,35 @@
 		}
 	}
 
+	async function resetPassword() {
+		if (!resetPwdData.newPassword || !resetPwdData.repeat) {
+			notify.push({ message: 'Please fill in both password fields', color: 'warning' });
+			return;
+		}
+		if (resetPwdData.newPassword !== resetPwdData.repeat) {
+			notify.push({ message: 'Passwords do not match', color: 'warning' });
+			return;
+		}
+
+		try {
+			let result = await ResetSystemUserPassword({
+				iduser: selectedRow.iduser,
+				newPassword: resetPwdData.newPassword
+			});
+			if (result && result.success) {
+				notify.push({ message: 'Temporary password set. The user must change it on next login.', color: 'success' });
+				showResetPassword = false;
+				resetPwdData = { newPassword: '', repeat: '' };
+			} else {
+				let msg = result?.error || result?.message || 'Failed to reset password';
+				notify.push({ message: msg, color: 'danger' });
+			}
+		} catch (error) {
+			console.error('resetPassword error:', error);
+			notify.push({ message: error.message || 'Failed to reset password', color: 'danger' });
+		}
+	}
+
 	function openEditor(row = null) {
 		if (row) {
 			isEditing = true;
@@ -227,6 +271,12 @@
 		selectedRow = { ...row };
 		passwordData = { oldPassword: '', newPassword: '', repeatNewPassword: '' };
 		showChangePassword = true;
+	}
+
+	function openResetPassword(row) {
+		selectedRow = { ...row };
+		resetPwdData = { newPassword: '', repeat: '' };
+		showResetPassword = true;
 	}
 </script>
 
@@ -324,27 +374,34 @@
 				</div>
 			</div>
 
-			{#if !isEditing}
-				<div class="columns">
-					<div class="column is-one-half">
-						<Input type="password" label="Password:" bind:value={selectedRow.password}></Input>
-					</div>
-					<div class="column is-one-half">
-						<Input type="password" label="Repeat Password:" bind:value={selectedRow.repeatPassword}></Input>
-					</div>
+			<div class="columns">
+				<div class="column is-one-half">
+					<Input type="password" label={isEditing ? 'New Password (optional):' : 'Password:'} bind:value={selectedRow.password}></Input>
 				</div>
-				{#if selectedRow.password && selectedRow.repeatPassword && selectedRow.password !== selectedRow.repeatPassword}
-					<div class="notification is-warning is-light py-2 px-3 mb-3">
-						<span class="icon-text">
-							<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
-							<span>Passwords do not match.</span>
-						</span>
-					</div>
-				{/if}
+				<div class="column is-one-half">
+					<Input type="password" label={isEditing ? 'Repeat Password (optional):' : 'Repeat Password:'} bind:value={selectedRow.repeatPassword}></Input>
+				</div>
+			</div>
+			{#if selectedRow.password && selectedRow.repeatPassword && selectedRow.password !== selectedRow.repeatPassword}
+				<div class="notification is-warning is-light py-2 px-3 mb-3">
+					<span class="icon-text">
+						<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+						<span>Passwords do not match.</span>
+					</span>
+				</div>
+			{/if}
+			{#if isEditing}
+				<p class="help">Leave empty to keep the current password. If filled, it becomes the definitive password (no forced change on next login).</p>
 			{/if}
 
 			{#if isEditing}
 				<div class="buttons are-small mt-4">
+					{#if canEdit}
+						<button class="button is-warning" onclick={() => { openResetPassword(selectedRow); }}>
+							<span class="icon is-small"><i class="fa-solid fa-rotate"></i></span>
+							<span>Reset Password (temporary)</span>
+						</button>
+					{/if}
 					<button class="button is-warning is-outlined" onclick={() => { openChangePassword(selectedRow); }}>
 						<span class="icon is-small"><i class="fa-solid fa-key"></i></span>
 						<span>Change Password</span>
@@ -382,6 +439,40 @@
 				<span class="icon-text">
 					<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
 					<span>You must repeat the new password twice.</span>
+				</span>
+			</div>
+		{/if}
+	{/snippet}
+</DialogModal>
+
+<DialogModal
+	title={resetTitleModal}
+	body={resetBodyDialogModal}
+	onaccept={async () => { await resetPassword(); }}
+	oncancel={() => {
+		showResetPassword = false;
+		resetPwdData = { newPassword: '', repeat: '' };
+	}}
+	bind:show={showResetPassword}
+>
+	{#snippet resetTitleModal()}
+		<span>Reset Password (temporary): {selectedRow.username}</span>
+	{/snippet}
+
+	{#snippet resetBodyDialogModal()}
+		<div class="notification is-warning is-light py-2 px-3">
+			<span class="icon-text">
+				<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+				<span>The user will need to change this password on their next login.</span>
+			</span>
+		</div>
+		<Input type="password" label="Temporary Password" bind:value={resetPwdData.newPassword}></Input>
+		<Input type="password" label="Repeat Temporary Password" bind:value={resetPwdData.repeat}></Input>
+		{#if resetPwdData.newPassword && resetPwdData.newPassword !== resetPwdData.repeat}
+			<div class="notification is-warning is-light py-2 px-3">
+				<span class="icon-text">
+					<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+					<span>Passwords do not match.</span>
 				</span>
 			</div>
 		{/if}

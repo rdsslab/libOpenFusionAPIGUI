@@ -106,7 +106,7 @@
     "isEntry": true,
     "imports": [
       "_utils.js",
-      "_root.js",
+      "_index.js",
       "_server.js",
       "_exports.js",
       "_utils2.js",
@@ -128,11 +128,11 @@
     "src": "src/routes/+page.svelte",
     "isEntry": true,
     "imports": [
-      "_index.js",
-      "_index2.js"
+      "_index2.js",
+      "_index.js"
     ],
     "css": [
-      "_app/immutable/assets/_page.C7uorL3V.css"
+      "_app/immutable/assets/_page.B5zKt2u_.css"
     ],
     "assets": [
       "_app/immutable/assets/fa-brands-400.Bs6tcqqs.woff2",

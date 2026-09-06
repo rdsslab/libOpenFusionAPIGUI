@@ -20,7 +20,7 @@ import {
 function checkStatus(response) {
 	if (response && response.status === 401) {
 		authEventStore.set({ type: 'unauthorized' });
-		throw new Error('Sesión expirada o no autorizada (401)');
+		throw new Error('Session expired or unauthorized (401)');
 	}
 	return response;
 }
@@ -583,6 +583,30 @@ export const getLogs = async (options, token) => {
 	}
 };
 
+export const getTraceSummary = async (options) => {
+	if (options) {
+		let uf = new uFetch();
+		let req = checkStatus(await uf.get({ url: url_paths.getTraceSummary, data: options }));
+		return await req.json();
+	}
+};
+
+export const getTraceErrorsOnly = async (options) => {
+	if (options) {
+		let uf = new uFetch();
+		let req = checkStatus(await uf.get({ url: url_paths.getTraceErrorsOnly, data: options }));
+		return await req.json();
+	}
+};
+
+export const getTraceSlowestHops = async (options) => {
+	if (options) {
+		let uf = new uFetch();
+		let req = checkStatus(await uf.get({ url: url_paths.getTraceSlowestHops, data: options }));
+		return await req.json();
+	}
+};
+
 export const GetAppVars = async (idapp, setStoreListAppVars = false) => {
 	let uf = new uFetch();
 
@@ -739,36 +763,36 @@ export const GetSystemUsersList = async () => {
 
 export const CreateSystemUser = async (data) => {
 	let uf = new uFetch();
-	let request = checkStatus(
-		await uf.post({ url: url_paths.systemUserCreate, data: data })
-	);
+	let request = checkStatus(await uf.post({ url: url_paths.systemUserCreate, data: data }));
 	let result = await request.json();
 	return result;
 };
 
 export const UpdateSystemUser = async (data) => {
 	let uf = new uFetch();
-	let request = checkStatus(
-		await uf.post({ url: url_paths.systemUserUpdate, data: data })
-	);
+	let request = checkStatus(await uf.post({ url: url_paths.systemUserUpdate, data: data }));
 	let result = await request.json();
 	return result;
 };
 
 export const DeleteSystemUser = async (data) => {
 	let uf = new uFetch();
-	let request = checkStatus(
-		await uf.post({ url: url_paths.systemUserDelete, data: data })
-	);
+	let request = checkStatus(await uf.post({ url: url_paths.systemUserDelete, data: data }));
 	let result = await request.json();
 	return result;
 };
 
-export const ChangeSystemUserPassword = async (data) => {
+export const ChangeSystemUserPassword = async (data, token) => {
 	let uf = new uFetch();
-	let request = checkStatus(
-		await uf.post({ url: url_paths.systemUserChangePassword, data: data })
-	);
+	if (token) uf.setBearerAuthorization(token);
+	let request = checkStatus(await uf.post({ url: url_paths.systemUserChangePassword, data: data }));
+	let result = await request.json();
+	return result;
+};
+
+export const ResetSystemUserPassword = async (data) => {
+	let uf = new uFetch();
+	let request = checkStatus(await uf.post({ url: url_paths.systemUserResetPassword, data: data }));
 	let result = await request.json();
 	return result;
 };

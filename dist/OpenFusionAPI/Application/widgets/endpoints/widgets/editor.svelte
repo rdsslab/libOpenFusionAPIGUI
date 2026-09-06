@@ -195,6 +195,7 @@
 		},
 		{ name: 'json_schema', label: 'JSON Schema', component: tab_json_schema },
 		{ name: 'auth', label: 'Authorizations', component: tab_auth, classIcon: ' fa-solid fa-key ' },
+		{ name: 'cors', label: 'CORS', component: tab_cors, classIcon: ' fa-solid fa-earth-americas ' },
 		{ name: 'mcp', label: 'MCP', component: tab_mcp, classIcon: ' fa-solid fa-robot ' },
 		{
 			name: 'custom_data',
@@ -240,6 +241,7 @@
 			'config',
 			'docs',
 			'auth',
+			'cors',
 			'mcp',
 			'price',
 			'tester',
@@ -252,6 +254,7 @@
 			'config',
 			'docs',
 			'auth',
+			'cors',
 			'price',
 			'tester',
 			'backups',
@@ -265,6 +268,7 @@
 			'config',
 			'docs',
 			'auth',
+			'cors',
 			'price',
 			'tester',
 			'backups',
@@ -278,6 +282,7 @@
 			'config',
 			'docs',
 			'auth',
+			'cors',
 			'price',
 			'tester',
 			'backups',
@@ -291,6 +296,7 @@
 			'config',
 			'docs',
 			'auth',
+			'cors',
 			'price',
 			'tester',
 			'backups',
@@ -579,6 +585,68 @@
 {#snippet tab_mcp()}
 	{#if endpoint?.mcp}
 		<MCP bind:mcp={endpoint.mcp} bind:endpoint></MCP>
+	{/if}
+{/snippet}
+
+{#snippet tab_cors()}
+	{#if endpoint}
+		<div>
+			<div class="block">
+				<div class="buttons is-small">
+					<button
+						class="button is-small"
+						title="Remove per-endpoint CORS: use the deployment-wide default policy"
+						onclick={() => {
+							endpoint.cors = {};
+							onChangeValueHandler();
+						}}
+					>
+						<span class="icon is-small"><i class="fas fa-times"></i></span>
+						<span>Default (deployment-wide)</span>
+					</button>
+					<button
+						class="button is-small"
+						title="Allow any cross-origin request"
+						onclick={() => {
+							endpoint.cors = { origin: ['*'] };
+							onChangeValueHandler();
+						}}
+					>
+						<span class="icon is-small"><i class="fas fa-globe"></i></span>
+						<span>Allow all origins</span>
+					</button>
+				</div>
+			</div>
+
+			<EditorCode
+				lang="json"
+				showFormat={true}
+				bind:code={endpoint.cors}
+				onchange={() => {
+					onChangeValueHandler();
+				}}
+			></EditorCode>
+
+			<div class="block">
+				<div class="content is-small">
+					<div class="icon-text">
+						<span class="icon has-text-info">
+							<i class="fas fa-info-circle"></i>
+						</span>
+						<span>Info</span>
+					</div>
+					<p>
+						Set a list of allowed origins
+						<code>["https://app.example.com"]</code> or an object like
+						<code>&#123;"origin": ["https://app.example.com"], "credentials": true&#125;</code>
+						to restrict cross-origin browser access. Empty
+						<code>&#123;&#125;</code> uses the deployment-wide default policy. Requests from
+						an Origin outside the allowlist are denied and receive no
+						<code>Access-Control-Allow-Origin</code> header.
+					</p>
+				</div>
+			</div>
+		</div>
 	{/if}
 {/snippet}
 

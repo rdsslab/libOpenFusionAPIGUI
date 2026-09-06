@@ -1,4 +1,15 @@
 /**
+ * Actualiza el `ctrl` del usuario en sesión con el valor vigente en la BD.
+ * Crea un nuevo objeto `user` para disparar la reactividad de los `$derived`
+ * (menús y permisos) sin cambiar el token ni la sesión.
+ *
+ * @param {Array<{username: string, ctrl?: object}>} users - Lista de System Users.
+ */
+export function syncCurrentUserCtrl(users: Array<{
+    username: string;
+    ctrl?: object;
+}>): void;
+/**
  * Emite eventos de autenticación globales.
  * Valores posibles:
  *   null
