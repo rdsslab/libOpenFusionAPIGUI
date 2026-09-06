@@ -1,6 +1,6 @@
 {
   "name": "@rdsslab/libopenfusionapigui",
-  "version": "8.0.3",
+  "version": "9.0.0",
   "main": "./dist/index.js",
   "repository": {
     "type": "git",
@@ -71,7 +71,7 @@
   "types": "./dist/index.d.ts",
   "type": "module",
   "dependencies": {
-    "@rdsslab/svelte-components": "https://github.com/rdsslab/svelte-components.git#8188532b3176e5a7f0b1e8745d3853a557a29755",
+    "@rdsslab/svelte-components": "https://github.com/rdsslab/svelte-components.git#e5cd8416d812ab72c0e0c714d6f5791b80dd3527",
     "@rdsslab/uFetch": "https://github.com/rdsslab/uFetch.git",
     "@fortawesome/fontawesome-free": "^7.0.0",
     "bulma": "^1.0.4",

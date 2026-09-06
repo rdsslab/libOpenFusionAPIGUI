@@ -49,3 +49,27 @@ export const storeBotChanged = writable(null);
  * Lista de usuarios internos del sistema (System Users).
  */
 export const storeSystemUsersList = writable([]);
+
+/**
+ * Actualiza el `ctrl` del usuario en sesión con el valor vigente en la BD.
+ * Crea un nuevo objeto `user` para disparar la reactividad de los `$derived`
+ * (menús y permisos) sin cambiar el token ni la sesión.
+ *
+ * @param {Array<{username: string, ctrl?: object}>} users - Lista de System Users.
+ */
+export function syncCurrentUserCtrl(users) {
+	if (!Array.isArray(users) || users.length === 0) return;
+
+	userStore.update((state) => {
+		const curr = state?.user;
+		if (!curr?.username) return state;
+
+		const row = users.find((u) => u.username === curr.username);
+		if (!row || row.ctrl == null || typeof row.ctrl !== 'object') return state;
+
+		return {
+			...state,
+			user: { ...curr, ctrl: JSON.parse(JSON.stringify(row.ctrl)) }
+		};
+	});
+}

@@ -3,7 +3,8 @@
 		getListMethods,
 		getListHandler,
 		LoginRequest,
-		GetServerAPIVersion
+		GetServerAPIVersion,
+		ChangeSystemUserPassword
 	} from '$lib/OpenFusionAPI/Application/utils/request.js';
 	import { userStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import {
@@ -12,7 +13,7 @@
 		logJwtExpiration
 	} from '$lib/OpenFusionAPI/Application/utils/jwtUtils.js';
 	import logo from '$lib/OpenFusionAPI/img/favicon.png';
-	import { Notifications, Modal } from '@rdsslab/svelte-components';
+	import { Notifications, Modal, DialogModal, Input } from '@rdsslab/svelte-components';
 	import { version } from '$lib/OpenFusionAPI/version.js';
 
 	let noty = new Notifications();
@@ -23,6 +24,13 @@
 	let showPassword = $state(false);
 	let mounted = $state(false);
 	let serverVersion = $state('...');
+	let mustChangePassword = $state(false);
+	let lastToken = $state('');
+	let forcedChangeError = $state('');
+	let changePwd = $state({ current: '', newPassword: '', repeat: '' });
+	let changePwdMatch = $derived(
+		changePwd.newPassword.length > 0 && changePwd.newPassword === changePwd.repeat
+	);
 
 	import { onMount } from 'svelte';
 
@@ -41,7 +49,7 @@
 	});
 
 	/**
-	 * Muestra una notificación con la vigencia de la sesión recién iniciada.
+	 * Shows a notification with the lifetime of the session just started.
 	 * @param {string} token
 	 */
 	function notifySessionLifetime(token) {
@@ -53,22 +61,22 @@
 		if (minutesLeft <= 0) {
 			noty.push({
 				message:
-					'Tu sesión ya expiró o el token tiene una vigencia inválida. Contacta al administrador.',
+					'Your session has already expired or the token has an invalid lifetime. Contact the administrator.',
 				color: 'danger'
 			});
 		} else if (minutesLeft < 1) {
 			noty.push({
-				message: `Sesión iniciada con vigencia muy corta: ${timeText}.`,
+				message: `Session started with a very short lifetime: ${timeText}.`,
 				color: 'danger'
 			});
 		} else if (minutesLeft < 5) {
 			noty.push({
-				message: `Sesión iniciada. Tiempo de sesión: ${timeText}.`,
+				message: `Session started. Session time: ${timeText}.`,
 				color: 'warning'
 			});
 		} else {
 			noty.push({
-				message: `Sesión iniciada. Tiempo de sesión: ${timeText}.`,
+				message: `Session started. Session time: ${timeText}.`,
 				color: 'success'
 			});
 		}
@@ -83,6 +91,18 @@
 
 			if (data.login) {
 				userStore.set({ login: data.login, token: data.token, user: data.user });
+				lastToken = data.token;
+
+				// Cambio de clave obligatorio (clave temporal o reset del admin).
+				// No se entra a la aplicación hasta que el usuario la cambie.
+				if (data.user?.change_password === true) {
+					processing.waiting = false;
+					forcedChangeError = '';
+					changePwd = { current: password, newPassword: '', repeat: '' };
+					password = '';
+					mustChangePassword = true;
+					return;
+				}
 
 				await getListMethods(data.token);
 				await getListHandler(data.token);
@@ -106,6 +126,55 @@
 			processing.waiting = false;
 			processing.error = error.message;
 		}
+	}
+
+	async function submitForcedChange() {
+		forcedChangeError = '';
+
+		if (!changePwd.newPassword || !changePwd.repeat) {
+			forcedChangeError = 'Please enter and repeat the new password.';
+			return;
+		}
+		if (changePwd.newPassword !== changePwd.repeat) {
+			forcedChangeError = 'Passwords do not match.';
+			return;
+		}
+
+		try {
+			let result = await ChangeSystemUserPassword(
+				{
+					username,
+					oldPassword: changePwd.current,
+					newPassword: changePwd.newPassword
+				},
+				lastToken
+			);
+
+			if (result && result.success) {
+				mustChangePassword = false;
+				changePwd = { current: '', newPassword: '', repeat: '' };
+
+				await getListMethods(lastToken);
+				await getListHandler(lastToken);
+
+				notifySessionLifetime(lastToken);
+
+				onlogin({ login: true });
+			} else {
+				forcedChangeError = result?.error || result?.message || 'Password could not be changed.';
+			}
+		} catch (error) {
+			console.trace(error);
+			forcedChangeError = error.message || 'Password could not be changed.';
+		}
+	}
+
+	function cancelForcedChange() {
+		mustChangePassword = false;
+		userStore.set({});
+		changePwd = { current: '', newPassword: '', repeat: '' };
+		forcedChangeError = '';
+		noty.push({ message: 'You must change your password to continue.', color: 'warning' });
 	}
 </script>
 
@@ -229,6 +298,48 @@
 		</div>
 	</div>
 </Modal>
+
+<DialogModal
+	title={forcedChangeTitle}
+	body={forcedChangeBody}
+	closeOnEscape={false}
+	closeOnBackground={false}
+	onaccept={async () => { await submitForcedChange(); }}
+	oncancel={() => { cancelForcedChange(); }}
+	bind:show={mustChangePassword}
+>
+	{#snippet forcedChangeTitle()}
+		<span class="has-text-warning"><i class="fa-solid fa-key"></i> Password change required</span>
+	{/snippet}
+
+	{#snippet forcedChangeBody()}
+		<div class="notification is-warning is-light">
+			<span class="icon-text">
+				<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+				<span>For security reasons you must change your password before continuing.</span>
+			</span>
+		</div>
+		<Input label="Current password:" bind:value={changePwd.current}></Input>
+		<Input label="New password:" bind:value={changePwd.newPassword}></Input>
+		<Input label="Repeat new password:" bind:value={changePwd.repeat}></Input>
+		{#if changePwd.newPassword && !changePwdMatch}
+			<div class="notification is-danger is-light py-2 px-3 mt-2">
+				<span class="icon-text">
+					<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+					<span>Passwords do not match.</span>
+				</span>
+			</div>
+		{/if}
+		{#if forcedChangeError}
+			<div class="notification is-danger is-light py-2 px-3 mt-2">
+				<span class="icon-text">
+					<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+					<span>{forcedChangeError}</span>
+				</span>
+			</div>
+		{/if}
+	{/snippet}
+</DialogModal>
 
 <style>
 	/* Overlay style override */

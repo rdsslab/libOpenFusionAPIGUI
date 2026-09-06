@@ -36,6 +36,9 @@ export const url_paths = {
 	appEndpointUsageSummary: '/api/system/system/log/app/endpoints/usage/prd',
 	getTopErrorEndpointsByTime: '/api/system/system/log/errors/top/bytime/prd',
 	getTopErrorEndpoints: '/api/system/system/log/errors/top/prd',
+	getTraceSummary: '/api/system/system/log/trace/summary/prd',
+	getTraceErrorsOnly: '/api/system/system/log/trace/errors/prd',
+	getTraceSlowestHops: '/api/system/system/log/trace/slow/prd',
 	getEndpointBackups: '/api/system/api/endpoint/backup/prd',
 	getBotBackups: '/api/system/bots/backup/prd',
 	getBotLogs: '/api/system/bots/logs/prd',
@@ -52,5 +55,6 @@ export const url_paths = {
 	systemUserCreate: '/api/system/user/create/prd',
 	systemUserUpdate: '/api/system/user/update/prd',
 	systemUserDelete: '/api/system/user/delete/prd',
-	systemUserChangePassword: '/api/system/user/changepassword/prd'
+	systemUserChangePassword: '/api/system/user/changepassword/prd',
+	systemUserResetPassword: '/api/system/user/resetpassword/prd'
 };

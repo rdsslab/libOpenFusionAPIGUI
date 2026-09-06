@@ -15,7 +15,8 @@
 		storeIntervalTaskEvent,
 		storeBotStatusChanged,
 		storeBotChanged,
-		statusSystemEndpointsStore
+		statusSystemEndpointsStore,
+		syncCurrentUserCtrl
 	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
 
 	import {
@@ -30,6 +31,7 @@
 	import Endpoints from '$lib/OpenFusionAPI/Application/widgets/endpoints/index.svelte';
 	import IntervalTasks from '$lib/OpenFusionAPI/Application/widgets/interval_tasks/index.svelte';
 	import Bots from '$lib/OpenFusionAPI/Application/widgets/bots/index.svelte';
+	import Logs from '$lib/OpenFusionAPI/Application/widgets/logs/index.svelte';
 	import ApiKeys from '$lib/OpenFusionAPI/Application/widgets/apikeys/index.svelte';
 	import Users from '$lib/OpenFusionAPI/Application/widgets/users/index.svelte';
 	import SystemUsers from '$lib/OpenFusionAPI/Application/widgets/system_users/index.svelte';
@@ -38,9 +40,13 @@
 		changeUserPassword,
 		restoreSystemEndpoints,
 		GetAllAppsBackup,
-		RestoreAllAppsBackup
+		RestoreAllAppsBackup,
+		GetSystemUsersList
 	} from '$lib/OpenFusionAPI/Application/utils/request.js';
-	import { currentUserHasPermission, getDefaultEnvironment } from '$lib/OpenFusionAPI/Application/utils/permissions.js';
+	import {
+		currentUserHasPermission,
+		getDefaultEnvironment
+	} from '$lib/OpenFusionAPI/Application/utils/permissions.js';
 
 	let notify = new Notifications();
 	let { onexit = () => {} } = $props();
@@ -63,6 +69,21 @@
 
 	let password_change = $state(defaultPasswordChange);
 
+	/**
+	 * Re-sincroniza el ctrl del usuario en sesión con el valor vigente en BD.
+	 * Así los menús y permisos reflejan cambios hechos por un administrador sin
+	 * necesidad de volver a iniciar sesión.
+	 */
+	async function refreshCurrentUserCtrl() {
+		try {
+			if (!currentUserHasPermission(currentUser, permEnv, 'users', 'read')) return;
+			const users = await GetSystemUsersList();
+			syncCurrentUserCtrl(users);
+		} catch (error) {
+			console.error('refreshCurrentUserCtrl:', error);
+		}
+	}
+
 	let changepwd_compare_verify = $derived.by(() => {
 		return password_change.newPassword == password_change.repeatNewPassword;
 	});
@@ -79,17 +100,24 @@
 				{
 					label: 'New',
 					icon: ' fa-solid fa-plus ',
-					onclick: () => { idapp = 0; menu_item_selected = '/basic'; }
+					onclick: () => {
+						idapp = 0;
+						menu_item_selected = '/basic';
+					}
 				},
 				{
 					label: 'Dashboard',
 					icon: ' fa-solid fa-chart-area ',
-					onclick: () => { menu_item_selected = '/dashboard'; }
+					onclick: () => {
+						menu_item_selected = '/dashboard';
+					}
 				},
 				{
 					label: 'Basic',
 					icon: ' fa-solid fa-file ',
-					onclick: () => { menu_item_selected = '/basic'; }
+					onclick: () => {
+						menu_item_selected = '/basic';
+					}
 				}
 			];
 
@@ -97,37 +125,56 @@
 				appItems.push({
 					label: 'Endpoints',
 					icon: ' fa-solid fa-network-wired ',
-					onclick: () => { menu_item_selected = '/endpoints'; }
+					onclick: () => {
+						menu_item_selected = '/endpoints';
+					}
 				});
 			}
 			if (currentUserHasPermission(currentUser, permEnv, 'appvars', 'read')) {
 				appItems.push({
 					label: 'Variables',
 					icon: ' fa-solid fa-square-root-variable ',
-					onclick: () => { menu_item_selected = '/appvars'; }
+					onclick: () => {
+						menu_item_selected = '/appvars';
+					}
 				});
 			}
 			if (currentUserHasPermission(currentUser, permEnv, 'apiclients', 'read')) {
 				appItems.push({
 					label: 'API Keys',
 					icon: ' fa-solid fa-key ',
-					onclick: () => { menu_item_selected = '/apikeys'; }
+					onclick: () => {
+						menu_item_selected = '/apikeys';
+					}
 				});
 			}
 			if (currentUserHasPermission(currentUser, permEnv, 'bots', 'read')) {
 				appItems.push({
 					label: 'Bots',
 					icon: ' fa-solid fa-robot ',
-					onclick: () => { menu_item_selected = '/bots'; }
+					onclick: () => {
+						menu_item_selected = '/bots';
+					}
 				});
 			}
 			if (currentUserHasPermission(currentUser, permEnv, 'interval_tasks', 'read')) {
 				appItems.push({
 					label: 'Tasks',
 					icon: ' fa-solid fa-list-check ',
-					onclick: () => { menu_item_selected = '/interval_tasks'; }
+					onclick: () => {
+						menu_item_selected = '/interval_tasks';
+					}
 				});
 			}
+			// Recurso de logs a nivel de aplicación (mismo gate que apps: no existe permiso
+			// granular 'logs' todavía en el backend).
+			appItems.push({
+				label: 'Logs',
+				icon: ' fa-solid fa-scroll ',
+				onclick: () => {
+					menu_item_selected = '/logs';
+				}
+			});
 
 			sections.push({ title: 'Application', items: appItems });
 		}
@@ -138,14 +185,18 @@
 			adminItems.push({
 				label: 'System Users',
 				icon: ' fa-solid fa-user-gear ',
-				onclick: () => { menu_item_selected = '/system-users'; }
+				onclick: () => {
+					menu_item_selected = '/system-users';
+				}
 			});
 		}
 		if (currentUserHasPermission(currentUser, permEnv, 'apiclients', 'read')) {
 			adminItems.push({
 				label: 'API Clients',
 				icon: ' fa-solid fa-users ',
-				onclick: () => { menu_item_selected = '/users'; }
+				onclick: () => {
+					menu_item_selected = '/users';
+				}
 			});
 		}
 		if (adminItems.length > 0) {
@@ -288,6 +339,7 @@
 
 	onMount(async () => {
 		await getListAppsInternal();
+		await refreshCurrentUserCtrl();
 
 		notify.push({ message: 'Welcome ', color: 'success' });
 
@@ -297,7 +349,6 @@
 		});
 
 		wsClient.on('message', (m) => {
-
 			//console.log('XXXXX >>>>> ', m);
 
 			if (m && m.event_name == 'system_information') {
@@ -322,7 +373,7 @@
 				} else if (m && m.event_name == 'request_completed') {
 					let data1 = m.data;
 					data1.dateTime = m.timestamp;
-console.log('request_completed >>>>> ', data1);
+					console.log('request_completed >>>>> ', data1);
 					storeEndpointOnComplete.set(data1);
 
 					storeCountResponseStatusCode.update((value) => {
@@ -379,7 +430,11 @@ console.log('request_completed >>>>> ', data1);
 </script>
 
 {#snippet logoIcon()}
-	<img src={Logo} alt="Open Fusion API" style="width: 32px; height: 32px; object-fit: contain; display: block; margin: auto;" />
+	<img
+		src={Logo}
+		alt="Open Fusion API"
+		style="width: 32px; height: 32px; object-fit: contain; display: block; margin: auto;"
+	/>
 {/snippet}
 
 {#snippet user()}
@@ -397,9 +452,7 @@ console.log('request_completed >>>>> ', data1);
 		onclick={backupAllApps}
 	>
 		<span class="icon is-small">
-			<i
-				class="fa-solid {loading_full_backup ? 'fa-spinner fa-spin' : 'fa-download'}"
-			></i>
+			<i class="fa-solid {loading_full_backup ? 'fa-spinner fa-spin' : 'fa-download'}"></i>
 		</span>
 		<span>Backup All</span>
 	</button>
@@ -410,9 +463,7 @@ console.log('request_completed >>>>> ', data1);
 		onclick={() => restore_all_file_input.click()}
 	>
 		<span class="icon is-small">
-			<i
-				class="fa-solid {loading_full_restore ? 'fa-spinner fa-spin' : 'fa-upload'}"
-			></i>
+			<i class="fa-solid {loading_full_restore ? 'fa-spinner fa-spin' : 'fa-upload'}"></i>
 		</span>
 		<span>Restore All</span>
 	</button>
@@ -574,6 +625,8 @@ console.log('request_completed >>>>> ', data1);
 			<SystemUsers></SystemUsers>
 		{:else if menu_item_selected == '/users'}
 			<Users></Users>
+		{:else if menu_item_selected == '/logs'}
+			<Logs {idapp}></Logs>
 		{:else}
 			<DashBoardScreen {idapp}></DashBoardScreen>
 		{/if}
