@@ -39,6 +39,7 @@
  */
 declare module '$env/static/private' {
 	export const ACLOCAL_PATH: string;
+	export const AGENT: string;
 	export const ALLUSERSPROFILE: string;
 	export const APPDATA: string;
 	export const CHROME_CRASHPAD_PIPE_NAME: string;
@@ -114,6 +115,8 @@ declare module '$env/static/private' {
 	export const NUMBER_OF_PROCESSORS: string;
 	export const OneDrive: string;
 	export const OneDriveCommercial: string;
+	export const OPENCODE: string;
+	export const OPENCODE_PID: string;
 	export const ORIGINAL_PATH: string;
 	export const ORIGINAL_TEMP: string;
 	export const ORIGINAL_TMP: string;
@@ -249,6 +252,7 @@ declare module '$env/static/public' {
 declare module '$env/dynamic/private' {
 	export const env: {
 		ACLOCAL_PATH: string;
+		AGENT: string;
 		ALLUSERSPROFILE: string;
 		APPDATA: string;
 		CHROME_CRASHPAD_PIPE_NAME: string;
@@ -324,6 +328,8 @@ declare module '$env/dynamic/private' {
 		NUMBER_OF_PROCESSORS: string;
 		OneDrive: string;
 		OneDriveCommercial: string;
+		OPENCODE: string;
+		OPENCODE_PID: string;
 		ORIGINAL_PATH: string;
 		ORIGINAL_TEMP: string;
 		ORIGINAL_TMP: string;

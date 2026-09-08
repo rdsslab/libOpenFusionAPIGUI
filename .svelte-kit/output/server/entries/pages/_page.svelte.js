@@ -4073,7 +4073,7 @@ function App($$renderer, $$props) {
   });
 }
 const ChartWidgets = { Base: Chart, TimeSeries };
-const version = "9.1.1";
+const version = "9.1.2";
 function Login($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let noty = new Notifications$1();
@@ -12422,6 +12422,8 @@ function Apikeys($$renderer, $$props) {
       token: "",
       idapp
     };
+    let jwtCopied = false;
+    const isEditing = derived(() => !!selectedRow.idkey);
     const todayISO = () => (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
     const nextMonthISO = () => {
       const d = /* @__PURE__ */ new Date();
@@ -12429,6 +12431,7 @@ function Apikeys($$renderer, $$props) {
       return d.toISOString().split("T")[0];
     };
     let optionsClients = [{ name: "dsdf", value: "dsdf" }];
+    const clientLabel = derived(() => (optionsClients || []).find((c) => String(c.value) === String(selectedRow?.idclient))?.name || selectedRow?.idclient || "");
     let DataTableAPIs = [];
     let columns = {
       idkey: { hidden: true },
@@ -12528,17 +12531,21 @@ function Apikeys($$renderer, $$props) {
           showEditButton: canEdit(),
           oneditrow: (r) => {
             selectedRow.idkey = r.idkey || "";
-            selectedRow.enabled = r.enabled;
+            selectedRow.enabled = Boolean(r.enabled);
             selectedRow.startAt = r.startAt || "";
             selectedRow.endAt = r.endAt || "";
             selectedRow.idclient = r.idclient || "";
             selectedRow.token = r.token || "";
             selectedRow.description = r.description || "";
             selectedRow.idapp = idapp;
+            snapshot(selectedRow);
+            jwtCopied = false;
             showEditor = true;
           },
           onnewrow: () => {
             fnDefaulValues();
+            snapshot(selectedRow);
+            jwtCopied = false;
             console.log("TABLE > NEW ", selectedRow);
             showEditor = true;
           },
@@ -12581,39 +12588,44 @@ function Apikeys($$renderer, $$props) {
             {
               let r01 = function($$renderer5) {
                 $$renderer5.push(`<div class="field has-addons">`);
-                if (selectedRow.idkey) {
-                  $$renderer5.push(`<!--[0--><p class="control"><button class="button is-small is-warning is-light" title="Re-sign the token with the current application JWT key"><span class="icon is-small"><i class="fa-solid fa-rotate"></i></span> <span>Regenerate JWT</span></button></p>`);
+                if (isEditing()) {
+                  $$renderer5.push(`<!--[0--><p class="control"><button class="button is-small is-warning is-light" title="Re-sign the token with the current application JWT key"><span class="icon is-small"><i class="fa-solid fa-rotate"></i></span> <span>Regenerate JWT</span></button></p> <p class="control"><button class="button is-small is-link"><span class="icon is-small"><i class="fa-solid fa-save"></i></span> <span>Save</span></button></p>`);
                 } else {
-                  $$renderer5.push("<!--[-1-->");
+                  $$renderer5.push(`<!--[-1--><p class="control"><button class="button is-small is-link"><span class="icon is-small"><i class="fa-solid fa-rocket"></i></span> <span>Save &amp; Deploy</span></button></p>`);
                 }
-                $$renderer5.push(`<!--]--> <p class="control"><button class="button is-small is-link"><span class="icon is-small"><i class="fa-solid fa-rocket"></i></span> <span>Save &amp; Deploy</span></button></p> <p class="control"><button class="button is-small"><span class="icon is-small"><i class="fa-solid fa-xmark"></i></span> <span>Cancel</span></button></p></div>`);
+                $$renderer5.push(`<!--]--> <p class="control"><button class="button is-small"><span class="icon is-small"><i class="fa-solid fa-xmark"></i></span> <span>${escape_html(isEditing() ? "Close" : "Cancel")}</span></button></p></div>`);
               };
               Level($$renderer4, { left: [], right: [r01] });
             }
             $$renderer4.push(`<!----> <div>`);
-            Predictive($$renderer4, {
-              label: "API Client",
-              classLabel: "is-small",
-              classInput: "is-small",
-              onselect: (e) => {
-                console.log(e, selectedRow);
-              },
-              get options() {
-                return optionsClients;
-              },
-              set options($$value) {
-                optionsClients = $$value;
-                $$settled = false;
-              },
-              get selectedValue() {
-                return selectedRow.idclient;
-              },
-              set selectedValue($$value) {
-                selectedRow.idclient = $$value;
-                $$settled = false;
-              }
-            });
-            $$renderer4.push(`<!----> <div class="columns"><div class="column is-one-third">`);
+            if (isEditing()) {
+              $$renderer4.push(`<!--[0--><div class="field has-addons"><p class="control"><span class="button is-static is-small">API Client</span></p> <p class="control is-expanded"><input class="input is-small" type="text" readonly=""${attr("value", clientLabel())}/></p></div>`);
+            } else {
+              $$renderer4.push("<!--[-1-->");
+              Predictive($$renderer4, {
+                label: "API Client",
+                classLabel: "is-small",
+                classInput: "is-small",
+                onselect: (e) => {
+                  console.log(e, selectedRow);
+                },
+                get options() {
+                  return optionsClients;
+                },
+                set options($$value) {
+                  optionsClients = $$value;
+                  $$settled = false;
+                },
+                get selectedValue() {
+                  return selectedRow.idclient;
+                },
+                set selectedValue($$value) {
+                  selectedRow.idclient = $$value;
+                  $$settled = false;
+                }
+              });
+            }
+            $$renderer4.push(`<!--]--> <div class="columns"><div class="column is-one-third">`);
             Basic$1($$renderer4, {
               type: "boolean",
               label: "Enabled",
@@ -12626,30 +12638,58 @@ function Apikeys($$renderer, $$props) {
               }
             });
             $$renderer4.push(`<!----></div> <div class="column is-one-third">`);
-            Basic$1($$renderer4, {
-              type: "date",
-              label: "Date Start: ",
-              get value() {
-                return selectedRow.startAt;
-              },
-              set value($$value) {
-                selectedRow.startAt = $$value;
-                $$settled = false;
-              }
-            });
-            $$renderer4.push(`<!----></div> <div class="column is-one-third">`);
-            Basic$1($$renderer4, {
-              type: "date",
-              label: "Date End: ",
-              get value() {
-                return selectedRow.endAt;
-              },
-              set value($$value) {
-                selectedRow.endAt = $$value;
-                $$settled = false;
-              }
-            });
-            $$renderer4.push(`<!----></div></div> <div class="columns"><div class="column is-full">`);
+            if (isEditing()) {
+              $$renderer4.push("<!--[0-->");
+              Basic$1($$renderer4, {
+                type: "date",
+                label: "Date Start: ",
+                value: selectedRow.startAt,
+                readonly: true
+              });
+            } else {
+              $$renderer4.push("<!--[-1-->");
+              Basic$1($$renderer4, {
+                type: "date",
+                label: "Date Start: ",
+                get value() {
+                  return selectedRow.startAt;
+                },
+                set value($$value) {
+                  selectedRow.startAt = $$value;
+                  $$settled = false;
+                }
+              });
+            }
+            $$renderer4.push(`<!--]--></div> <div class="column is-one-third">`);
+            if (isEditing()) {
+              $$renderer4.push("<!--[0-->");
+              Basic$1($$renderer4, {
+                type: "date",
+                label: "Date End: ",
+                value: selectedRow.endAt,
+                readonly: true
+              });
+            } else {
+              $$renderer4.push("<!--[-1-->");
+              Basic$1($$renderer4, {
+                type: "date",
+                label: "Date End: ",
+                get value() {
+                  return selectedRow.endAt;
+                },
+                set value($$value) {
+                  selectedRow.endAt = $$value;
+                  $$settled = false;
+                }
+              });
+            }
+            $$renderer4.push(`<!--]--></div></div> `);
+            if (selectedRow.token) {
+              $$renderer4.push(`<!--[0--><div class="columns"><div class="column is-full"><div class="field has-addons"><p class="control"><span class="button is-static is-small">JWT Token</span></p> <p class="control is-expanded"><input class="input is-small" type="text" readonly=""${attr("value", selectedRow.token)}/></p> <p class="control"><button class="button is-small" title="Copy token"><span class="icon is-small"><i${attr_class(clsx(jwtCopied ? "fa-solid fa-check" : "fa-regular fa-copy"))}></i></span> <span>${escape_html(jwtCopied ? "Copied" : "Copy")}</span></button></p></div></div></div>`);
+            } else {
+              $$renderer4.push("<!--[-1-->");
+            }
+            $$renderer4.push(`<!--]--> <div class="columns"><div class="column is-full">`);
             TextArea$1($$renderer4, {
               label: "Description",
               get value() {
