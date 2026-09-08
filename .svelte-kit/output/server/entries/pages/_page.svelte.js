@@ -4073,7 +4073,7 @@ function App($$renderer, $$props) {
   });
 }
 const ChartWidgets = { Base: Chart, TimeSeries };
-const version = "9.0.2";
+const version = "9.1.1";
 function Login($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let noty = new Notifications$1();
@@ -4894,7 +4894,13 @@ function Basic($$renderer, $$props) {
       } else {
         $$renderer3.push("<!--[-1-->");
       }
-      $$renderer3.push(`<!--]--></p></div></div> <div class="column"><div class="field has-addons"><p class="control"><a class="button is-static is-small">Enabled</a></p> <p class="control">`);
+      $$renderer3.push(`<!--]--></p></div></div> <div class="column"><div class="field has-addons"><p class="control"><a class="button is-static is-small">JWT Key</a></p> <p class="control is-expanded">`);
+      if (app) {
+        $$renderer3.push(`<!--[0--><input class="input is-small" type="text" readonly="" placeholder="JWT Key"${attr("value", app.jwt_key)} title="Signing key used to mint the API keys of this application."/>`);
+      } else {
+        $$renderer3.push("<!--[-1-->");
+      }
+      $$renderer3.push(`<!--]--></p> <p class="control"><button class="button is-small" title="Generate a new JWT signing key"><span class="icon is-small"><i class="fa-solid fa-rotate"></i></span> <span>Generate</span></button></p></div></div> <div class="column"><div class="field has-addons"><p class="control"><a class="button is-static is-small">Enabled</a></p> <p class="control">`);
       if (app) {
         $$renderer3.push(`<!--[0--><input type="button"${attr("value", app.enabled)}${attr_class(clsx(app.enabled ? "button is-success is-selected is-small" : "button is-danger is-small"))}/>`);
       } else {
@@ -12407,6 +12413,7 @@ function Apikeys($$renderer, $$props) {
     const canDelete = derived(() => currentUserHasPermission(currentUser(), permEnv, "apiclients", "delete"));
     let showEditor = false;
     let selectedRow = {
+      idkey: "",
       idclient: "",
       enabled: true,
       startAt: "",
@@ -12496,6 +12503,7 @@ function Apikeys($$renderer, $$props) {
     }
     function fnDefaulValues() {
       selectedRow = {
+        idkey: "",
         idclient: "",
         enabled: true,
         startAt: todayISO(),
@@ -12519,9 +12527,10 @@ function Apikeys($$renderer, $$props) {
           showDeleteButton: canDelete(),
           showEditButton: canEdit(),
           oneditrow: (r) => {
-            selectedRow.enabled = r.task_enabled;
-            selectedRow.startAt = r.datestart || "";
-            selectedRow.endAt = r.dateend || "";
+            selectedRow.idkey = r.idkey || "";
+            selectedRow.enabled = r.enabled;
+            selectedRow.startAt = r.startAt || "";
+            selectedRow.endAt = r.endAt || "";
             selectedRow.idclient = r.idclient || "";
             selectedRow.token = r.token || "";
             selectedRow.description = r.description || "";
@@ -12571,7 +12580,13 @@ function Apikeys($$renderer, $$props) {
           children: ($$renderer4) => {
             {
               let r01 = function($$renderer5) {
-                $$renderer5.push(`<div class="field has-addons"><p class="control"><button class="button is-small is-link"><span class="icon is-small"><i class="fa-solid fa-rocket"></i></span> <span>Save &amp; Deploy</span></button></p> <p class="control"><button class="button is-small"><span class="icon is-small"><i class="fa-solid fa-xmark"></i></span> <span>Cancel</span></button></p></div>`);
+                $$renderer5.push(`<div class="field has-addons">`);
+                if (selectedRow.idkey) {
+                  $$renderer5.push(`<!--[0--><p class="control"><button class="button is-small is-warning is-light" title="Re-sign the token with the current application JWT key"><span class="icon is-small"><i class="fa-solid fa-rotate"></i></span> <span>Regenerate JWT</span></button></p>`);
+                } else {
+                  $$renderer5.push("<!--[-1-->");
+                }
+                $$renderer5.push(`<!--]--> <p class="control"><button class="button is-small is-link"><span class="icon is-small"><i class="fa-solid fa-rocket"></i></span> <span>Save &amp; Deploy</span></button></p> <p class="control"><button class="button is-small"><span class="icon is-small"><i class="fa-solid fa-xmark"></i></span> <span>Cancel</span></button></p></div>`);
               };
               Level($$renderer4, { left: [], right: [r01] });
             }

@@ -35,6 +35,7 @@
 	const canDelete = $derived(currentUserHasPermission(currentUser, permEnv, 'apiclients', 'delete'));
 	let showEditor = $state(false);
 	let selectedRow = $state({
+		idkey: '',
 		idclient: '',
 		enabled: true,
 		startAt: '',
@@ -149,6 +150,19 @@
 		}
 	}
 
+	async function regenerateToken() {
+		if (
+			!confirm(
+				'Regenerating the JWT will replace the current API key token. Any consumer using the current token will stop working and must be updated to the new token. This is required when the application signing key (JWT Key) was regenerated. Do you want to continue?'
+			)
+		) {
+			return;
+		}
+
+		await saveAPIKey();
+		showEditor = false;
+	}
+
 	async function deleteTasks(tasks) {
 		let idtasks = tasks.map((t) => {
 			return t.idtask;
@@ -163,6 +177,7 @@
 
 	function fnDefaulValues() {
 		selectedRow = {
+			idkey: '',
 			idclient: '',
 			enabled: true,
 			startAt: todayISO(),
@@ -190,9 +205,10 @@
 	showDeleteButton={canDelete}
 	showEditButton={canEdit}
 	oneditrow={(r) => {
-		selectedRow.enabled = r.task_enabled;
-		selectedRow.startAt = r.datestart || '';
-		selectedRow.endAt = r.dateend || '';
+		selectedRow.idkey = r.idkey || '';
+		selectedRow.enabled = r.enabled;
+		selectedRow.startAt = r.startAt || '';
+		selectedRow.endAt = r.endAt || '';
 		selectedRow.idclient = r.idclient || '';
 		selectedRow.token = r.token || '';
 		selectedRow.description = r.description || '';
@@ -222,6 +238,20 @@
 		<Level left={[]} right={[r01]}>
 			{#snippet r01()}
 				<div class="field has-addons">
+					{#if selectedRow.idkey}
+						<p class="control">
+							<button
+								class="button is-small is-warning is-light"
+								title="Re-sign the token with the current application JWT key"
+								onclick={regenerateToken}
+							>
+								<span class="icon is-small">
+									<i class="fa-solid fa-rotate"></i>
+								</span>
+								<span>Regenerate JWT</span>
+							</button>
+						</p>
+					{/if}
 					<p class="control">
 						<button
 							class="button is-small is-link"

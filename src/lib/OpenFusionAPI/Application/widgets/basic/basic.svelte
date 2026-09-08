@@ -107,6 +107,21 @@
 		const input = e.target;
 		input.value = input.value.replace(/[^a-zA-Z0-9]/g, '');
 	}
+
+	// Genera una clave JWT nueva (UUID v4). crypto.randomUUID solo está
+	// disponible en contextos seguros (HTTPS/localhost); se usa un fallback
+	// para servidores servidos por HTTP.
+	function generateJwtKey() {
+		if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+			return crypto.randomUUID();
+		}
+
+		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+			const r = (Math.random() * 16) | 0;
+			const v = c === 'x' ? r : (r & 0x3) | 0x8;
+			return v.toString(16);
+		});
+	}
 </script>
 
 {#snippet backup_restore_app()}
@@ -312,6 +327,48 @@
 							value={app.idapp}
 						/>
 					{/if}
+				</p>
+			</div>
+		</div>
+		<div class="column">
+			<div class="field has-addons">
+				<p class="control">
+					<!-- svelte-ignore a11y_missing_attribute -->
+					<a class="button is-static is-small"> JWT Key </a>
+				</p>
+				<p class="control is-expanded">
+					{#if app}
+						<input
+							class="input is-small"
+							type="text"
+							readonly
+							placeholder="JWT Key"
+							value={app.jwt_key}
+							title="Signing key used to mint the API keys of this application."
+						/>
+					{/if}
+				</p>
+				<p class="control">
+					<button
+						class="button is-small"
+						title="Generate a new JWT signing key"
+						onclick={() => {
+							if (
+								!confirm(
+									'Regenerating the JWT key will invalidate all current API tokens signed with it. Existing tokens will stop working and must be regenerated. Do you want to continue?'
+								)
+							) {
+								return;
+							}
+
+							app.jwt_key = generateJwtKey();
+						}}
+					>
+						<span class="icon is-small">
+							<i class="fa-solid fa-rotate"></i>
+						</span>
+						<span> Generate </span>
+					</button>
 				</p>
 			</div>
 		</div>

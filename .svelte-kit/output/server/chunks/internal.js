@@ -103,7 +103,7 @@ const options = {
     app: ({ head, body, assets, nonce, env }) => '<!doctype html>\n<html lang="en" class="theme-dark">\n	<head>\n		<meta charset="utf-8" />\n		<link rel="icon" href="' + assets + '/favicon.png" />\n		<meta name="viewport" content="width=device-width, initial-scale=1" />\n		' + head + '\n	</head>\n	<body data-sveltekit-preload-data="hover">\n		<div>' + body + "</div>\n	</body>\n</html>\n",
     error
   },
-  version_hash: "19a61fi"
+  version_hash: "1al8bps"
 };
 async function get_hooks() {
   let handle;
