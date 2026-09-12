@@ -1,0 +1,7 @@
+{
+  "spec": "https://github.com/rdsslab/uFetch.git",
+  "lockVersion": "5.1.0",
+  "lockResolved": "git+ssh://git@github.com/rdsslab/uFetch.git#78c1f66756b09689d7752b324956fa23320dde76",
+  "commit": "78c1f66756b09689d7752b324956fa23320dde76",
+  "installedVersion": "5.1.0"
+}

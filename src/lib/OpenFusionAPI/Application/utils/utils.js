@@ -26,10 +26,19 @@ export const jsonToHtmlString = (obj) => {
 	// Convierte el objeto en JSON con identación (2 espacios)
 	let jsonString = JSON.stringify(obj, null, 2);
 
-	// Divide en líneas, convierte espacios a &nbsp; y luego vuelve a unir con <br>
+	// Escapa caracteres HTML antes de inyectarlo (se usa con {@html} en la UI)
+	// para evitar XSS en caso de que el contenido provenga de datos externos.
 	return jsonString
 		.split('\n')
-		.map((line) => line.replace(/ /g, '&nbsp;')) // espacios → &nbsp;
+		.map((line) =>
+			line
+				.replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(/"/g, '&quot;')
+				.replace(/'/g, '&#39;')
+				.replace(/ /g, '&nbsp;')
+		) // espacios → &nbsp;
 		.join('<br>'); // saltos → <br>
 };
 

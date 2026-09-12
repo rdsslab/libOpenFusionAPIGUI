@@ -1,6 +1,6 @@
 {
   "name": "@rdsslab/libopenfusionapigui",
-  "version": "9.1.2",
+  "version": "9.2.1",
   "main": "./dist/index.js",
   "repository": {
     "type": "git",
@@ -24,7 +24,8 @@
   "scripts": {
     "dev": "vite dev",
     "dev_proxy": "vite dev --host --port 5317 --proxy",
-    "build": "node ./set_version.js && vite build && npm run package",
+    "build": "node ./set_version.js && npm run verify:deps && vite build && npm run package",
+    "verify:deps": "node ./scripts/verify-deps.js",
     "preview": "vite preview",
     "package": "svelte-kit sync && svelte-package && publint",
     "prepublishOnly": "npm run package",

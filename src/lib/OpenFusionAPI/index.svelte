@@ -132,7 +132,6 @@
 {:else}
 	<Login
 		onlogin={(login) => {
-			console.log('LOGIN', login);
 			if (login && login.login) {
 				page = 'main';
 				startJwtWatcher();

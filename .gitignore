@@ -9,8 +9,12 @@ node_modules
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
+# Artefactos de build/emisiones (sin trackear). dist/ SÍ se versiona:
+# la librería se consume por URL git y el consumidor necesita dist listo.
+*.zip
+*.stackdump
+*.log
+/nohup_server.log
+
 # VSCode
 .vscode/
-
-#
-package-lock.json

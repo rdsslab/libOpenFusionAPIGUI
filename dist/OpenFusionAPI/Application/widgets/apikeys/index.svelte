@@ -163,7 +163,6 @@
 	async function saveAPIKey() {
 		if (idapp) {
 			let row = $state.snapshot(selectedRow);
-			console.log('saveAPIKey >>>>>>>>>>>>>', row);
 			try {
 				let resp = await uF.post({ url: url_paths.APIKeys, data: row });
 				let text = await resp.text();
@@ -340,11 +339,9 @@
 		fnDefaulValues();
 		originalForm = $state.snapshot(selectedRow);
 		jwtCopied = false;
-		console.log('TABLE > NEW ', selectedRow);
 		showEditor = true;
 	}}
 	ondeleterow={async (r) => {
-		console.log('TABLE > DELETE ', r);
 		if (r.rows.length > 0 && confirm('Are you sure you want to delete this task?')) {
 			await deleteTasks(r.rows);
 		}
