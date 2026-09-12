@@ -1,0 +1,7 @@
+{
+  "spec": "https://github.com/rdsslab/svelte-components.git#90c8103f35b8da52d38e3232131e86f75dc6d844",
+  "lockVersion": "1.3.22",
+  "lockResolved": "git+ssh://git@github.com/rdsslab/svelte-components.git#90c8103f35b8da52d38e3232131e86f75dc6d844",
+  "commit": "90c8103f35b8da52d38e3232131e86f75dc6d844",
+  "installedVersion": "1.3.22"
+}
