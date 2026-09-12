@@ -7,4 +7,3 @@ function Layout($$renderer, $$props) {
 export {
   Layout as default
 };
-//# sourceMappingURL=layout.svelte.js.map

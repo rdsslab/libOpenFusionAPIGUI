@@ -328,7 +328,7 @@
 	}
 </script>
 
-<Modal show={true}>
+<Modal show={true} closeOnEscape={false} closeOnBackground={false}>
 	<div class="login-wrapper" class:is-visible={mounted} class:overlay-mode={isOverlay}>
 		<!-- Animated background orbs -->
 		<div class="orb orb-1"></div>

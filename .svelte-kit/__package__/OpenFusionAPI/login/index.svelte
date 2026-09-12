@@ -147,7 +147,7 @@
 					: 'If the account exists and the selected channel is available, you will receive a verification code.';
 			recoveryStep = 'code';
 		} catch (error) {
-			console.trace(error);
+			console.error(error);
 			recoveryError = error.message || 'The code could not be sent. Try again later.';
 		} finally {
 			recoveryBusy = false;
@@ -191,7 +191,7 @@
 				recoveryError = data?.error || data?.message || 'The code is invalid or has expired.';
 			}
 		} catch (error) {
-			console.trace(error);
+			console.error(error);
 			recoveryError = error.message || 'The password could not be updated.';
 		} finally {
 			recoveryBusy = false;
@@ -271,7 +271,7 @@
 				onfail();
 			}
 		} catch (error) {
-			console.trace(error);
+			console.error(error);
 			noty.push({ message: error.message, color: 'danger' });
 			processing.waiting = false;
 			processing.error = error.message;
@@ -314,7 +314,7 @@
 				forcedChangeError = result?.error || result?.message || 'Password could not be changed.';
 			}
 		} catch (error) {
-			console.trace(error);
+			console.error(error);
 			forcedChangeError = error.message || 'Password could not be changed.';
 		}
 	}
@@ -328,7 +328,7 @@
 	}
 </script>
 
-<Modal show={true}>
+<Modal show={true} closeOnEscape={false} closeOnBackground={false}>
 	<div class="login-wrapper" class:is-visible={mounted} class:overlay-mode={isOverlay}>
 		<!-- Animated background orbs -->
 		<div class="orb orb-1"></div>

@@ -39,4 +39,3 @@ function Error$1($$renderer, $$props) {
 export {
   Error$1 as default
 };
-//# sourceMappingURL=error.svelte.js.map
