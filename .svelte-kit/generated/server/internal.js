@@ -26,7 +26,7 @@ export const options = {
 		app: ({ head, body, assets, nonce, env }) => "<!doctype html>\n<html lang=\"en\" class=\"theme-dark\">\n\t<head>\n\t\t<meta charset=\"utf-8\" />\n\t\t<link rel=\"icon\" href=\"" + assets + "/favicon.png\" />\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n\t\t<meta\n\t\t\thttp-equiv=\"Content-Security-Policy\"\n\t\t\tcontent=\"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; connect-src 'self' https: ws: wss:;\"\n\t\t/>\n\t\t" + head + "\n\t</head>\n\t<body data-sveltekit-preload-data=\"hover\">\n\t\t<div>" + body + "</div>\n\t</body>\n</html>\n",
 		error
 	},
-	version_hash: "o3rygi"
+	version_hash: "79jmor"
 };
 
 export async function get_hooks() {

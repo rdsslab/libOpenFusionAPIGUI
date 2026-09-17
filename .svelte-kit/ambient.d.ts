@@ -39,7 +39,6 @@
  */
 declare module '$env/static/private' {
 	export const ACLOCAL_PATH: string;
-	export const AGENT: string;
 	export const ALLUSERSPROFILE: string;
 	export const APPDATA: string;
 	export const CHROME_CRASHPAD_PIPE_NAME: string;
@@ -55,12 +54,8 @@ declare module '$env/static/private' {
 	export const DISPLAY: string;
 	export const DriverData: string;
 	export const EDITOR: string;
-	export const EFC_14448_1262719628: string;
-	export const EFC_14448_1592913036: string;
-	export const EFC_14448_2283032206: string;
-	export const EFC_14448_2775293581: string;
-	export const EFC_14448_3789132940: string;
-	export const EFC_14448_4126798990: string;
+	export const EFC_13460_1592913036: string;
+	export const EFC_13460_4126798990: string;
 	export const ESET_OPTIONS: string;
 	export const EXEPATH: string;
 	export const FPS_BROWSER_APP_PROFILE_STRING: string;
@@ -115,8 +110,6 @@ declare module '$env/static/private' {
 	export const NUMBER_OF_PROCESSORS: string;
 	export const OneDrive: string;
 	export const OneDriveCommercial: string;
-	export const OPENCODE: string;
-	export const OPENCODE_PID: string;
 	export const ORIGINAL_PATH: string;
 	export const ORIGINAL_TEMP: string;
 	export const ORIGINAL_TMP: string;
@@ -165,6 +158,7 @@ declare module '$env/static/private' {
 	export const WINDIR: string;
 	export const ZES_ENABLE_SYSMAN: string;
 	export const _: string;
+	export const __COMPAT_LAYER: string;
 }
 
 /**
@@ -252,7 +246,6 @@ declare module '$env/static/public' {
 declare module '$env/dynamic/private' {
 	export const env: {
 		ACLOCAL_PATH: string;
-		AGENT: string;
 		ALLUSERSPROFILE: string;
 		APPDATA: string;
 		CHROME_CRASHPAD_PIPE_NAME: string;
@@ -268,12 +261,8 @@ declare module '$env/dynamic/private' {
 		DISPLAY: string;
 		DriverData: string;
 		EDITOR: string;
-		EFC_14448_1262719628: string;
-		EFC_14448_1592913036: string;
-		EFC_14448_2283032206: string;
-		EFC_14448_2775293581: string;
-		EFC_14448_3789132940: string;
-		EFC_14448_4126798990: string;
+		EFC_13460_1592913036: string;
+		EFC_13460_4126798990: string;
 		ESET_OPTIONS: string;
 		EXEPATH: string;
 		FPS_BROWSER_APP_PROFILE_STRING: string;
@@ -328,8 +317,6 @@ declare module '$env/dynamic/private' {
 		NUMBER_OF_PROCESSORS: string;
 		OneDrive: string;
 		OneDriveCommercial: string;
-		OPENCODE: string;
-		OPENCODE_PID: string;
 		ORIGINAL_PATH: string;
 		ORIGINAL_TEMP: string;
 		ORIGINAL_TMP: string;
@@ -378,6 +365,7 @@ declare module '$env/dynamic/private' {
 		WINDIR: string;
 		ZES_ENABLE_SYSMAN: string;
 		_: string;
+		__COMPAT_LAYER: string;
 		[key: `PUBLIC_${string}`]: undefined;
 		[key: `${string}`]: string | undefined;
 	}

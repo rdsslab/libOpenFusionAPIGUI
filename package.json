@@ -1,6 +1,6 @@
 {
   "name": "@rdsslab/libopenfusionapigui",
-  "version": "9.3.5",
+  "version": "9.3.7",
   "main": "./dist/index.js",
   "repository": {
     "type": "git",

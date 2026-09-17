@@ -1,7 +1,7 @@
 {
   "spec": "https://github.com/rdsslab/uFetch.git",
-  "lockVersion": "5.1.0",
-  "lockResolved": "git+ssh://git@github.com/rdsslab/uFetch.git#78c1f66756b09689d7752b324956fa23320dde76",
-  "commit": "78c1f66756b09689d7752b324956fa23320dde76",
-  "installedVersion": "5.1.0"
+  "lockVersion": "5.2.0",
+  "lockResolved": "git+ssh://git@github.com/rdsslab/uFetch.git#926d679f1ef0b60110ae69e1f58937fc1432fb24",
+  "commit": "926d679f1ef0b60110ae69e1f58937fc1432fb24",
+  "installedVersion": "5.2.0"
 }

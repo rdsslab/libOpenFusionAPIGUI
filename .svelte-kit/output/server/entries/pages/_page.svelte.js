@@ -4075,7 +4075,7 @@ function App($$renderer, $$props) {
   });
 }
 const ChartWidgets = { Base: Chart, TimeSeries };
-const version = "9.3.5";
+const version = "9.3.7";
 function Login($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let noty = new Notifications$1();
