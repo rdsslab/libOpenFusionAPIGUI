@@ -32,6 +32,8 @@
 	let password = $state('');
 	let processing = $state({ waiting: false, error: null });
 	let showPassword = $state(false);
+	let rateLimit = $state({ active: false, total: 0, left: 0 });
+	let countdownTimer = null;
 	let mounted = $state(false);
 	let serverVersion = $state('...');
 	let mustChangePassword = $state(false);
@@ -92,7 +94,35 @@
 		setTimeout(() => (mounted = true), 50);
 		loadServerVersion();
 		loadRecoveryOptions();
+		return () => {
+			if (countdownTimer) {
+				clearInterval(countdownTimer);
+				countdownTimer = null;
+			}
+		};
 	});
+
+	function formatRetryTime(seconds) {
+		const total = Math.max(0, Math.round(seconds || 0));
+		const mins = Math.floor(total / 60);
+		const secs = total % 60;
+		if (mins > 0) return `${mins}m ${secs}s`;
+		return `${secs}s`;
+	}
+
+	function startRateLimit(seconds) {
+		const total = Math.max(1, Math.ceil(Number(seconds) || 0));
+		rateLimit = { active: true, total, left: total };
+		if (countdownTimer) clearInterval(countdownTimer);
+		countdownTimer = setInterval(() => {
+			rateLimit = { ...rateLimit, left: rateLimit.left - 1 };
+			if (rateLimit.left <= 0) {
+				clearInterval(countdownTimer);
+				countdownTimer = null;
+				rateLimit = { active: false, total: 0, left: 0 };
+			}
+		}, 1000);
+	}
 
 	async function loadRecoveryOptions() {
 		try {
@@ -233,6 +263,7 @@
 	}
 
 	async function handleSubmit() {
+		if (rateLimit.active) return;
 		try {
 			processing.waiting = true;
 			processing.error = '';
@@ -265,16 +296,29 @@
 					login: data.login
 				});
 			} else {
-				processing.error = 'Invalid credentials';
+				processing.error =
+					data?.error ||
+					(data?.retry_after_seconds
+						? 'Too many failed attempts. Please retry later.'
+						: 'Invalid credentials');
+				if (data?.retry_after_seconds) {
+					startRateLimit(Number(data.retry_after_seconds));
+				}
 				processing.waiting = false;
 				noty.push({ message: processing.error, color: 'danger' });
 				onfail();
 			}
 		} catch (error) {
 			console.error(error);
-			noty.push({ message: error.message, color: 'danger' });
+			const seconds = error?.retry_after_seconds || error?.data?.retry_after_seconds;
+			const message =
+				error?.error ||
+				error?.data?.error ||
+				(seconds ? 'Too many failed attempts. Please retry later.' : error.message);
+			if (seconds) startRateLimit(Number(seconds));
+			noty.push({ message, color: 'danger' });
 			processing.waiting = false;
-			processing.error = error.message;
+			processing.error = message;
 		}
 	}
 
@@ -414,7 +458,16 @@
 					</p>
 				</div>
 
-				{#if !processing.waiting && processing.error}
+				{#if rateLimit.active}
+					<div class="notification is-warning is-light error-notification">
+						<span class="icon"><i class="fa-solid fa-clock-rotate-left"></i></span>
+						<span>
+							Too many failed attempts. Please wait
+							<strong class="countdown-label">{formatRetryTime(rateLimit.left)}</strong>
+							before trying again.
+						</span>
+					</div>
+				{:else if !processing.waiting && processing.error}
 					<div class="notification is-danger is-light error-notification">
 						<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
 						<span>{processing.error}</span>
@@ -427,9 +480,12 @@
 							type="submit"
 							class="button is-fullwidth is-rounded login-btn"
 							class:is-loading={processing.waiting}
-							disabled={processing.waiting || !username || !password}
+							disabled={processing.waiting || !username || !password || rateLimit.active}
 						>
-							{#if !processing.waiting}
+							{#if rateLimit.active}
+								<span class="icon"><i class="fa-solid fa-lock"></i></span>
+								<span>Retry in {formatRetryTime(rateLimit.left)}</span>
+							{:else if !processing.waiting}
 								<span class="icon"><i class="fa-solid fa-right-to-bracket"></i></span>
 								<span>Sign In</span>
 							{/if}
@@ -855,6 +911,11 @@
 		80% {
 			transform: translateX(4px);
 		}
+	}
+
+	.countdown-label {
+		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
 	}
 
 	/* ── Login button ─────────────────────────────────────────── */

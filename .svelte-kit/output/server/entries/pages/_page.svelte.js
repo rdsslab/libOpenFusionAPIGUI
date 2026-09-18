@@ -4075,7 +4075,7 @@ function App($$renderer, $$props) {
   });
 }
 const ChartWidgets = { Base: Chart, TimeSeries };
-const version = "9.3.7";
+const version = "9.3.8";
 function Login($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let noty = new Notifications$1();
@@ -4275,7 +4275,7 @@ function Login($$renderer, $$props) {
           }
           $$renderer4.push(`<!--]--> <div class="field mt-4 svelte-177ibf8"><p class="control svelte-177ibf8"><button type="submit"${attr_class("button is-fullwidth is-rounded login-btn svelte-177ibf8", void 0, { "is-loading": processing.waiting })}${attr("disabled", !username, true)}>`);
           {
-            $$renderer4.push(`<!--[0--><span class="icon svelte-177ibf8"><i class="fa-solid fa-right-to-bracket svelte-177ibf8"></i></span> <span class="svelte-177ibf8">Sign In</span>`);
+            $$renderer4.push(`<!--[1--><span class="icon svelte-177ibf8"><i class="fa-solid fa-right-to-bracket svelte-177ibf8"></i></span> <span class="svelte-177ibf8">Sign In</span>`);
           }
           $$renderer4.push(`<!--]--></button></p></div></form> `);
           if (recoveryEnabled()) {
