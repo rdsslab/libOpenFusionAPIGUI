@@ -371,62 +371,36 @@ export const getHandlerDocs = async (handler, token) => {
 };
 
 export const getListFunction = async (/** @type {string} */ appName) => {
-	// @ts-ignore
-	let f = new uFetch();
+	// Los tres ambientes se cargan en paralelo; la tabla de endpoints no debe
+	// esperar por estas listas que solo usan los editores (handler JS).
+	const loadEnv = async (environment, store) => {
+		// @ts-ignore
+		let f = new uFetch();
 
-	try {
-		let fr = await f.get({
-			url: url_paths.getfunctions,
-			data: { appName: appName, environment: 'dev' }
-		});
-		let list = await fr.json();
-
-		if (list && Array.isArray(list)) {
-			let data = list.map((fn) => {
-				return { id: fn, value: fn };
+		try {
+			let fr = await f.get({
+				url: url_paths.getfunctions,
+				data: { appName: appName, environment: environment }
 			});
-			listFunctionStoreDev.set(data);
-		}
-	} catch (error) {
-		console.error(error);
-		listFunctionStoreDev.set([]);
-	}
-	////////////////////////////////////
-	try {
-		let fr = await f.get({
-			url: url_paths.getfunctions,
-			data: { appName: appName, environment: 'qa' }
-		});
-		let list = await fr.json();
+			let list = await fr.json();
 
-		if (list && Array.isArray(list)) {
-			let data = list.map((fn) => {
-				return { id: fn, value: fn };
-			});
-			listFunctionStoreQA.set(data);
+			if (list && Array.isArray(list)) {
+				let data = list.map((fn) => {
+					return { id: fn, value: fn };
+				});
+				store.set(data);
+			}
+		} catch (error) {
+			console.error(error);
+			store.set([]);
 		}
-	} catch (error) {
-		console.error(error);
-		listFunctionStoreQA.set([]);
-	}
-	////////////////////////////////////
-	try {
-		let fr = await f.get({
-			url: url_paths.getfunctions,
-			data: { appName: appName, environment: 'prd' }
-		});
-		let list = await fr.json();
+	};
 
-		if (list && Array.isArray(list)) {
-			let data = list.map((fn) => {
-				return { id: fn, value: fn };
-			});
-			listFunctionStorePRD.set(data);
-		}
-	} catch (error) {
-		console.error(error);
-		listFunctionStorePRD.set([]);
-	}
+	await Promise.all([
+		loadEnv('dev', listFunctionStoreDev),
+		loadEnv('qa', listFunctionStoreQA),
+		loadEnv('prd', listFunctionStorePRD)
+	]);
 };
 
 export const clearCache = async (/** @type {string} */ token, urls_clear) => {
@@ -504,14 +478,28 @@ export const getServerAPIVersion = async (token) => {
  * El backend responde 200 incluso cuando no logra alcanzar GitHub; en ese
  * caso trae la última versión conocida con `stale: true` y `checked_at`.
  *
+ * El backend consulta el repositorio en cada llamada, por lo que se cachea en
+ * memoria durante MAX_CACHE_MS para no disparar una llamada por cada montaje
+ * del widget de endpoints.
+ *
+ * @param {number=} maxCacheMs Duración de la caché en milisegundos.
  * @returns {Promise<object|null>} null si no se pudo obtener
  */
-export const getServerAPILastVersion = async () => {
+let serverAPILastVersionCache = null;
+
+export const getServerAPILastVersion = async (maxCacheMs = 600000) => {
+	const now = Date.now();
+	if (serverAPILastVersionCache && now - serverAPILastVersionCache.ts < maxCacheMs) {
+		return serverAPILastVersionCache.value;
+	}
+
 	let uf = new uFetch();
 
 	try {
 		let version_req = checkStatus(await uf.get({ url: url_paths.serverAPIVersionLast }));
-		return await version_req.json();
+		const value = await version_req.json();
+		serverAPILastVersionCache = { ts: now, value };
+		return value;
 	} catch (error) {
 		console.error(error.message);
 		return null;

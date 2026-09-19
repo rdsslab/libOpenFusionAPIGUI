@@ -8,7 +8,10 @@
 		storeCountResponseStatusCode,
 		storeServerModelChanged
 	} from '../../utils/stores.js';
-	import { currentUserHasPermission, getDefaultEnvironment } from '../../utils/permissions.js';
+	import {
+		currentUserHasPermission,
+		getDefaultEnvironment
+	} from '../../utils/permissions.js';
 	import { endpointColumns } from './columns/index.svelte';
 	import {
 		GetEndpointsByIdapp,
@@ -299,19 +302,20 @@
 		return `${base}\nDato no verificado ahora: no se pudo consultar el repositorio. Última comprobación con éxito: ${fecha}`;
 	});
 
-	async function GetEndpoints(full = false) {
-		try {
-			loadingEndpoints = true;
+	/**
+	 * Ejecuta una promesa en segundo plano sin bloquear la interfaz.
+	 * Los errores se loguean y se notifican como antes, pero nunca impiden
+	 * que la tabla de endpoints se muestre.
+	 */
+	function runInBackground(fn) {
+		fn().catch((error) => {
+			console.error(error);
+			notify.push({ message: error.message, color: 'danger' });
+		});
+	}
 
-			let freshApp = await GetEndpointsByIdapp(idapp);
-			await getListFunction(freshApp.app);
-
-			if (full) {
-				await GetAppVars(idapp, true);
-				let status_sys_endp = await restoreSystemEndpoints(false);
-				statusSystemEndpointsStore.set(status_sys_endp);
-			}
-
+	function loadStatusCodeSummary() {
+		runInBackground(async () => {
 			let statusCodeEndpoints = await getLogSummaryByAppStatusCode({ idapp }, $userStore.token);
 
 			if (statusCodeEndpoints && Array.isArray(statusCodeEndpoints)) {
@@ -324,8 +328,40 @@
 				}
 				storeCountResponseStatusCode.set(dataStatus);
 			}
+		});
+	}
 
+	async function GetEndpoints(full = false) {
+		try {
+			loadingEndpoints = true;
+
+			let freshApp = await GetEndpointsByIdapp(idapp);
+
+			// Pintar la tabla apenas se tienen los endpoints: el resto de llamadas
+			// (listas de funciones, app vars, resumen de status codes, chequeo del
+			// server) son datos secundarios y van en paralelo y en segundo plano.
 			app = freshApp;
+
+			// Datos secundarios (editores JS / selectores): no bloquean la tabla.
+			getListFunction(freshApp.app).catch((error) => console.error(error));
+
+			// Resumen de status codes por endpoint (columna "Status Code").
+			loadStatusCodeSummary();
+
+			if (full) {
+				// Variables de la app (selector del editor).
+				GetAppVars(idapp, true).catch((error) => {
+					console.error(error);
+					notify.push({ message: error.message, color: 'danger' });
+				});
+
+				// Verificación de system endpoints ya corrida al cargar la app
+				// (Application/index.svelte): aquí solo se refresca en segundo plano.
+				runInBackground(async () => {
+					let status_sys_endp = await restoreSystemEndpoints(false);
+					statusSystemEndpointsStore.set(status_sys_endp);
+				});
+			}
 		} catch (error) {
 			console.error(error);
 			notify.push({ message: error.message, color: 'danger' });
