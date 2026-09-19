@@ -1,7 +1,7 @@
 import "clsx";
-import { w as writable, g as get } from "../../chunks/index2.js";
 import { a5 as is_array, a6 as get_prototype_of, a7 as object_prototype, a8 as ssr_context, a9 as attr_class, aa as clsx, ab as stringify, e as escape_html, ac as attr, ad as bind_props, a4 as derived, ae as ensure_array_like, af as spread_props, ag as attributes, ah as fallback, ai as attr_style, aj as store_get, ak as unsubscribe_stores } from "../../chunks/index.js";
 import uFetch from "@rdsslab/uFetch";
+import { w as writable, g as get } from "../../chunks/index2.js";
 import "events";
 import * as XLSX from "xlsx-js-style";
 import { DateTime } from "luxon";
@@ -4075,7 +4075,7 @@ function App($$renderer, $$props) {
   });
 }
 const ChartWidgets = { Base: Chart, TimeSeries };
-const version = "9.3.8";
+const version = "9.3.10";
 function Login($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let noty = new Notifications$1();

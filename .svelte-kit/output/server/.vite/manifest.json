@@ -128,8 +128,8 @@
     "src": "src/routes/+page.svelte",
     "isEntry": true,
     "imports": [
-      "_index2.js",
-      "_index.js"
+      "_index.js",
+      "_index2.js"
     ],
     "css": [
       "_app/immutable/assets/_page.BjDsDZuU.css"
