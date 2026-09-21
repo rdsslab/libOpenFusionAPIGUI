@@ -58,4 +58,7 @@ export namespace url_paths {
     let userRecoveryOptions: string;
     let userForgotPassword: string;
     let userResetPasswordConfirm: string;
+    let auditLog: string;
+    let auditLogStats: string;
+    let auditLogPrune: string;
 }

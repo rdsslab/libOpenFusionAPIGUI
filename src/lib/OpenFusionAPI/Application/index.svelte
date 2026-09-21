@@ -35,6 +35,7 @@
 	import ApiKeys from '$lib/OpenFusionAPI/Application/widgets/apikeys/index.svelte';
 	import Users from '$lib/OpenFusionAPI/Application/widgets/users/index.svelte';
 	import SystemUsers from '$lib/OpenFusionAPI/Application/widgets/system_users/index.svelte';
+	import AuditLogs from '$lib/OpenFusionAPI/Application/widgets/audit_logs/index.svelte';
 	import {
 		getListApps,
 		changeUserPassword,
@@ -196,6 +197,15 @@
 				icon: ' fa-solid fa-users ',
 				onclick: () => {
 					menu_item_selected = '/users';
+				}
+			});
+		}
+		if (currentUser?.ctrl?.as_admin === true) {
+			adminItems.push({
+				label: 'Audit Logs',
+				icon: ' fa-solid fa-magnifying-glass-chart ',
+				onclick: () => {
+					menu_item_selected = '/audit';
 				}
 			});
 		}
@@ -625,6 +635,8 @@
 			<SystemUsers></SystemUsers>
 		{:else if menu_item_selected == '/users'}
 			<Users></Users>
+		{:else if menu_item_selected == '/audit'}
+			<AuditLogs></AuditLogs>
 		{:else if menu_item_selected == '/logs'}
 			<Logs {idapp}></Logs>
 		{:else}

@@ -816,3 +816,48 @@ export const ResetSystemUserPassword = async (data) => {
 	let result = await request.json();
 	return result;
 };
+
+// ── Audit log (ofapi_audit_log) ────────────────────────────────────────────
+
+/**
+ * Lista de eventos de auditoría (vista ligera, sin snapshots before/after).
+ * El backend responde { rows, total, offset, limit }.
+ * @param {object} options - Filtros: action, entity_type, actor_username, target_username,
+ * environment, status, from, to, limit, offset...
+ */
+export const SearchAuditLogs = async (options = {}) => {
+	let uf = new uFetch();
+	let request = checkStatus(await uf.get({ url: url_paths.auditLog, data: options }));
+	return await request.json();
+};
+
+/**
+ * Detalle de un evento (incluye before_data/after_data parseados).
+ * @param {string|number} id
+ */
+export const GetAuditLogDetail = async (id) => {
+	if (id === undefined || id === null || id === '') return null;
+	let uf = new uFetch();
+	let request = checkStatus(await uf.get({ url: url_paths.auditLog, data: { id } }));
+	return await request.json();
+};
+
+/**
+ * Resumen de eventos en una ventana de tiempo.
+ * @param {{ last_days?: number }} [options]
+ */
+export const GetAuditLogStats = async (options = {}) => {
+	let uf = new uFetch();
+	let request = checkStatus(await uf.get({ url: url_paths.auditLogStats, data: options }));
+	return await request.json();
+};
+
+/**
+ * Poda manual de eventos anteriores a la retención configurada.
+ * Devuelve { retention_days, pruned, status, cutoff }.
+ */
+export const PruneAuditLogs = async () => {
+	let uf = new uFetch();
+	let request = checkStatus(await uf.post({ url: url_paths.auditLogPrune }));
+	return await request.json();
+};

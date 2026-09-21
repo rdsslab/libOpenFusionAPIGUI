@@ -59,5 +59,10 @@ export const url_paths = {
 	systemUserResetPassword: '/api/system/user/resetpassword/prd',
 	userRecoveryOptions: '/api/system/user/recovery/options/prd',
 	userForgotPassword: '/api/system/user/forgotpassword/prd',
-	userResetPasswordConfirm: '/api/system/user/resetpassword/confirm/prd'
+	userResetPasswordConfirm: '/api/system/user/resetpassword/confirm/prd',
+
+	// Audit log (ofapi_audit_log)
+	auditLog: '/api/system/system/audit/log/prd',
+	auditLogStats: '/api/system/system/audit/log/stats/prd',
+	auditLogPrune: '/api/system/audit/log/prune/prd'
 };

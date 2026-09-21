@@ -174,7 +174,11 @@ const url_paths = {
   systemUserResetPassword: "/api/system/user/resetpassword/prd",
   userRecoveryOptions: "/api/system/user/recovery/options/prd",
   userForgotPassword: "/api/system/user/forgotpassword/prd",
-  userResetPasswordConfirm: "/api/system/user/resetpassword/confirm/prd"
+  userResetPasswordConfirm: "/api/system/user/resetpassword/confirm/prd",
+  // Audit log (ofapi_audit_log)
+  auditLog: "/api/system/system/audit/log/prd",
+  auditLogStats: "/api/system/system/audit/log/stats/prd",
+  auditLogPrune: "/api/system/audit/log/prune/prd"
 };
 const authEventStore = writable(null);
 const userStore = writable({});
@@ -420,6 +424,27 @@ const ResetSystemUserPassword = async (data) => {
   let result = await request.json();
   return result;
 };
+const SearchAuditLogs = async (options = {}) => {
+  let uf = new uFetch();
+  let request = checkStatus(await uf.get({ url: url_paths.auditLog, data: options }));
+  return await request.json();
+};
+const GetAuditLogDetail = async (id) => {
+  if (id === void 0 || id === null || id === "") return null;
+  let uf = new uFetch();
+  let request = checkStatus(await uf.get({ url: url_paths.auditLog, data: { id } }));
+  return await request.json();
+};
+const GetAuditLogStats = async (options = {}) => {
+  let uf = new uFetch();
+  let request = checkStatus(await uf.get({ url: url_paths.auditLogStats, data: options }));
+  return await request.json();
+};
+const PruneAuditLogs = async () => {
+  let uf = new uFetch();
+  let request = checkStatus(await uf.post({ url: url_paths.auditLogPrune }));
+  return await request.json();
+};
 function decodeJwtPayload(token) {
   const parts = token.split(".");
   if (parts.length !== 3) throw new Error("Token con formato inválido");
@@ -538,6 +563,32 @@ function Boolean$1($$renderer, $$props) {
       $$renderer2.push(`<!--]--></td>`);
     }
     $$renderer2.push(`<!--]-->`);
+    bind_props($$props, { value, row });
+  });
+}
+function TextLimit($$renderer, $$props) {
+  $$renderer.component(($$renderer2) => {
+    let {
+      value = void 0,
+      onclick_cell = () => {
+      },
+      limit = 30,
+      css_cell = "",
+      row = void 0
+    } = $$props;
+    $$renderer2.push(`<td${attr_class(clsx(css_cell), "svelte-sh0rsf")}>`);
+    if (value && typeof value === "string" && value.length > limit) {
+      $$renderer2.push("<!--[0-->");
+      {
+        $$renderer2.push(`<!--[-1--><div>${escape_html(value.substring(0, limit))}...  <span class="btn_show svelte-sh0rsf">ver más</span></div>`);
+      }
+      $$renderer2.push(`<!--]-->`);
+    } else if (typeof value === "string") {
+      $$renderer2.push(`<!--[1--><div>${escape_html(value)}</div>`);
+    } else {
+      $$renderer2.push(`<!--[-1--><div>${escape_html(JSON.stringify(value))}</div>`);
+    }
+    $$renderer2.push(`<!--]--></td>`);
     bind_props($$props, { value, row });
   });
 }
@@ -4075,7 +4126,7 @@ function App($$renderer, $$props) {
   });
 }
 const ChartWidgets = { Base: Chart, TimeSeries };
-const version = "9.3.10";
+const version = "9.4.0";
 function Login($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let noty = new Notifications$1();
@@ -11764,7 +11815,7 @@ function CellStatusCode($$renderer, $$props) {
       }
       return m;
     });
-    let isAttack = derived(() => messageObj()?.type === "posible_ataque");
+    let isAttack = derived(() => messageObj()?.type === "possible_attack");
     let titleText = derived(() => [
       `HTTP ${value ?? ""} ${httpStatusText(value)}`,
       isAttack() ? "Possible attack detected" : ""
@@ -11804,7 +11855,7 @@ function jsonBlock($$renderer, data, label) {
 function Request_detail($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let { show = false, row = void 0, appName = "" } = $$props;
-    let isAttack = derived(() => row?.message?.type === "posible_ataque");
+    let isAttack = derived(() => row?.message?.type === "possible_attack");
     let hasMessage = derived(() => row?.message != null && String(row.message).trim() !== "");
     let jsonFields = derived(() => [
       "req_headers",
@@ -12306,7 +12357,7 @@ function Logs($$renderer, $$props) {
           $$settled = false;
         }
       });
-      $$renderer3.push(`<!----></div> <div class="control"><button class="button is-small"${attr("disabled", loading, true)}><span class="icon is-small"><i class="fa-solid fa-rotate"></i></span> <span>Refresh</span></button></div></div> <p class="help">Requests ending on 401/429 (or any status selected above) are marked by the API with <code>message.type = "posible_ataque"</code>; the shield badge shows up when the full payload is
+      $$renderer3.push(`<!----></div> <div class="control"><button class="button is-small"${attr("disabled", loading, true)}><span class="icon is-small"><i class="fa-solid fa-rotate"></i></span> <span>Refresh</span></button></div></div> <p class="help">Requests ending on 401/429 (or any status selected above) are marked by the API with <code>message.type = "possible_attack"</code>; the shield badge shows up when the full payload is
 		loaded. Click a row for the request/response detail, or the trace icon to follow a trace end to
 		end.</p></div>  `);
       Table($$renderer3, {
@@ -13787,6 +13838,859 @@ function System_users($$renderer, $$props) {
     if ($$store_subs) unsubscribe_stores($$store_subs);
   });
 }
+function CellAction($$renderer, $$props) {
+  $$renderer.component(($$renderer2) => {
+    let { value = void 0, row = void 0 } = $$props;
+    const ACTION_CLASS = {
+      login: "is-info",
+      login_failed: "is-danger",
+      logout: "is-light",
+      create: "is-success",
+      update: "is-warning",
+      delete: "is-danger",
+      enable: "is-success",
+      disable: "is-warning",
+      restore: "is-info",
+      bulk_delete: "is-danger"
+    };
+    let badgeClass = derived(() => ACTION_CLASS[value] || "is-link");
+    $$renderer2.push(`<td><div class="tags has-addons"><span${attr_class(`tag ${stringify(badgeClass())}`)}>${escape_html(value || "—")}</span></div></td>`);
+    bind_props($$props, { value, row });
+  });
+}
+function CellEntity($$renderer, $$props) {
+  $$renderer.component(($$renderer2) => {
+    let { value = void 0, row = void 0 } = $$props;
+    const ENTITY_CLASS = {
+      app: "is-link",
+      appvar: "is-info",
+      endpoint: "is-primary",
+      bot: "is-warning",
+      interval_task: "is-info",
+      user: "is-success",
+      apiclient: "is-dark",
+      apikey: "is-danger"
+    };
+    let badgeClass = derived(() => ENTITY_CLASS[value] || "is-light");
+    $$renderer2.push(`<td><div class="tags has-addons"><span${attr_class(`tag ${stringify(badgeClass())}`)}>${escape_html(value || "—")}</span></div></td>`);
+    bind_props($$props, { value, row });
+  });
+}
+function Audit_detail($$renderer, $$props) {
+  $$renderer.component(($$renderer2) => {
+    let { show = false, detail = null, loading = false } = $$props;
+    function fmtISO(iso) {
+      if (!iso) return "—";
+      const s = String(iso).replace(" ", "T").replace(/\s*([+-]\d{2}:\d{2}|Z)\s*$/, "Z");
+      const d = new Date(s);
+      if (!isNaN(d.getTime())) {
+        const p = (n) => String(n).padStart(2, "0");
+        return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+      }
+      return String(iso);
+    }
+    function hasContent(value) {
+      if (value === null || value === void 0) return false;
+      if (typeof value === "string") return value.trim() !== "";
+      if (Array.isArray(value)) return value.length > 0;
+      if (typeof value === "object") return Object.keys(value).length > 0;
+      return true;
+    }
+    let hasBefore = derived(() => hasContent(detail?.before_data));
+    let hasAfter = derived(() => hasContent(detail?.after_data));
+    let hasSnapshots = derived(() => hasBefore() || hasAfter());
+    let statusText = derived(() => detail?.status ? "Success" : detail?.status === false ? "Failed" : "");
+    let $$settled = true;
+    let $$inner_renderer;
+    function $$render_inner($$renderer3) {
+      SlideFullScreen($$renderer3, {
+        get show() {
+          return show;
+        },
+        set show($$value) {
+          show = $$value;
+          $$settled = false;
+        },
+        children: ($$renderer4) => {
+          {
+            let r01 = function($$renderer5) {
+              $$renderer5.push(`<div class="field has-addons"><p class="control"><button class="button is-small"><span class="icon is-small"><i class="fa-solid fa-xmark"></i></span> <span>Close</span></button></p></div>`);
+            };
+            Level($$renderer4, { left: [], right: [r01] });
+          }
+          $$renderer4.push(`<!----> `);
+          if (loading) {
+            $$renderer4.push(`<!--[0--><div class="has-text-centered py-6"><span class="icon is-large has-text-info"><i class="fas fa-spinner fa-pulse"></i></span></div>`);
+          } else if (detail) {
+            $$renderer4.push(`<!--[1--><p class="heading has-text-grey">Audit event</p> <p class="is-family-monospace has-text-grey is-size-7">${escape_html(detail.id ? `ID ${detail.id}` : "")}</p> <div class="field is-grouped is-grouped-multiline mb-3"><div class="control"><div class="tags has-addons"><span class="tag is-light">Date</span> <span class="tag">${escape_html(fmtISO(detail.timestamp))}</span></div></div> `);
+            if (detail.action) {
+              $$renderer4.push(`<!--[0--><div class="control"><div class="tags has-addons"><span class="tag is-light">Action</span> <span class="tag is-info">${escape_html(detail.action)}</span></div></div>`);
+            } else {
+              $$renderer4.push("<!--[-1-->");
+            }
+            $$renderer4.push(`<!--]--> `);
+            if (statusText()) {
+              $$renderer4.push(`<!--[0--><div class="control"><div class="tags has-addons"><span class="tag is-light">Result</span> <span${attr_class(`tag ${detail.status ? "is-success" : "is-danger"}`)}>${escape_html(statusText())}</span></div></div>`);
+            } else {
+              $$renderer4.push("<!--[-1-->");
+            }
+            $$renderer4.push(`<!--]--> `);
+            if (detail.result_code != null) {
+              $$renderer4.push(`<!--[0--><div class="control"><div class="tags has-addons"><span class="tag is-light">Code</span> <span class="tag">${escape_html(detail.result_code)}</span></div></div>`);
+            } else {
+              $$renderer4.push("<!--[-1-->");
+            }
+            $$renderer4.push(`<!--]--></div> <div class="field is-grouped is-grouped-multiline mb-3">`);
+            if (detail.actor_username) {
+              $$renderer4.push(`<!--[0--><div class="control"><div class="tags has-addons"><span class="tag is-light">Actor</span> <span class="tag">${escape_html(detail.actor_username)}</span></div></div>`);
+            } else {
+              $$renderer4.push("<!--[-1-->");
+            }
+            $$renderer4.push(`<!--]--> `);
+            if (detail.actor_kind) {
+              $$renderer4.push(`<!--[0--><div class="control"><div class="tags has-addons"><span class="tag is-light">Actor type</span> <span class="tag">${escape_html(detail.actor_kind)}</span></div></div>`);
+            } else {
+              $$renderer4.push("<!--[-1-->");
+            }
+            $$renderer4.push(`<!--]--> `);
+            if (detail.actor_id) {
+              $$renderer4.push(`<!--[0--><div class="control"><div class="tags has-addons"><span class="tag is-light">Actor id</span> <span class="tag">${escape_html(detail.actor_id)}</span></div></div>`);
+            } else {
+              $$renderer4.push("<!--[-1-->");
+            }
+            $$renderer4.push(`<!--]--> `);
+            if (detail.entity_type) {
+              $$renderer4.push(`<!--[0--><div class="control"><div class="tags has-addons"><span class="tag is-light">Entity</span> <span class="tag">${escape_html(detail.entity_type)}</span></div></div>`);
+            } else {
+              $$renderer4.push("<!--[-1-->");
+            }
+            $$renderer4.push(`<!--]--> `);
+            if (detail.entity_id) {
+              $$renderer4.push(`<!--[0--><div class="control"><div class="tags has-addons"><span class="tag is-light">Entity id</span> <span class="tag">${escape_html(detail.entity_id)}</span></div></div>`);
+            } else {
+              $$renderer4.push("<!--[-1-->");
+            }
+            $$renderer4.push(`<!--]--> `);
+            if (detail.target_username) {
+              $$renderer4.push(`<!--[0--><div class="control"><div class="tags has-addons"><span class="tag is-light">Target</span> <span class="tag">${escape_html(detail.target_username)}</span></div></div>`);
+            } else {
+              $$renderer4.push("<!--[-1-->");
+            }
+            $$renderer4.push(`<!--]--> `);
+            if (detail.environment) {
+              $$renderer4.push(`<!--[0--><div class="control"><div class="tags has-addons"><span class="tag is-light">Env</span> <span class="tag">${escape_html(detail.environment)}</span></div></div>`);
+            } else {
+              $$renderer4.push("<!--[-1-->");
+            }
+            $$renderer4.push(`<!--]--> `);
+            if (detail.idapp) {
+              $$renderer4.push(`<!--[0--><div class="control"><div class="tags has-addons"><span class="tag is-light">idapp</span> <span class="tag">${escape_html(detail.idapp)}</span></div></div>`);
+            } else {
+              $$renderer4.push("<!--[-1-->");
+            }
+            $$renderer4.push(`<!--]--> `);
+            if (detail.ip) {
+              $$renderer4.push(`<!--[0--><div class="control"><div class="tags has-addons"><span class="tag is-light">IP</span> <span class="tag">${escape_html(detail.ip)}</span></div></div>`);
+            } else {
+              $$renderer4.push("<!--[-1-->");
+            }
+            $$renderer4.push(`<!--]--> `);
+            if (detail.idclient) {
+              $$renderer4.push(`<!--[0--><div class="control"><div class="tags has-addons"><span class="tag is-light">Client</span> <span class="tag">${escape_html(detail.idclient)}</span></div></div>`);
+            } else {
+              $$renderer4.push("<!--[-1-->");
+            }
+            $$renderer4.push(`<!--]--> `);
+            if (detail.trace_id) {
+              $$renderer4.push(`<!--[0--><div class="control"><div class="tags has-addons"><span class="tag is-light">Trace ID</span> <span class="tag" style="word-break: break-all;">${escape_html(detail.trace_id)}</span></div></div>`);
+            } else {
+              $$renderer4.push("<!--[-1-->");
+            }
+            $$renderer4.push(`<!--]--></div> `);
+            if (detail.user_agent) {
+              $$renderer4.push(`<!--[0--><div class="mb-2"><p class="heading">User agent</p> <p class="is-size-7 has-text-grey" style="word-break: break-all;">${escape_html(detail.user_agent)}</p></div>`);
+            } else {
+              $$renderer4.push("<!--[-1-->");
+            }
+            $$renderer4.push(`<!--]--> `);
+            if (detail.message) {
+              $$renderer4.push(`<!--[0--><div class="mb-3">`);
+              JSONView($$renderer4, {
+                jsonObject: detail.message,
+                label: "Message",
+                maxHeight: 220,
+                showBox: false
+              });
+              $$renderer4.push(`<!----></div>`);
+            } else {
+              $$renderer4.push("<!--[-1-->");
+            }
+            $$renderer4.push(`<!--]--> `);
+            if (hasSnapshots()) {
+              $$renderer4.push(`<!--[0--><div class="notification is-info is-light py-2 px-3 mb-3"><span class="icon-text is-size-7"><span class="icon"><i class="fa-solid fa-circle-info"></i></span> <span>Secret fields (passwords, tokens, appvar values…) are stored as [REDACTED].</span></span></div> <div class="columns"><div class="column is-half">`);
+              if (hasBefore()) {
+                $$renderer4.push("<!--[0-->");
+                JSONView($$renderer4, {
+                  jsonObject: detail.before_data,
+                  label: "Before",
+                  maxHeight: 480,
+                  showBox: true
+                });
+              } else {
+                $$renderer4.push(`<!--[-1--><p class="has-text-grey is-italic is-size-7">No before snapshot stored for this event.</p>`);
+              }
+              $$renderer4.push(`<!--]--></div> <div class="column is-half">`);
+              if (hasAfter()) {
+                $$renderer4.push("<!--[0-->");
+                JSONView($$renderer4, {
+                  jsonObject: detail.after_data,
+                  label: "After",
+                  maxHeight: 480,
+                  showBox: true
+                });
+              } else {
+                $$renderer4.push(`<!--[-1--><p class="has-text-grey is-italic is-size-7">No after snapshot stored for this event.</p>`);
+              }
+              $$renderer4.push(`<!--]--></div></div>`);
+            } else {
+              $$renderer4.push(`<!--[-1--><p class="has-text-grey is-italic is-size-7">No snapshots stored for this event.</p>`);
+            }
+            $$renderer4.push(`<!--]-->`);
+          } else {
+            $$renderer4.push("<!--[-1-->");
+          }
+          $$renderer4.push(`<!--]-->`);
+        },
+        $$slots: { default: true }
+      });
+    }
+    do {
+      $$settled = true;
+      $$inner_renderer = $$renderer2.copy();
+      $$render_inner($$inner_renderer);
+    } while (!$$settled);
+    $$renderer2.subsume($$inner_renderer);
+    bind_props($$props, { show, detail, loading });
+  });
+}
+function Audit_logs($$renderer, $$props) {
+  $$renderer.component(($$renderer2) => {
+    let notify = new Notifications$1();
+    const ENVIRONMENTS = [
+      { id: "", value: "All environments" },
+      { id: "prd", value: "Production" },
+      { id: "qa", value: "QA" },
+      { id: "dev", value: "Development" }
+    ];
+    const ACTIONS = [
+      { id: "", value: "All actions" },
+      { id: "login", value: "Login" },
+      { id: "login_failed", value: "Login failed" },
+      { id: "logout", value: "Logout" },
+      { id: "create", value: "Create" },
+      { id: "update", value: "Update" },
+      { id: "delete", value: "Delete" },
+      { id: "enable", value: "Enable" },
+      { id: "disable", value: "Disable" },
+      { id: "restore", value: "Restore" },
+      { id: "bulk_delete", value: "Bulk delete" }
+    ];
+    const ENTITY_TYPES = [
+      { id: "", value: "All entities" },
+      { id: "app", value: "App" },
+      { id: "appvar", value: "App variable" },
+      { id: "endpoint", value: "Endpoint" },
+      { id: "bot", value: "Bot" },
+      { id: "interval_task", value: "Interval task" },
+      { id: "user", value: "User" },
+      { id: "apiclient", value: "API client" },
+      { id: "apikey", value: "API key" }
+    ];
+    const ACTOR_KINDS = [
+      { id: "", value: "Any actor type" },
+      { id: "user", value: "User" },
+      { id: "apikey", value: "API key" },
+      { id: "system", value: "System" }
+    ];
+    const STATUSES = [
+      { id: "", value: "All results" },
+      { id: "true", value: "Success" },
+      { id: "false", value: "Failed" }
+    ];
+    const STATS_WINDOWS = [7, 30, 90];
+    let action = "";
+    let entityType = "";
+    let entityId = "";
+    let actorKind = "";
+    let actorUsername = "";
+    let targetUsername = "";
+    let environment = "";
+    let statusFilter = "";
+    let timeMode = "preset";
+    let presetHours = 24;
+    let startDate = "";
+    let endDate = "";
+    let limit = 100;
+    let statsDays = 30;
+    let logs = [];
+    let total = 0;
+    let offset = 0;
+    let loading = false;
+    let stats = null;
+    let loadingStats = false;
+    let showDetail = false;
+    let detailData = null;
+    let detailLoading = false;
+    let showPrune = false;
+    let pruning = false;
+    function isNumeric(n) {
+      return Number.isFinite(Number(n));
+    }
+    function normalizedLimit() {
+      const n = Math.floor(Number(limit));
+      if (!Number.isInteger(n) || n < 1) return 100;
+      return Math.min(n, 200);
+    }
+    function isValidRange() {
+      const s = String(startDate || "");
+      const e = String(endDate || "");
+      if (!s || !e) return false;
+      const ds = new Date(s);
+      const de = new Date(e);
+      return !isNaN(ds.getTime()) && !isNaN(de.getTime()) && ds < de;
+    }
+    function buildQuery(forOffset = 0) {
+      const q = { limit: normalizedLimit(), offset: forOffset };
+      if (action) q.action = action;
+      if (entityType) q.entity_type = entityType;
+      const eid = String(entityId || "").trim();
+      if (eid) q.entity_id = eid;
+      if (actorKind) q.actor_kind = actorKind;
+      const actor = String(actorUsername || "").trim();
+      if (actor) q.actor_username = actor;
+      const target = String(targetUsername || "").trim();
+      if (target) q.target_username = target;
+      if (environment) q.environment = environment;
+      if (statusFilter !== "") q.status = statusFilter;
+      if (timeMode === "range") {
+        if (isValidRange()) {
+          q.from = startDate;
+          q.to = endDate;
+        }
+      } else {
+        const hours = Math.floor(Number(presetHours));
+        if (isNumeric(hours) && hours > 0) {
+          q.from = new Date(Date.now() - hours * 60 * 60 * 1e3).toISOString();
+        }
+      }
+      return q;
+    }
+    function decorateRow(row) {
+      return {
+        ...row,
+        action: row.action || "",
+        entity_type: row.entity_type || "",
+        actor_username: row.actor_username || "",
+        target_username: row.target_username || "",
+        environment: row.environment || "",
+        status: row.status !== false,
+        message: row.message || "",
+        trace_id: row.trace_id || ""
+      };
+    }
+    let logs_guard = 0;
+    async function loadAudit() {
+      const rid = ++logs_guard;
+      loading = true;
+      try {
+        const res = await SearchAuditLogs(buildQuery(0));
+        if (rid !== logs_guard) return;
+        const rows = Array.isArray(res?.rows) ? res.rows : [];
+        logs = rows.map(decorateRow);
+        total = Number(res?.total) || 0;
+        offset = rows.length;
+      } catch (e) {
+        console.error(e);
+        if (rid === logs_guard) {
+          logs = [];
+          total = 0;
+          offset = 0;
+          notify.push({
+            message: e.message || "Failed to load audit logs",
+            color: "danger"
+          });
+        }
+      } finally {
+        if (rid === logs_guard) loading = false;
+      }
+    }
+    async function loadStats() {
+      loadingStats = true;
+      try {
+        const res = await GetAuditLogStats({ last_days: statsDays });
+        if (!res || res.error) {
+          console.error("stats error:", res?.error || res);
+          stats = null;
+        } else {
+          stats = res;
+        }
+      } catch (e) {
+        console.error(e);
+        stats = null;
+      } finally {
+        loadingStats = false;
+      }
+    }
+    async function refreshAll() {
+      await Promise.all([loadAudit(), loadStats()]);
+    }
+    async function onRowClick({ row }) {
+      showDetail = true;
+      detailData = null;
+      detailLoading = true;
+      try {
+        const detail = await GetAuditLogDetail(row?.id);
+        detailData = detail && !detail.error ? detail : row;
+      } catch (e) {
+        console.error(e);
+        detailData = row;
+      } finally {
+        detailLoading = false;
+      }
+    }
+    async function confirmPrune() {
+      pruning = true;
+      try {
+        const res = await PruneAuditLogs();
+        if (res && res.error) {
+          notify.push({ message: res.error, color: "danger" });
+        } else if (res && res.status === "ok") {
+          notify.push({
+            message: `Audit pruning complete: ${res.pruned} event(s) older than ${res.retention_days} days removed`,
+            color: "success"
+          });
+        } else if (res && res.status === "disabled") {
+          notify.push({
+            message: "Retention set to 0: pruning disabled, audit rows kept indefinitely",
+            color: "warning"
+          });
+        }
+        showPrune = false;
+        if (res && !res.error) await refreshAll();
+      } catch (e) {
+        console.error(e);
+        notify.push({
+          message: e.message || "Failed to prune audit logs",
+          color: "danger"
+        });
+      } finally {
+        pruning = false;
+      }
+    }
+    function handlePresetHoursChange(e) {
+      const value = Math.floor(Number(e.target.value));
+      presetHours = Number.isFinite(value) && value > 0 ? value : 24;
+    }
+    function handleLimitChange(e) {
+      const value = Math.floor(Number(e.target.value));
+      limit = Number.isFinite(value) && value > 0 ? value : 100;
+    }
+    let columns = {
+      timestamp: {
+        label: "Date/Time",
+        decorator: {
+          component: DateTime_1,
+          props: { format: "yyyy-MM-dd HH:mm:ss" }
+        }
+      },
+      action: { label: "Action", decorator: { component: CellAction } },
+      actor_username: { label: "Actor" },
+      entity_type: { label: "Entity", decorator: { component: CellEntity } },
+      target_username: { label: "Target" },
+      environment: { label: "Env" },
+      status: {
+        label: "Result",
+        decorator: {
+          component: Boolean$1,
+          props: {
+            custom: {
+              ontrue: { label: "Success" },
+              onfalse: { label: "Failed" },
+              editInline: false
+            }
+          }
+        }
+      },
+      result_code: { label: "Code" },
+      actor_kind: { label: "Actor type" },
+      message: {
+        label: "Message",
+        decorator: { component: TextLimit, props: { limit: 40 } }
+      },
+      id: { hidden: true },
+      trace_id: { hidden: true },
+      actor_id: { hidden: true },
+      idclient: { hidden: true },
+      entity_id: { hidden: true },
+      idapp: { hidden: true },
+      ip: { hidden: true },
+      user_agent: { hidden: true }
+    };
+    function tableStatus($$renderer3) {
+      $$renderer3.push(`<span class="is-size-7 has-text-grey">${escape_html(loading ? "Loading…" : `${logs.length} of ${total} events`)}</span> `);
+      if (loading) {
+        $$renderer3.push(`<!--[0--><span class="icon is-small has-text-info"><i class="fas fa-spinner fa-pulse"></i></span>`);
+      } else {
+        $$renderer3.push("<!--[-1-->");
+      }
+      $$renderer3.push(`<!--]-->`);
+    }
+    function loadMoreButton($$renderer3) {
+      if (offset < total) {
+        $$renderer3.push(`<!--[0--><button class="button is-small is-link is-outlined"${attr("disabled", loading, true)}><span class="icon is-small"><i${attr_class(`fa-solid ${"fa-angle-double-down"}`)}></i></span> <span>Load older (next ${escape_html(normalizedLimit())})</span></button>`);
+      } else {
+        $$renderer3.push("<!--[-1-->");
+      }
+      $$renderer3.push(`<!--]-->`);
+    }
+    let $$settled = true;
+    let $$inner_renderer;
+    function $$render_inner($$renderer3) {
+      if (stats) {
+        $$renderer3.push(`<!--[0--><div class="box p-3 mb-3"><div class="field is-grouped is-grouped-multiline is-align-items-center"><span class="control"><span class="tag is-medium is-light mr-1">Window:</span></span> <!--[-->`);
+        const each_array = ensure_array_like(STATS_WINDOWS);
+        for (let $$index = 0, $$length = each_array.length; $$index < $$length; $$index++) {
+          let d = each_array[$$index];
+          $$renderer3.push(`<p class="control"><button${attr_class(`button is-small ${statsDays === d ? "is-info" : "is-light"}`)}>${escape_html(d)}d</button></p>`);
+        }
+        $$renderer3.push(`<!--]--> <span class="control"><span class="tag is-medium is-info">${escape_html(stats.total)} events</span></span> `);
+        if (stats.failures > 0) {
+          $$renderer3.push(`<!--[0--><span class="control"><span class="tag is-medium is-danger">${escape_html(stats.failures)} failures</span></span>`);
+        } else {
+          $$renderer3.push("<!--[-1-->");
+        }
+        $$renderer3.push(`<!--]--> `);
+        if (loadingStats) {
+          $$renderer3.push(`<!--[0--><span class="icon is-small has-text-grey"><i class="fas fa-spinner fa-pulse"></i></span>`);
+        } else {
+          $$renderer3.push("<!--[-1-->");
+        }
+        $$renderer3.push(`<!--]--></div> `);
+        if (stats.by_action.length > 0) {
+          $$renderer3.push(`<!--[0--><div class="field is-grouped is-grouped-multiline"><span class="tag is-light is-italic">By action:</span> <!--[-->`);
+          const each_array_1 = ensure_array_like(stats.by_action);
+          for (let $$index_1 = 0, $$length = each_array_1.length; $$index_1 < $$length; $$index_1++) {
+            let b = each_array_1[$$index_1];
+            $$renderer3.push(`<span class="tag is-info is-light">${escape_html(b.action)} <b>${escape_html(b.count)}</b></span>`);
+          }
+          $$renderer3.push(`<!--]--></div>`);
+        } else {
+          $$renderer3.push("<!--[-1-->");
+        }
+        $$renderer3.push(`<!--]--> `);
+        if (stats.by_entity.length > 0) {
+          $$renderer3.push(`<!--[0--><div class="field is-grouped is-grouped-multiline"><span class="tag is-light is-italic">By entity:</span> <!--[-->`);
+          const each_array_2 = ensure_array_like(stats.by_entity);
+          for (let $$index_2 = 0, $$length = each_array_2.length; $$index_2 < $$length; $$index_2++) {
+            let b = each_array_2[$$index_2];
+            $$renderer3.push(`<span class="tag is-success is-light">${escape_html(b.entity_type)} <b>${escape_html(b.count)}</b></span>`);
+          }
+          $$renderer3.push(`<!--]--></div>`);
+        } else {
+          $$renderer3.push("<!--[-1-->");
+        }
+        $$renderer3.push(`<!--]--> `);
+        if (stats.by_actor.length > 0) {
+          $$renderer3.push(`<!--[0--><div class="field is-grouped is-grouped-multiline"><span class="tag is-light is-italic">By actor:</span> <!--[-->`);
+          const each_array_3 = ensure_array_like(stats.by_actor);
+          for (let $$index_3 = 0, $$length = each_array_3.length; $$index_3 < $$length; $$index_3++) {
+            let b = each_array_3[$$index_3];
+            $$renderer3.push(`<span class="tag is-warning is-light">${escape_html(b.actor_username)} <b>${escape_html(b.count)}</b></span>`);
+          }
+          $$renderer3.push(`<!--]--></div>`);
+        } else {
+          $$renderer3.push("<!--[-1-->");
+        }
+        $$renderer3.push(`<!--]--></div>`);
+      } else {
+        $$renderer3.push("<!--[-1-->");
+      }
+      $$renderer3.push(`<!--]--> <div class="box p-3 mb-3"><div class="field is-grouped is-grouped-multiline"><div class="control">`);
+      BasicSelect($$renderer3, {
+        label: "Action",
+        options: ACTIONS,
+        get option() {
+          return action;
+        },
+        set option($$value) {
+          action = $$value;
+          $$settled = false;
+        }
+      });
+      $$renderer3.push(`<!----></div> <div class="control">`);
+      BasicSelect($$renderer3, {
+        label: "Entity",
+        options: ENTITY_TYPES,
+        get option() {
+          return entityType;
+        },
+        set option($$value) {
+          entityType = $$value;
+          $$settled = false;
+        }
+      });
+      $$renderer3.push(`<!----></div> <div class="control">`);
+      Basic$1($$renderer3, {
+        label: "Entity ID",
+        type: "text",
+        placeholder: "Search by entity_id",
+        isExpanded: false,
+        get value() {
+          return entityId;
+        },
+        set value($$value) {
+          entityId = $$value;
+          $$settled = false;
+        }
+      });
+      $$renderer3.push(`<!----></div> <div class="control">`);
+      BasicSelect($$renderer3, {
+        label: "Actor type",
+        options: ACTOR_KINDS,
+        get option() {
+          return actorKind;
+        },
+        set option($$value) {
+          actorKind = $$value;
+          $$settled = false;
+        }
+      });
+      $$renderer3.push(`<!----></div> <div class="control">`);
+      Basic$1($$renderer3, {
+        label: "Actor",
+        type: "text",
+        placeholder: "Search by actor_username",
+        isExpanded: false,
+        get value() {
+          return actorUsername;
+        },
+        set value($$value) {
+          actorUsername = $$value;
+          $$settled = false;
+        }
+      });
+      $$renderer3.push(`<!----></div> <div class="control">`);
+      Basic$1($$renderer3, {
+        label: "Target",
+        type: "text",
+        placeholder: "Target username",
+        isExpanded: false,
+        get value() {
+          return targetUsername;
+        },
+        set value($$value) {
+          targetUsername = $$value;
+          $$settled = false;
+        }
+      });
+      $$renderer3.push(`<!----></div> <div class="control">`);
+      BasicSelect($$renderer3, {
+        label: "Environment",
+        options: ENVIRONMENTS,
+        get option() {
+          return environment;
+        },
+        set option($$value) {
+          environment = $$value;
+          $$settled = false;
+        }
+      });
+      $$renderer3.push(`<!----></div> <div class="control">`);
+      BasicSelect($$renderer3, {
+        label: "Result",
+        options: STATUSES,
+        get option() {
+          return statusFilter;
+        },
+        set option($$value) {
+          statusFilter = $$value;
+          $$settled = false;
+        }
+      });
+      $$renderer3.push(`<!----></div></div> <div class="field is-grouped is-grouped-multiline"><div class="control">`);
+      BasicSelect($$renderer3, {
+        label: "Window",
+        options: [
+          { id: "preset", value: "Last hours" },
+          { id: "range", value: "Date range" }
+        ],
+        get option() {
+          return timeMode;
+        },
+        set option($$value) {
+          timeMode = $$value;
+          $$settled = false;
+        }
+      });
+      $$renderer3.push(`<!----></div> `);
+      if (timeMode === "preset") {
+        $$renderer3.push(`<!--[0--><div class="control">`);
+        Basic$1($$renderer3, {
+          label: "Hours",
+          type: "number",
+          min: "1",
+          step: "1",
+          onchange: handlePresetHoursChange,
+          get value() {
+            return presetHours;
+          },
+          set value($$value) {
+            presetHours = $$value;
+            $$settled = false;
+          }
+        });
+        $$renderer3.push(`<!----></div> <div class="control is-flex is-align-items-center" style="gap: 0.25rem;"><!--[-->`);
+        const each_array_4 = ensure_array_like([1, 6, 12, 24, 48, 72, 168]);
+        for (let $$index_4 = 0, $$length = each_array_4.length; $$index_4 < $$length; $$index_4++) {
+          let h = each_array_4[$$index_4];
+          $$renderer3.push(`<button${attr_class(`button is-small ${presetHours === h ? "is-info" : "is-light"}`)}>${escape_html(h < 24 ? `${h}h` : h === 24 ? "24h" : h === 48 ? "2d" : h === 72 ? "3d" : "7d")}</button>`);
+        }
+        $$renderer3.push(`<!--]--></div>`);
+      } else {
+        $$renderer3.push(`<!--[-1--><div class="control">`);
+        Basic$1($$renderer3, {
+          label: "From",
+          type: "datetime-local",
+          get value() {
+            return startDate;
+          },
+          set value($$value) {
+            startDate = $$value;
+            $$settled = false;
+          }
+        });
+        $$renderer3.push(`<!----></div> <div class="control">`);
+        Basic$1($$renderer3, {
+          label: "To",
+          type: "datetime-local",
+          get value() {
+            return endDate;
+          },
+          set value($$value) {
+            endDate = $$value;
+            $$settled = false;
+          }
+        });
+        $$renderer3.push(`<!----></div>`);
+      }
+      $$renderer3.push(`<!--]--> <div class="control">`);
+      Basic$1($$renderer3, {
+        label: "Limit",
+        type: "number",
+        min: "1",
+        max: "200",
+        step: "50",
+        onchange: handleLimitChange,
+        get value() {
+          return limit;
+        },
+        set value($$value) {
+          limit = $$value;
+          $$settled = false;
+        }
+      });
+      $$renderer3.push(`<!----></div> <div class="control"><button class="button is-small"${attr("disabled", loading || loadingStats, true)}><span class="icon is-small"><i class="fa-solid fa-rotate"></i></span> <span>Refresh</span></button></div> <div class="control"><button class="button is-small is-danger is-outlined" title="Delete audit events older than the configured retention (appvar $_VAR_AUDIT_LOG_RETENTION_DAYS)"><span class="icon is-small"><i class="fa-solid fa-broom"></i></span> <span>Prune old</span></button></div></div> `);
+      if (timeMode === "range" && !isValidRange() && (startDate || endDate)) {
+        $$renderer3.push(`<!--[0--><p class="help has-text-warning">Set a valid From before To to apply the date range filter.</p>`);
+      } else {
+        $$renderer3.push("<!--[-1-->");
+      }
+      $$renderer3.push(`<!--]--> <p class="help">Audit trail of admin actions (login, CRUD of apps, endpoints, variables, users, API clients…).
+		Click a row for the full event detail including the before/after snapshots.</p></div>  `);
+      Table($$renderer3, {
+        columns,
+        left_items: [tableStatus],
+        right_items: [loadMoreButton],
+        showSelectionButton: false,
+        showNewButton: false,
+        showEditButton: false,
+        showDeleteButton: false,
+        showExportButton: true,
+        fileNameExport: "openfusion_audit_log",
+        onclickrow: onRowClick,
+        get RawDataTable() {
+          return logs;
+        },
+        set RawDataTable($$value) {
+          logs = $$value;
+          $$settled = false;
+        }
+      });
+      $$renderer3.push(`<!----> `);
+      Audit_detail($$renderer3, {
+        get show() {
+          return showDetail;
+        },
+        set show($$value) {
+          showDetail = $$value;
+          $$settled = false;
+        },
+        get detail() {
+          return detailData;
+        },
+        set detail($$value) {
+          detailData = $$value;
+          $$settled = false;
+        },
+        get loading() {
+          return detailLoading;
+        },
+        set loading($$value) {
+          detailLoading = $$value;
+          $$settled = false;
+        }
+      });
+      $$renderer3.push(`<!----> `);
+      {
+        let pruneTitle = function($$renderer4) {
+          $$renderer4.push(`<span>Confirm audit pruning</span>`);
+        }, pruneBody = function($$renderer4) {
+          $$renderer4.push(`<div class="notification is-warning is-light py-2 px-3"><span class="icon-text"><span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span> <span>This permanently deletes all audit events older than the configured retention (default 365
+					days). This cannot be undone.</span></span></div> `);
+          if (pruning) {
+            $$renderer4.push(`<!--[0--><p class="has-text-grey is-italic is-size-7">Pruning…</p>`);
+          } else {
+            $$renderer4.push("<!--[-1-->");
+          }
+          $$renderer4.push(`<!--]-->`);
+        };
+        Modal_1($$renderer3, {
+          title: pruneTitle,
+          body: pruneBody,
+          onaccept: confirmPrune,
+          oncancel: () => showPrune = false,
+          get show() {
+            return showPrune;
+          },
+          set show($$value) {
+            showPrune = $$value;
+            $$settled = false;
+          },
+          pruneTitle,
+          pruneBody,
+          $$slots: { pruneTitle: true, pruneBody: true }
+        });
+      }
+      $$renderer3.push(`<!---->`);
+    }
+    do {
+      $$settled = true;
+      $$inner_renderer = $$renderer2.copy();
+      $$render_inner($$inner_renderer);
+    } while (!$$settled);
+    $$renderer2.subsume($$inner_renderer);
+  });
+}
 function logoIcon($$renderer) {
   $$renderer.push(`<img${attr("src", Logo)} alt="Open Fusion API" style="width: 32px; height: 32px; object-fit: contain; display: block; margin: auto;"/>`);
 }
@@ -13911,6 +14815,15 @@ function Application($$renderer, $$props) {
           icon: " fa-solid fa-users ",
           onclick: () => {
             menu_item_selected = "/users";
+          }
+        });
+      }
+      if (currentUser()?.ctrl?.as_admin === true) {
+        adminItems.push({
+          label: "Audit Logs",
+          icon: " fa-solid fa-magnifying-glass-chart ",
+          onclick: () => {
+            menu_item_selected = "/audit";
           }
         });
       }
@@ -14041,8 +14954,11 @@ function Application($$renderer, $$props) {
             } else if (menu_item_selected == "/users") {
               $$renderer4.push("<!--[7-->");
               Users($$renderer4);
-            } else if (menu_item_selected == "/logs") {
+            } else if (menu_item_selected == "/audit") {
               $$renderer4.push("<!--[8-->");
+              Audit_logs($$renderer4);
+            } else if (menu_item_selected == "/logs") {
+              $$renderer4.push("<!--[9-->");
               Logs($$renderer4, { idapp });
             } else {
               $$renderer4.push("<!--[-1-->");

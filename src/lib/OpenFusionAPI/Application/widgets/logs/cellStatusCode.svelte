@@ -13,7 +13,7 @@
 		return 'is-danger';
 	});
 
-	// El backend marca los intentos de fuerza bruta / ataques con message.type = 'posible_ataque'
+	// El backend marca los intentos de fuerza bruta / ataques con message.type = 'possible_attack'
 	// (solo disponible cuando la consulta trae el payload completo, lightweight=false). El campo
 	// message llega como string JSON sin serializar.
 	let messageObj = $derived.by(() => {
@@ -29,7 +29,7 @@
 		return m;
 	});
 
-	let isAttack = $derived(messageObj?.type === 'posible_ataque');
+	let isAttack = $derived(messageObj?.type === 'possible_attack');
 
 	let titleText = $derived(
 		[`HTTP ${value ?? ''} ${httpStatusText(value)}`, isAttack ? 'Possible attack detected' : '']

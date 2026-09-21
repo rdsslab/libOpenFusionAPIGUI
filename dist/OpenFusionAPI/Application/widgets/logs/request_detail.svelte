@@ -5,7 +5,7 @@
 
 	let { show = $bindable(false), row = $bindable(), appName = $bindable('') } = $props();
 
-	let isAttack = $derived(row?.message?.type === 'posible_ataque');
+	let isAttack = $derived(row?.message?.type === 'possible_attack');
 
 	let hasMessage = $derived(row?.message != null && String(row.message).trim() !== '');
 

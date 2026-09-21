@@ -495,7 +495,7 @@
 	</div>
 	<p class="help">
 		Requests ending on 401/429 (or any status selected above) are marked by the API with
-		<code>message.type = "posible_ataque"</code>; the shield badge shows up when the full payload is
+		<code>message.type = "possible_attack"</code>; the shield badge shows up when the full payload is
 		loaded. Click a row for the request/response detail, or the trace icon to follow a trace end to
 		end.
 	</p>

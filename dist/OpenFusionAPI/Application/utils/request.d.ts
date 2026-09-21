@@ -59,3 +59,9 @@ export function UpdateSystemUser(data: any): Promise<any>;
 export function DeleteSystemUser(data: any): Promise<any>;
 export function ChangeSystemUserPassword(data: any, token: any): Promise<any>;
 export function ResetSystemUserPassword(data: any): Promise<any>;
+export function SearchAuditLogs(options?: object): Promise<any>;
+export function GetAuditLogDetail(id: string | number): Promise<any>;
+export function GetAuditLogStats(options?: {
+    last_days?: number;
+}): Promise<any>;
+export function PruneAuditLogs(): Promise<any>;
