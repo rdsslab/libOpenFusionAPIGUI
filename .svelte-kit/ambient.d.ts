@@ -39,10 +39,8 @@
  */
 declare module '$env/static/private' {
 	export const ACLOCAL_PATH: string;
-	export const AGENT: string;
 	export const ALLUSERSPROFILE: string;
 	export const APPDATA: string;
-	export const BUNDLED_DEBUGPY_PATH: string;
 	export const CHROME_CRASHPAD_PIPE_NAME: string;
 	export const CLAUDE_CODE_SSE_PORT: string;
 	export const COLOR: string;
@@ -83,6 +81,8 @@ declare module '$env/static/private' {
 	export const MSYSTEM_PREFIX: string;
 	export const NODE: string;
 	export const NODE_ENV: string;
+	export const NODE_EXE: string;
+	export const NPM_CLI_JS: string;
 	export const npm_command: string;
 	export const npm_config_allow_scripts: string;
 	export const npm_config_cache: string;
@@ -105,12 +105,11 @@ declare module '$env/static/private' {
 	export const npm_package_json: string;
 	export const npm_package_name: string;
 	export const npm_package_version: string;
+	export const NPM_PREFIX_JS: string;
+	export const NPM_PREFIX_NPM_CLI_JS: string;
 	export const NUMBER_OF_PROCESSORS: string;
-	export const OLDPWD: string;
 	export const OneDrive: string;
 	export const OneDriveCommercial: string;
-	export const OPENCODE: string;
-	export const OPENCODE_PID: string;
 	export const ORIGINAL_PATH: string;
 	export const ORIGINAL_TEMP: string;
 	export const ORIGINAL_TMP: string;
@@ -132,7 +131,6 @@ declare module '$env/static/private' {
 	export const PSModulePath: string;
 	export const PUBLIC: string;
 	export const PWD: string;
-	export const PYDEVD_DISABLE_FILE_VALIDATION: string;
 	export const PYTHONSTARTUP: string;
 	export const PYTHON_BASIC_REPL: string;
 	export const SESSIONNAME: string;
@@ -152,7 +150,6 @@ declare module '$env/static/private' {
 	export const USERDOMAIN_ROAMINGPROFILE: string;
 	export const USERNAME: string;
 	export const USERPROFILE: string;
-	export const VSCODE_DEBUGPY_ADAPTER_ENDPOINTS: string;
 	export const VSCODE_GIT_ASKPASS_EXTRA_ARGS: string;
 	export const VSCODE_GIT_ASKPASS_MAIN: string;
 	export const VSCODE_GIT_ASKPASS_NODE: string;
@@ -249,10 +246,8 @@ declare module '$env/static/public' {
 declare module '$env/dynamic/private' {
 	export const env: {
 		ACLOCAL_PATH: string;
-		AGENT: string;
 		ALLUSERSPROFILE: string;
 		APPDATA: string;
-		BUNDLED_DEBUGPY_PATH: string;
 		CHROME_CRASHPAD_PIPE_NAME: string;
 		CLAUDE_CODE_SSE_PORT: string;
 		COLOR: string;
@@ -293,6 +288,8 @@ declare module '$env/dynamic/private' {
 		MSYSTEM_PREFIX: string;
 		NODE: string;
 		NODE_ENV: string;
+		NODE_EXE: string;
+		NPM_CLI_JS: string;
 		npm_command: string;
 		npm_config_allow_scripts: string;
 		npm_config_cache: string;
@@ -315,12 +312,11 @@ declare module '$env/dynamic/private' {
 		npm_package_json: string;
 		npm_package_name: string;
 		npm_package_version: string;
+		NPM_PREFIX_JS: string;
+		NPM_PREFIX_NPM_CLI_JS: string;
 		NUMBER_OF_PROCESSORS: string;
-		OLDPWD: string;
 		OneDrive: string;
 		OneDriveCommercial: string;
-		OPENCODE: string;
-		OPENCODE_PID: string;
 		ORIGINAL_PATH: string;
 		ORIGINAL_TEMP: string;
 		ORIGINAL_TMP: string;
@@ -342,7 +338,6 @@ declare module '$env/dynamic/private' {
 		PSModulePath: string;
 		PUBLIC: string;
 		PWD: string;
-		PYDEVD_DISABLE_FILE_VALIDATION: string;
 		PYTHONSTARTUP: string;
 		PYTHON_BASIC_REPL: string;
 		SESSIONNAME: string;
@@ -362,7 +357,6 @@ declare module '$env/dynamic/private' {
 		USERDOMAIN_ROAMINGPROFILE: string;
 		USERNAME: string;
 		USERPROFILE: string;
-		VSCODE_DEBUGPY_ADAPTER_ENDPOINTS: string;
 		VSCODE_GIT_ASKPASS_EXTRA_ARGS: string;
 		VSCODE_GIT_ASKPASS_MAIN: string;
 		VSCODE_GIT_ASKPASS_NODE: string;

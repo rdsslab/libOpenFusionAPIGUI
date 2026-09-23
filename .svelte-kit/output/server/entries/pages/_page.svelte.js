@@ -4126,7 +4126,7 @@ function App($$renderer, $$props) {
   });
 }
 const ChartWidgets = { Base: Chart, TimeSeries };
-const version = "9.4.0";
+const version = "9.4.1";
 function Login($$renderer, $$props) {
   $$renderer.component(($$renderer2) => {
     let noty = new Notifications$1();
@@ -13380,6 +13380,7 @@ function System_users($$renderer, $$props) {
         password: "",
         repeatPassword: "",
         enabled: true,
+        custom_data: {},
         start_date: (/* @__PURE__ */ new Date()).toISOString().split("T")[0],
         end_date: "",
         exp_time: 3600,
@@ -13466,6 +13467,7 @@ function System_users($$renderer, $$props) {
           first_name: row.first_name || "",
           last_name: row.last_name || "",
           email: row.email || "",
+          custom_data: row.custom_data ? JSON.parse(JSON.stringify(row.custom_data)) : {},
           password: "",
           repeatPassword: "",
           enabled: row.enabled !== false,
@@ -13609,7 +13611,19 @@ function System_users($$renderer, $$props) {
                 $$settled = false;
               }
             });
-            $$renderer4.push(`<!----></div></div> <div class="columns"><div class="column is-one-half">`);
+            $$renderer4.push(`<!----></div></div> <div class="columns"><div class="column is-full">`);
+            Basic$1($$renderer4, {
+              label: "Telegram User ID:",
+              title: "Telegram User ID (uber usa custom_data.telegram_chat_id). Es el chat_id de Telegram del usuario: en un chat privado chat_id === user_id de Telegram. Se usa para vincular la cuenta con el bot /linkapp; quien tenga este ID enlazado es reconocido como usuario válido del bot.",
+              get value() {
+                return selectedRow.custom_data.telegram_chat_id;
+              },
+              set value($$value) {
+                selectedRow.custom_data.telegram_chat_id = $$value;
+                $$settled = false;
+              }
+            });
+            $$renderer4.push(`<!----> <p class="help">Is the Telegram chat_id stored in custom_data.telegram_chat_id — in a private chat this equals the user's Telegram user_id, and it is what the /linkapp bot validates to recognize the user.</p></div></div> <div class="columns"><div class="column is-one-half">`);
             Basic$1($$renderer4, {
               type: "date",
               label: "Start Date:",

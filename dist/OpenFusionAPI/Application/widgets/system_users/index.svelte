@@ -81,6 +81,7 @@
 			password: '',
 			repeatPassword: '',
 			enabled: true,
+			custom_data: {},
 			start_date: new Date().toISOString().split('T')[0],
 			end_date: '',
 			exp_time: 3600,
@@ -251,9 +252,10 @@
 				username: row.username || '',
 				first_name: row.first_name || '',
 				last_name: row.last_name || '',
-				email: row.email || '',
-				password: '',
-				repeatPassword: '',
+			email: row.email || '',
+			custom_data: row.custom_data ? JSON.parse(JSON.stringify(row.custom_data)) : {},
+			password: '',
+			repeatPassword: '',
 				enabled: row.enabled !== false,
 				start_date: row.start_date ? new Date(row.start_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
 				end_date: row.end_date ? new Date(row.end_date).toISOString().split('T')[0] : '',
@@ -362,6 +364,17 @@
 			<div class="columns">
 				<div class="column is-full">
 					<Input label="Email:" type="email" bind:value={selectedRow.email}></Input>
+				</div>
+			</div>
+
+			<div class="columns">
+				<div class="column is-full">
+					<Input
+						label="Telegram User ID:"
+						bind:value={selectedRow.custom_data.telegram_chat_id}
+						title="Telegram User ID (uber usa custom_data.telegram_chat_id). Es el chat_id de Telegram del usuario: en un chat privado chat_id === user_id de Telegram. Se usa para vincular la cuenta con el bot /linkapp; quien tenga este ID enlazado es reconocido como usuario válido del bot."
+					></Input>
+					<p class="help">Is the Telegram chat_id stored in custom_data.telegram_chat_id — in a private chat this equals the user's Telegram user_id, and it is what the /linkapp bot validates to recognize the user.</p>
 				</div>
 			</div>
 
