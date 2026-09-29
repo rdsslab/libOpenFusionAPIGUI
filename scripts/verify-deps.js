@@ -1,13 +1,20 @@
 // scripts/verify-deps.js
 // Verifica la trazabilidad de las dependencias instaladas desde repositorio git.
 //
-// Politica: @rdsslab/uFetch se actualiza desde main ("siempre la version mas
-// reciente", URL flotante) y @rdsslab/svelte-components puede apuntar a un
-// commit concreto (URL pinned). Para no perder el control se exige:
-//   1. package-lock.json committed (el lockfile fija el commit resuelto).
+// Politica: las dos dependencias de repositorio se actualizan desde main con URL
+// flotante ("siempre la version mas reciente"). El control no lo daba antes el SHA
+// fijado en package.json, sino lo que sigue, y por eso se sigue exigiendo:
+//   1. package-lock.json committed (el lockfile fija el commit resuelto, de modo
+//      que `npm ci` es reproducible aunque la URL no lleve SHA).
 //   2. El commit resuelto de cada dependencia debe estar registrado en su
 //      baseline (<paquete>.lock.json). Si cambia sin registrarse, el build
-//      falla (evita pins desactualizados o bumps silenciosos).
+//      falla (evita bumps silenciosos).
+//
+// El 2026-09-28 @rdsslab/svelte-components paso de URL con SHA a URL flotante, como
+// @rdsslab/uFetch, para que la GUI recoja el arreglo del EditorCode sin depender de
+// que alguien recuerde mover el pin. El paso 2 sigue cubriendo el riesgo: el script
+// lee el commit RESUELTO del lockfile, no el spec de package.json, asi que un
+// `npm install` que traiga un main nuevo hace fallar el build igual que antes.
 //
 // Uso:
 //   npm run verify:deps            -> comprueba que el commit resuelto coincide
