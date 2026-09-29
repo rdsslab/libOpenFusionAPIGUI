@@ -1,0 +1,65 @@
+# Verificacion en cada push y PR.
+#
+# Los gates duros son los que hoy pasan en verde: formato, tipos y build. El
+# lint de eslint va como paso informativo (continue-on-error) porque arrastra 114
+# errores preexistentes que nunca se vieron: eslint no arrancaba con
+# .eslintrc.cjs bajo ESLint 9. En cuanto se limpien, saca continue-on-error.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Formato, tipos y build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Misma major que el entorno de desarrollo: el lockfile tiene las deps
+          # git resueltas por https y npm 11 se comporta distinto al 10 en deps
+          # git.
+          node-version: '24'
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Verificar formato
+        run: npx prettier --check .
+
+      - name: Verificar tipos
+        run: npm run check
+
+      - name: Build
+        run: npx vite build && npm run package
+
+  lint:
+    name: ESLint (informativo)
+    runs-on: ubuntu-latest
+    # Dejar commented hasta que la deuda de no-unused-vars esté limpia.
+    continue-on-error: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - run: npm ci
+
+      - name: ESLint
+        run: npx eslint .

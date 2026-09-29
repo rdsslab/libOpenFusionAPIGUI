@@ -1,0 +1,83 @@
+# Mantiene al dia las dos dependencias que vienen de repositorio git
+# (@rdsslab/uFetch y @rdsslab/svelte-components).
+#
+# Por que hace falta esto: en package.json ambas usan URL flotante, pero eso NO
+# alcanza. Con package-lock.json commiteado, `npm install` no re-resuelve las
+# deps git y se queda en el commit ya fijado. Hay que pedir el re-resolveado con
+# `npm update <dep>`, que si sigue el HEAD del remoto. Sin este workflow la
+# GUI se queda congelada en la version que hubiera al crear el lockfile.
+#
+# Solo commitea si upstream publico algo nuevo, y exige que el build siga en
+# verde: si una version nueva rompe la compilacion, el job falla y no se
+# publica nada.
+name: Actualizar deps git
+
+on:
+  schedule:
+    # 05:17 UTC a diario. Horario raro a proposito: las Actions se ejecutan
+    # mas rapido en los minutos redondos y esto no necesita ir rapido.
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: actualizar-deps
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    name: npm update + rebuild
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Actualizar las deps git al HEAD remoto
+        run: npm update @rdsslab/uFetch @rdsslab/svelte-components
+
+      # Importante: el diff se evalua ignorando whitespace (-w). npm 11 reescribe
+      # package-lock.json con la indentacion que deduce del proyecto (useTabs de
+      # .prettierrc), asi que un `npm update` sin novedades aun asi toca 4000+
+      # lineas de puro formato. Sin -w el job detectaria drift siempre y
+      # commitearia todos los dias un cambio que no es real.
+      - name: ¿Cambio el lockfile?
+        id: drift
+        run: |
+          if git diff -w --quiet package-lock.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Sin versiones nuevas upstream. No hay nada que hacer."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Hay version nueva de las deps git:"
+            git diff package-lock.json | grep -E '^[+-].*(rdsslab|version)' || true
+          fi
+
+      # Solo si hubo drift. set_version.js bumpea el patch y svelte-package
+      # regenera dist/, que es lo que consume el repo consumidor.
+      - name: Build
+        if: steps.drift.outputs.changed == 'true'
+        run: npm run build
+
+      - name: Commit
+        if: steps.drift.outputs.changed == 'true'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff -w --quiet --cached; then
+            echo "::notice::El build no produjo cambios reales."
+            exit 0
+          fi
+          git commit -m 'chore(deps): actualizar uFetch y svelte-components al HEAD remoto'
+          git pull --rebase --autostash origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
