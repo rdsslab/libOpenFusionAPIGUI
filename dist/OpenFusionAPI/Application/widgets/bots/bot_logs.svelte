@@ -1,5 +1,5 @@
 <script>
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { Table } from '@rdsslab/svelte-components';
 	import { url_paths } from '../../utils/paths.js';
 	import uFetch from '@rdsslab/uFetch';
@@ -31,7 +31,12 @@
 		metadata: { hidden: true }
 	});
 
-	let inputHours = $state(hours);
+	// `hours` solo aporta el valor inicial del filtro: el input queda editable
+	// por el usuario (esta bindeado) y la consulta se dispara con inputHours.
+	// untrack() deja explicito que la lectura es de un solo momento; sin el, Svelte
+	// avisa (state_referenced_locally) de que esta referencia captura el primer
+	// valor del prop.
+	let inputHours = $state(untrack(() => hours));
 
 	async function fetchLogs() {
 		if (idbot) {

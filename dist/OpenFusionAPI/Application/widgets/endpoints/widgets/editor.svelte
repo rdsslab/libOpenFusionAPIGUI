@@ -13,7 +13,6 @@
 	import JsCode from './handler/js.svelte';
 	import SoapCode from './handler/soap.svelte';
 	import SqlCode from './handler/sql.svelte';
-	import AgentIA from './handler/agentia.svelte';
 	import SqlBulkInsert from './handler/sqlBulkInsert.svelte';
 	import SqlHana from './handler/sqlHana.svelte';
 	import TextCode from './handler/text.svelte';
@@ -559,8 +558,6 @@
 				<TextCode bind:endpoint onchange={onChangeValueHandler} />
 			{:else if endpoint?.handler == 'MONGODB'}
 				<MongoDB bind:endpoint onchange={onChangeValueHandler} />
-			{:else if endpoint?.handler == 'AGENT_IA'}
-				<AgentIA bind:endpoint onchange={onChangeValueHandler} />
 			{:else if endpoint?.handler == 'NOAPPLY' || endpoint?.handler == 'No Handler' || endpoint?.handler == 'NA'}
 				<div>No Handler</div>
 			{:else}
