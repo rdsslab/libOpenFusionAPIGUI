@@ -13,7 +13,6 @@
 	import JsCode from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/js.svelte';
 	import SoapCode from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/soap.svelte';
 	import SqlCode from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/sql.svelte';
-	import AgentIA from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/agentia.svelte';
 	import SqlBulkInsert from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/sqlBulkInsert.svelte';
 	import SqlHana from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/sqlHana.svelte';
 	import TextCode from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/text.svelte';
@@ -559,8 +558,6 @@
 				<TextCode bind:endpoint onchange={onChangeValueHandler} />
 			{:else if endpoint?.handler == 'MONGODB'}
 				<MongoDB bind:endpoint onchange={onChangeValueHandler} />
-			{:else if endpoint?.handler == 'AGENT_IA'}
-				<AgentIA bind:endpoint onchange={onChangeValueHandler} />
 			{:else if endpoint?.handler == 'NOAPPLY' || endpoint?.handler == 'No Handler' || endpoint?.handler == 'NA'}
 				<div>No Handler</div>
 			{:else}
