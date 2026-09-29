@@ -30,7 +30,10 @@
 		statusSystemEndpointsStore,
 		storeIntervalTaskEvent
 	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
-	import { currentUserHasPermission, getDefaultEnvironment } from '$lib/OpenFusionAPI/Application/utils/permissions.js';
+	import {
+		currentUserHasPermission,
+		getDefaultEnvironment
+	} from '$lib/OpenFusionAPI/Application/utils/permissions.js';
 	import {
 		GetEndpointsByIdapp,
 		GetAPIKeys,
@@ -43,9 +46,15 @@
 	const notify = new Notifications();
 	const permEnv = getDefaultEnvironment();
 	const currentUser = $derived($userStore?.user);
-	const canCreate = $derived(currentUserHasPermission(currentUser, permEnv, 'interval_tasks', 'create'));
-	const canEdit = $derived(currentUserHasPermission(currentUser, permEnv, 'interval_tasks', 'edit'));
-	const canDelete = $derived(currentUserHasPermission(currentUser, permEnv, 'interval_tasks', 'delete'));
+	const canCreate = $derived(
+		currentUserHasPermission(currentUser, permEnv, 'interval_tasks', 'create')
+	);
+	const canEdit = $derived(
+		currentUserHasPermission(currentUser, permEnv, 'interval_tasks', 'edit')
+	);
+	const canDelete = $derived(
+		currentUserHasPermission(currentUser, permEnv, 'interval_tasks', 'delete')
+	);
 	let showEditor = $state(false);
 	let runNowPending = $state(false);
 	let historyTask = $state({});

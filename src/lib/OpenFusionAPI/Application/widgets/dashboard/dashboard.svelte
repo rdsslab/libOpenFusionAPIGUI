@@ -119,9 +119,7 @@
 
 	function matchesSelection(data_endpoint) {
 		return (
-			idapp &&
-			data_endpoint?.idapp == idapp &&
-			data_endpoint?.environment == selectedEnvironment
+			idapp && data_endpoint?.idapp == idapp && data_endpoint?.environment == selectedEnvironment
 		);
 	}
 
@@ -609,13 +607,26 @@
 </script>
 
 <div class="field is-flex is-justify-content-flex-end is-align-items-center">
-
-<div class="mr-2">
-	<Input label="Hours" type="number" min={2} step={5} bind:value={selectedHours}   onchange={handleHoursChange} />
-</div>
-<BasicSelect label="Environment" options={[{id: 'dev', value: 'Development'}, {id: 'qa', value: 'QA'}, {id: 'prd', value: 'Production', label:"Production"}]} bind:option={selectedEnvironment} class="is-small" />
-
-
+	<div class="mr-2">
+		<Input
+			label="Hours"
+			type="number"
+			min={2}
+			step={5}
+			bind:value={selectedHours}
+			onchange={handleHoursChange}
+		/>
+	</div>
+	<BasicSelect
+		label="Environment"
+		options={[
+			{ id: 'dev', value: 'Development' },
+			{ id: 'qa', value: 'QA' },
+			{ id: 'prd', value: 'Production', label: 'Production' }
+		]}
+		bind:option={selectedEnvironment}
+		class="is-small"
+	/>
 </div>
 
 {#snippet statusCodeFilter()}
@@ -667,7 +678,9 @@
 		</p>
 	</div>
 	<div class="column is-half-desktop is-full-tablet">
-		<Chart.TimeSeries title="Requests by Status per Minute ({selectedHours}h)" bind:series={data_status_class}
+		<Chart.TimeSeries
+			title="Requests by Status per Minute ({selectedHours}h)"
+			bind:series={data_status_class}
 		></Chart.TimeSeries>
 		<p class="help has-text-centered">
 			Number of requests per minute over the last {selectedHours} hours, broken down by HTTP status class
@@ -719,12 +732,14 @@
 		</p>
 	</div>
 	<div class="column is-half-desktop is-full-tablet">
-		<Chart.TimeSeries title="Top 10 Endpoints with Most Errors ({selectedHours}h)" bind:series={data_top_error_endpoints}
+		<Chart.TimeSeries
+			title="Top 10 Endpoints with Most Errors ({selectedHours}h)"
+			bind:series={data_top_error_endpoints}
 			tooltipFormatter={topErrorsTooltipFormatter}
 		></Chart.TimeSeries>
 		<p class="help has-text-centered">
-			Endpoints with the most errors (status code &gt;= 400) per hour in the last {selectedHours} hours, for
-			the selected app and environment
+			Endpoints with the most errors (status code &gt;= 400) per hour in the last {selectedHours} hours,
+			for the selected app and environment
 		</p>
 	</div>
 	<div class="column is-full">

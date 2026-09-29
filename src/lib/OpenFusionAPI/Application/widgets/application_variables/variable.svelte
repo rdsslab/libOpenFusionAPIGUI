@@ -32,9 +32,7 @@
 		return appVars.filter((item) => {
 			let name = item && item.name ? String(item.name).toLowerCase() : '';
 			let value =
-				item && item.value != null && item.value !== ''
-					? String(item.value).toLowerCase()
-					: '';
+				item && item.value != null && item.value !== '' ? String(item.value).toLowerCase() : '';
 			return name.includes(term) || value.includes(term);
 		});
 	});
@@ -427,16 +425,16 @@
 				{/snippet}
 			</EditorCode>
 			<hr class="reset_margin" />
-			{:else}
-				{#if search_var.trim()}
-					<div class="icon-text" style="margin-top: 10px;">
-						<span class="icon has-text-warning">
-							<i class="fa-solid fa-magnifying-glass"></i>
-						</span>
-						<span> No variables match the search criteria. </span>
-					</div>
-				{/if}
-			{/each}
+		{:else}
+			{#if search_var.trim()}
+				<div class="icon-text" style="margin-top: 10px;">
+					<span class="icon has-text-warning">
+						<i class="fa-solid fa-magnifying-glass"></i>
+					</span>
+					<span> No variables match the search criteria. </span>
+				</div>
+			{/if}
+		{/each}
 	</div>
 {/if}
 

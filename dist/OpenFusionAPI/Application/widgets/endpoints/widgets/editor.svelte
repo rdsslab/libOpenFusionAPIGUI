@@ -640,8 +640,8 @@
 						<code>["https://app.example.com"]</code> or an object like
 						<code>&#123;"origin": ["https://app.example.com"], "credentials": true&#125;</code>
 						to restrict cross-origin browser access. Empty
-						<code>&#123;&#125;</code> uses the deployment-wide default policy. Requests from
-						an Origin outside the allowlist are denied and receive no
+						<code>&#123;&#125;</code> uses the deployment-wide default policy. Requests from an
+						Origin outside the allowlist are denied and receive no
 						<code>Access-Control-Allow-Origin</code> header.
 					</p>
 				</div>

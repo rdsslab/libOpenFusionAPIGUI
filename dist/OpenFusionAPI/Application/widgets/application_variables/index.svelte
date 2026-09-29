@@ -4,7 +4,10 @@
 		userStore,
 		statusSystemEndpointsStore
 	} from '../../utils/stores.js';
-	import { currentUserHasPermission, getDefaultEnvironment } from '../../utils/permissions.js';
+	import {
+		currentUserHasPermission,
+		getDefaultEnvironment
+	} from '../../utils/permissions.js';
 	import { restoreSystemEndpoints } from '../../utils/request.js';
 
 	import { onMount } from 'svelte';

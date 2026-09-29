@@ -12,7 +12,11 @@
 		{ key: 'apps', label: 'Applications', actions: ['read', 'create', 'edit', 'delete'] },
 		{ key: 'appvars', label: 'App Variables', actions: ['read', 'create', 'edit', 'delete'] },
 		{ key: 'bots', label: 'Bots', actions: ['read', 'create', 'edit', 'delete'] },
-		{ key: 'interval_tasks', label: 'Interval Tasks', actions: ['read', 'create', 'edit', 'delete'] },
+		{
+			key: 'interval_tasks',
+			label: 'Interval Tasks',
+			actions: ['read', 'create', 'edit', 'delete']
+		},
 		{ key: 'logs', label: 'Logs', actions: ['read'] },
 		{ key: 'settings', label: 'Settings', actions: ['read', 'edit'] }
 	];
@@ -57,7 +61,13 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<label class="checkbox" onclick={toggleAsAdmin}>
-			<input type="checkbox" checked={ctrl.as_admin === true} onchange={(e) => { e.preventDefault(); }} />
+			<input
+				type="checkbox"
+				checked={ctrl.as_admin === true}
+				onchange={(e) => {
+					e.preventDefault();
+				}}
+			/>
 			<strong>Super Admin</strong>
 			<span class="tag is-info is-light ml-2">Bypass all permissions</span>
 		</label>

@@ -59,7 +59,14 @@
 
 <div class="field has-addons mb-3">
 	<p class="control">
-		<input class="input is-small" type="number" min="1" max="72" bind:value={inputHours} style="width:70px" />
+		<input
+			class="input is-small"
+			type="number"
+			min="1"
+			max="72"
+			bind:value={inputHours}
+			style="width:70px"
+		/>
 	</p>
 	<p class="control">
 		<button class="button is-small" onclick={fetchLogs}>

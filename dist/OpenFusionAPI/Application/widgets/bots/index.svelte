@@ -24,8 +24,16 @@
 	import CellBotStatus from './cellBotStatus.svelte';
 	import Backups from './bot_bkp.svelte';
 	import BotLogs from './bot_logs.svelte';
-	import { userStore, statusSystemEndpointsStore, storeBotStatusChanged, storeBotChanged } from '../../utils/stores.js';
-	import { currentUserHasPermission, getDefaultEnvironment } from '../../utils/permissions.js';
+	import {
+		userStore,
+		statusSystemEndpointsStore,
+		storeBotStatusChanged,
+		storeBotChanged
+	} from '../../utils/stores.js';
+	import {
+		currentUserHasPermission,
+		getDefaultEnvironment
+	} from '../../utils/permissions.js';
 	import { restoreSystemEndpoints } from '../../utils/request.js';
 	import AppVarsSelector from '../endpoints/widgets/params_json_selector.svelte';
 
@@ -61,7 +69,12 @@
 	const TAB_LOGS = 4;
 	let tabList = $state([
 		{ name: 'general', label: 'General', component: tab_general, classIcon: 'fa-solid fa-sliders' },
-		{ name: 'params', label: 'Params (JSON)', component: tab_params, classIcon: 'fa-solid fa-code' },
+		{
+			name: 'params',
+			label: 'Params (JSON)',
+			component: tab_params,
+			classIcon: 'fa-solid fa-code'
+		},
 		{ name: 'code', label: 'Code', component: tab_code, classIcon: 'fa-solid fa-file-code' },
 		{
 			name: 'backups',
@@ -250,7 +263,7 @@
 				notify.push({ message: 'Bot saved successfully', color: 'success' });
 				await loadBots();
 			} else {
-				let msg = (jresp && jresp.error) ? jresp.error : 'Failed to save bot';
+				let msg = jresp && jresp.error ? jresp.error : 'Failed to save bot';
 				notify.push({ message: msg, color: 'danger' });
 				throw new Error(msg);
 			}
@@ -378,11 +391,7 @@
 						<button
 							class="button is-small is-link"
 							onclick={async () => {
-								if (
-									!confirm(
-										'Are you sure you want to save and deploy this bot?'
-									)
-								) {
+								if (!confirm('Are you sure you want to save and deploy this bot?')) {
 									return;
 								}
 								// saveBot() ya notifica el resultado; el editor permanece abierto
@@ -454,8 +463,8 @@
 								<span>
 									The system disabled this bot{health.disabled_reason
 										? ` (${health.disabled_reason})`
-										: ''}. Fix the token or the code and save: it has already been switched back
-									to <strong>Enabled</strong> for you.
+										: ''}. Fix the token or the code and save: it has already been switched back to
+									<strong>Enabled</strong> for you.
 								</span>
 							</span>
 						</div>
@@ -575,8 +584,8 @@
 	     el historial de todos los bots que se abran, y solo interesa cuando hay que deshacer algo. -->
 	{#if activeTab === TAB_BACKUPS && selectedRow.idbot}
 		<p class="help mb-3">
-			Every save and every deletion stores a version. Restoring one loads it into this form;
-			nothing changes until you press <strong>Save &amp; Deploy</strong>.
+			Every save and every deletion stores a version. Restoring one loads it into this form; nothing
+			changes until you press <strong>Save &amp; Deploy</strong>.
 		</p>
 		<Backups
 			bind:idbot={selectedRow.idbot}

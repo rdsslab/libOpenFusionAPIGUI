@@ -20,7 +20,10 @@
 		ChangeSystemUserPassword,
 		ResetSystemUserPassword
 	} from '$lib/OpenFusionAPI/Application/utils/request.js';
-	import { currentUserHasPermission, getDefaultEnvironment } from '$lib/OpenFusionAPI/Application/utils/permissions.js';
+	import {
+		currentUserHasPermission,
+		getDefaultEnvironment
+	} from '$lib/OpenFusionAPI/Application/utils/permissions.js';
 	import PermissionEditor from './PermissionEditor.svelte';
 
 	let notify = new Notifications();
@@ -89,9 +92,7 @@
 		};
 	}
 
-	let passwordMatch = $derived(
-		passwordData.newPassword === passwordData.repeatNewPassword
-	);
+	let passwordMatch = $derived(passwordData.newPassword === passwordData.repeatNewPassword);
 
 	$effect(async () => {
 		await loadUsers();
@@ -167,7 +168,8 @@
 
 	async function deleteUser() {
 		if (!selectedRow?.iduser) return;
-		if (!confirm(`Permanently delete user "${selectedRow.username}"? This cannot be undone.`)) return;
+		if (!confirm(`Permanently delete user "${selectedRow.username}"? This cannot be undone.`))
+			return;
 
 		try {
 			let result = await DeleteSystemUser({ iduser: selectedRow.iduser });
@@ -231,7 +233,10 @@
 				newPassword: resetPwdData.newPassword
 			});
 			if (result && result.success) {
-				notify.push({ message: 'Temporary password set. The user must change it on next login.', color: 'success' });
+				notify.push({
+					message: 'Temporary password set. The user must change it on next login.',
+					color: 'success'
+				});
 				showResetPassword = false;
 				resetPwdData = { newPassword: '', repeat: '' };
 			} else {
@@ -252,12 +257,14 @@
 				username: row.username || '',
 				first_name: row.first_name || '',
 				last_name: row.last_name || '',
-			email: row.email || '',
-			custom_data: row.custom_data ? JSON.parse(JSON.stringify(row.custom_data)) : {},
-			password: '',
-			repeatPassword: '',
+				email: row.email || '',
+				custom_data: row.custom_data ? JSON.parse(JSON.stringify(row.custom_data)) : {},
+				password: '',
+				repeatPassword: '',
 				enabled: row.enabled !== false,
-				start_date: row.start_date ? new Date(row.start_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+				start_date: row.start_date
+					? new Date(row.start_date).toISOString().split('T')[0]
+					: new Date().toISOString().split('T')[0],
 				end_date: row.end_date ? new Date(row.end_date).toISOString().split('T')[0] : '',
 				exp_time: row.exp_time || 3600,
 				ctrl: row.ctrl ? JSON.parse(JSON.stringify(row.ctrl)) : { as_admin: false, env: {} }
@@ -305,12 +312,12 @@
 					{#if canCreate || canEdit}
 						<p class="control">
 							<button
-							class="button is-small is-link"
-							onclick={async () => {
-								if (!confirm('Are you sure you want to save and deploy this user?')) return;
-								await saveUser();
-							}}
-						>
+								class="button is-small is-link"
+								onclick={async () => {
+									if (!confirm('Are you sure you want to save and deploy this user?')) return;
+									await saveUser();
+								}}
+							>
 								<span class="icon is-small"><i class="fa-solid fa-rocket"></i></span>
 								<span>Save & Deploy</span>
 							</button>
@@ -348,7 +355,8 @@
 					<Input type="boolean" label="Enabled" bind:value={selectedRow.enabled}></Input>
 				</div>
 				<div class="column is-one-third">
-					<Input type="number" label="Exp Time (seconds):" bind:value={selectedRow.exp_time}></Input>
+					<Input type="number" label="Exp Time (seconds):" bind:value={selectedRow.exp_time}
+					></Input>
 				</div>
 			</div>
 
@@ -374,7 +382,11 @@
 						bind:value={selectedRow.custom_data.telegram_chat_id}
 						title="Telegram User ID (uber usa custom_data.telegram_chat_id). Es el chat_id de Telegram del usuario: en un chat privado chat_id === user_id de Telegram. Se usa para vincular la cuenta con el bot /linkapp; quien tenga este ID enlazado es reconocido como usuario válido del bot."
 					></Input>
-					<p class="help">Is the Telegram chat_id stored in custom_data.telegram_chat_id — in a private chat this equals the user's Telegram user_id, and it is what the /linkapp bot validates to recognize the user.</p>
+					<p class="help">
+						Is the Telegram chat_id stored in custom_data.telegram_chat_id — in a private chat this
+						equals the user's Telegram user_id, and it is what the /linkapp bot validates to
+						recognize the user.
+					</p>
 				</div>
 			</div>
 
@@ -389,10 +401,18 @@
 
 			<div class="columns">
 				<div class="column is-one-half">
-					<Input type="password" label={isEditing ? 'New Password (optional):' : 'Password:'} bind:value={selectedRow.password}></Input>
+					<Input
+						type="password"
+						label={isEditing ? 'New Password (optional):' : 'Password:'}
+						bind:value={selectedRow.password}
+					></Input>
 				</div>
 				<div class="column is-one-half">
-					<Input type="password" label={isEditing ? 'Repeat Password (optional):' : 'Repeat Password:'} bind:value={selectedRow.repeatPassword}></Input>
+					<Input
+						type="password"
+						label={isEditing ? 'Repeat Password (optional):' : 'Repeat Password:'}
+						bind:value={selectedRow.repeatPassword}
+					></Input>
 				</div>
 			</div>
 			{#if selectedRow.password && selectedRow.repeatPassword && selectedRow.password !== selectedRow.repeatPassword}
@@ -404,18 +424,31 @@
 				</div>
 			{/if}
 			{#if isEditing}
-				<p class="help">Leave empty to keep the current password. If filled, it becomes the definitive password (no forced change on next login).</p>
+				<p class="help">
+					Leave empty to keep the current password. If filled, it becomes the definitive password
+					(no forced change on next login).
+				</p>
 			{/if}
 
 			{#if isEditing}
 				<div class="buttons are-small mt-4">
 					{#if canEdit}
-						<button class="button is-warning" onclick={() => { openResetPassword(selectedRow); }}>
+						<button
+							class="button is-warning"
+							onclick={() => {
+								openResetPassword(selectedRow);
+							}}
+						>
 							<span class="icon is-small"><i class="fa-solid fa-rotate"></i></span>
 							<span>Reset Password (temporary)</span>
 						</button>
 					{/if}
-					<button class="button is-warning is-outlined" onclick={() => { openChangePassword(selectedRow); }}>
+					<button
+						class="button is-warning is-outlined"
+						onclick={() => {
+							openChangePassword(selectedRow);
+						}}
+					>
 						<span class="icon is-small"><i class="fa-solid fa-key"></i></span>
 						<span>Change Password</span>
 					</button>
@@ -432,7 +465,9 @@
 <DialogModal
 	title={titleModal}
 	body={bodyDialogModal}
-	onaccept={async () => { await changePassword(); }}
+	onaccept={async () => {
+		await changePassword();
+	}}
 	oncancel={() => {
 		showChangePassword = false;
 		passwordData = { oldPassword: '', newPassword: '', repeatNewPassword: '' };
@@ -446,7 +481,8 @@
 	{#snippet bodyDialogModal()}
 		<Input type="password" label="Current Password" bind:value={passwordData.oldPassword}></Input>
 		<Input type="password" label="New Password" bind:value={passwordData.newPassword}></Input>
-		<Input type="password" label="Repeat New Password" bind:value={passwordData.repeatNewPassword}></Input>
+		<Input type="password" label="Repeat New Password" bind:value={passwordData.repeatNewPassword}
+		></Input>
 		{#if !passwordMatch && passwordData.newPassword && passwordData.repeatNewPassword}
 			<div class="notification is-warning is-light py-2 px-3">
 				<span class="icon-text">
@@ -461,7 +497,9 @@
 <DialogModal
 	title={resetTitleModal}
 	body={resetBodyDialogModal}
-	onaccept={async () => { await resetPassword(); }}
+	onaccept={async () => {
+		await resetPassword();
+	}}
 	oncancel={() => {
 		showResetPassword = false;
 		resetPwdData = { newPassword: '', repeat: '' };
@@ -480,7 +518,8 @@
 			</span>
 		</div>
 		<Input type="password" label="Temporary Password" bind:value={resetPwdData.newPassword}></Input>
-		<Input type="password" label="Repeat Temporary Password" bind:value={resetPwdData.repeat}></Input>
+		<Input type="password" label="Repeat Temporary Password" bind:value={resetPwdData.repeat}
+		></Input>
 		{#if resetPwdData.newPassword && resetPwdData.newPassword !== resetPwdData.repeat}
 			<div class="notification is-warning is-light py-2 px-3">
 				<span class="icon-text">

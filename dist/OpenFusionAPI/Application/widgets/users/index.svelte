@@ -11,7 +11,10 @@
 		Notifications
 	} from '@rdsslab/svelte-components';
 	import { userStore } from '../../utils/stores.js';
-	import { currentUserHasPermission, getDefaultEnvironment } from '../../utils/permissions.js';
+	import {
+		currentUserHasPermission,
+		getDefaultEnvironment
+	} from '../../utils/permissions.js';
 	import {
 		GetAPIClientsList,
 		CreateAPIClient,
@@ -22,7 +25,9 @@
 	let notify = new Notifications();
 	const permEnv = getDefaultEnvironment();
 	const currentUser = $derived($userStore?.user);
-	const canCreate = $derived(currentUserHasPermission(currentUser, permEnv, 'apiclients', 'create'));
+	const canCreate = $derived(
+		currentUserHasPermission(currentUser, permEnv, 'apiclients', 'create')
+	);
 	const canEdit = $derived(currentUserHasPermission(currentUser, permEnv, 'apiclients', 'edit'));
 	let showEditor = $state(false);
 	let showChangePassword = $state(false);
@@ -221,7 +226,9 @@
 				phone: row.phone || '',
 				password: '',
 				repeatPassword: '',
-				startAt: row.startAt ? new Date(row.startAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+				startAt: row.startAt
+					? new Date(row.startAt).toISOString().split('T')[0]
+					: new Date().toISOString().split('T')[0],
 				endAt: row.endAt ? new Date(row.endAt).toISOString().split('T')[0] : '',
 				enabled: row.enabled !== false,
 				exp_time: row.exp_time || 3600,
@@ -301,10 +308,7 @@
 					<Input type="boolean" label="Enabled" bind:value={selectedRow.enabled}></Input>
 				</div>
 				<div class="column is-one-third">
-					<BasicSelect
-						label="Status"
-						bind:option={selectedRow.status}
-						options={optionsStatus}
+					<BasicSelect label="Status" bind:option={selectedRow.status} options={optionsStatus}
 					></BasicSelect>
 				</div>
 			</div>
@@ -348,7 +352,8 @@
 					<Input type="date" label="End Date:" bind:value={selectedRow.endAt}></Input>
 				</div>
 				<div class="column is-one-third">
-					<Input type="number" label="Exp Time (seconds):" bind:value={selectedRow.exp_time}></Input>
+					<Input type="number" label="Exp Time (seconds):" bind:value={selectedRow.exp_time}
+					></Input>
 				</div>
 			</div>
 
@@ -358,7 +363,8 @@
 						<Input type="password" label="Password:" bind:value={selectedRow.password}></Input>
 					</div>
 					<div class="column is-one-half">
-						<Input type="password" label="Repeat Password:" bind:value={selectedRow.repeatPassword}></Input>
+						<Input type="password" label="Repeat Password:" bind:value={selectedRow.repeatPassword}
+						></Input>
 					</div>
 				</div>
 			{/if}
@@ -409,7 +415,8 @@
 
 	{#snippet bodyDialogModal()}
 		<Input type="password" label="New Password" bind:value={passwordData.newPassword}></Input>
-		<Input type="password" label="Repeat New Password" bind:value={passwordData.repeatNewPassword}></Input>
+		<Input type="password" label="Repeat New Password" bind:value={passwordData.repeatNewPassword}
+		></Input>
 		{#if !passwordMatch && passwordData.newPassword && passwordData.repeatNewPassword}
 			<div class="notification is-warning is-light py-2 px-3">
 				<span class="icon-text">

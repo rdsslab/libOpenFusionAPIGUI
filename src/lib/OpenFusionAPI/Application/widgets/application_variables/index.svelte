@@ -4,7 +4,10 @@
 		userStore,
 		statusSystemEndpointsStore
 	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
-	import { currentUserHasPermission, getDefaultEnvironment } from '$lib/OpenFusionAPI/Application/utils/permissions.js';
+	import {
+		currentUserHasPermission,
+		getDefaultEnvironment
+	} from '$lib/OpenFusionAPI/Application/utils/permissions.js';
 	import { restoreSystemEndpoints } from '$lib/OpenFusionAPI/Application/utils/request.js';
 
 	import { onMount } from 'svelte';
