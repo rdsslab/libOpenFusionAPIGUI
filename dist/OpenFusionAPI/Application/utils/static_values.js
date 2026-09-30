@@ -192,6 +192,13 @@ export const IntervalTaskStatus = {
 		background: 'warning',
 		icon: ' fa-solid fa-hourglass-end ',
 		description: 'The run exceeded its time limit and was aborted.'
+	},
+	5: {
+		label: 'Aborted',
+		background: 'dark',
+		icon: ' fa-solid fa-ban ',
+		description:
+			'The run was stopped by an operator. It does not count as a failure and the task stays scheduled.'
 	}
 };
 
@@ -225,7 +232,7 @@ export function getIntervalTaskLastResultStatus(value, response) {
 	) {
 		return IntervalTaskStatus[3];
 	}
-	return numericStatus >= 2 && numericStatus <= 4 ? IntervalTaskStatus[numericStatus] : null;
+	return numericStatus >= 2 && numericStatus <= 5 ? IntervalTaskStatus[numericStatus] : null;
 }
 
 /**

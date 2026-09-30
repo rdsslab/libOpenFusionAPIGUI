@@ -196,6 +196,12 @@ export const IntervalTaskStatus: {
         icon: string;
         description: string;
     };
+    5: {
+        label: string;
+        background: string;
+        icon: string;
+        description: string;
+    };
 };
 export namespace IntervalTaskStatusFallback {
     export let label: string;

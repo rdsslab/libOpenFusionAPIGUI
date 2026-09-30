@@ -57,6 +57,7 @@
 	);
 	let showEditor = $state(false);
 	let runNowPending = $state(false);
+	let stopNowPending = $state(false);
 	let historyTask = $state({});
 	// Debe arrancar con la forma completa: los `bind:option` de BasicSelect fallan si el
 	// campo llega `undefined` en el primer render (SlideFullScreen monta su contenido
@@ -245,6 +246,16 @@
 	let runtimeStatus = $derived(runtime ? getIntervalTaskRuntimeStatus(runtime.status) : null);
 	let lastResultStatus = $derived(
 		runtime ? getIntervalTaskLastResultStatus(runtime.status, runtime.last_response) : null
+	);
+
+	// La fila seleccionada se captura una sola vez, pero el efecto de websocket
+	// reemplaza los objetos de `DataTableTasks` en cada evento: quedarse con esa
+	// referencia dejaría el botón de la barra describing un estado viejo. Se resuelve
+	// por id contra la tabla, que es la que sí se parchea en vivo.
+	let historyTaskRuntime = $derived(
+		historyTask?.idtask
+			? DataTableTasks.find((t) => String(t.idtask) === String(historyTask.idtask)) || null
+			: null
 	);
 
 	let nextIn = $derived.by(() => {
@@ -471,6 +482,62 @@
 		if (!jresp?.success) alert(jresp?.message || 'No se pudo reiniciar el contador.');
 		await loadTasks();
 	}
+
+	/**
+	 * Corta la ejecución que la tarea tiene en vuelo. El planificador la registra como
+	 * ABORTED (status 5) tanto en la tarea como en su historial, sin tocar
+	 * `failed_attempts` ni aplicar backoff: la programación no cambia, así que la
+	 * siguiente corrida sigue occurriendo igual.
+	 */
+	async function stopNow(task) {
+		if (!task?.idtask || stopNowPending) return false;
+
+		if (
+			!confirm(
+				'Stop the execution of this task? It will be aborted (whatever it already did stays done) and the task keeps its schedule.'
+			)
+		) {
+			return false;
+		}
+
+		stopNowPending = true;
+		try {
+			const resp = await uF.post({
+				url: url_paths.stopIntervalTaskRun,
+				data: { idtask: task.idtask }
+			});
+			const jresp = await resp.json();
+
+			if (!resp.ok) {
+				notify.push({
+					message: `No se pudo detener la tarea: ${jresp?.error || resp.statusText}`,
+					color: 'danger'
+				});
+				return false;
+			}
+
+			// `stopped: false` no es un error: la ejecución ya había terminado y no había
+			// nada que cortar. El endpoint responde 200 en los dos casos, así que el
+			// resultado se decide por `stopped`, no por el código HTTP.
+			notify.push({
+				message: jresp?.stopped
+					? 'Ejecución detenida.'
+					: jresp?.message || 'La tarea no tenía ninguna ejecución en vuelo.',
+				color: jresp?.stopped ? 'success' : 'info'
+			});
+
+			await loadTasks();
+			return jresp?.stopped === true;
+		} catch (error) {
+			notify.push({
+				message: `No se pudo detener la tarea: ${error?.message || 'error desconocido'}`,
+				color: 'danger'
+			});
+			return false;
+		} finally {
+			stopNowPending = false;
+		}
+	}
 </script>
 
 <Table
@@ -519,6 +586,21 @@
 			</p>
 			<p class="control">
 				<button
+					class="button is-small is-danger"
+					disabled={!historyTask?.idtask || Number(historyTaskRuntime?.status) !== 1}
+					title={!historyTask?.idtask
+						? 'Select a single task to act on it'
+						: Number(historyTaskRuntime?.status) === 1
+							? 'Aborta la ejecución en vuelo; la tarea no se deshabilita y conserva su programación'
+							: 'No hay ninguna ejecución en vuelo que detener'}
+					onclick={() => stopNow(historyTask)}
+				>
+					<span class="icon is-small"><i class="fa-solid fa-stop"></i></span>
+					<span>Stop now</span>
+				</button>
+			</p>
+			<p class="control">
+				<button
 					class="button is-small"
 					disabled={!historyTask?.idtask}
 					title="Reinicia el contador de fallos y reactiva la tarea si el backoff la deshabilitó"
@@ -554,6 +636,20 @@
 							>
 								<span class="icon is-small"><i class="fa-solid fa-bolt"></i></span>
 								<span>Run now</span>
+							</button>
+						</p>
+						<p class="control">
+							<button
+								class="button is-small is-danger"
+								class:is-loading={stopNowPending}
+								disabled={stopNowPending || Number(runtime?.status) !== 1}
+								title={Number(runtime?.status) === 1
+									? 'Aborts the execution in flight; the task is not disabled and keeps its schedule'
+									: 'There is no execution in flight to stop'}
+								onclick={() => stopNow(runtime)}
+							>
+								<span class="icon is-small"><i class="fa-solid fa-stop"></i></span>
+								<span>Stop now</span>
 							</button>
 						</p>
 					{/if}

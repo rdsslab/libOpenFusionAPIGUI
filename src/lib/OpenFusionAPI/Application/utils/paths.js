@@ -18,6 +18,7 @@ export const url_paths = {
 	deleteIntervalTasksByIdTask: '/api/system/interval_tasks/delete/prd',
 	getIntervalTaskRuns: '/api/system/interval_tasks/runs/prd',
 	runNowIntervalTask: '/api/system/interval_tasks/run_now/prd',
+	stopIntervalTaskRun: '/api/system/interval_tasks/stop/prd',
 	resetIntervalTaskAttempts: '/api/system/interval_tasks/reset_attempts/prd',
 	getfunctions: '/api/system/api/function_names/prd',
 	serverAPIVersion: '/api/system/server/version/prd',

@@ -18,6 +18,7 @@ export namespace url_paths {
     let deleteIntervalTasksByIdTask: string;
     let getIntervalTaskRuns: string;
     let runNowIntervalTask: string;
+    let stopIntervalTaskRun: string;
     let resetIntervalTaskAttempts: string;
     let getfunctions: string;
     let serverAPIVersion: string;
