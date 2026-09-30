@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 const packagePath = path.resolve('package.json');
+const lockPath = path.resolve('package-lock.json');
 const versionFilePath = path.resolve('./src/lib/OpenFusionAPI/version.js');
 
 // Leer package.json
@@ -49,6 +50,73 @@ if (JSON.parse(updatedPackage).version !== newVersion) {
 }
 
 fs.writeFileSync(packagePath, updatedPackage, 'utf8');
+
+// Sincronizar package-lock.json.
+//
+// El lock tiene su propia copia de la versión (la raíz y la entrada "" de `packages`),
+// así que bumpear solo package.json lo deja desfasado en cada build: `npm ci` instala
+// la versión del lock, no la del manifest. Se corrigen las dos con el mismo criterio
+// que arriba -- reemplazo del texto crudo, sin reserializar -- porque el lock también
+// va con tabs y un `JSON.stringify` lo reformatearía entero.
+//
+// Los dos campos se localizan por posición y no buscando el número de versión:
+// cuando el lock ya está desfasado sus dos copias ni siquiera coinciden entre sí
+// (una puede decir 9.4.5 y la otra 9.5.1) y una búsqueda por texto dejaría una sin
+// tocar. El anclaje es que npm escribe la metadata de la raíz primero, y que
+// `packages` arranca con la entrada "".
+if (fs.existsSync(lockPath)) {
+	const rawLock = fs.readFileSync(lockPath, 'utf8');
+
+	// 1) la "version" de primer nivel (la raíz del lock)
+	const rootField = /("version"\s*:\s*")[^"]*(")/;
+	// 2) la "version" dentro de la entrada "" de `packages`
+	const emptyEntryField = /("packages"\s*:\s*\{\s*""\s*:\s*\{[\s\S]*?)("version"\s*:\s*")[^"]*(")/;
+
+	let updatedLock = rawLock;
+	if (rootField.test(updatedLock)) {
+		updatedLock = updatedLock.replace(rootField, `$1${newVersion}$2`);
+	}
+	if (emptyEntryField.test(updatedLock)) {
+		// El match completo es `pre` + `head` + versión + `tail`: se reassamblea todo
+		// igual y solo se cambia el número de versión.
+		updatedLock = updatedLock.replace(
+			emptyEntryField,
+			(_, pre, head, tail) => pre + head + newVersion + tail
+		);
+	}
+
+	// Si el lock quedara con JSON inválido no se aborta el build: se avisa y sigue,
+	// porque el bump de package.json ya se aplicó y el lock se regenera con
+	// `npm install --package-lock-only`.
+	let lockOk = false;
+	try {
+		const parsedLock = JSON.parse(updatedLock);
+		const lockRootOk = parsedLock.version === newVersion;
+		const lockEntryOk = parsedLock.packages?.['']?.version === newVersion;
+
+		// Ninguna dependencia puede haber cambiado: salvo la entrada "", `packages`
+		// tiene que quedar idéntico. Si no, no se escribe el lock.
+		const depsIntact =
+			JSON.stringify({ ...parsedLock.packages, '': null }) ===
+			JSON.stringify({ ...JSON.parse(rawLock).packages, '': null });
+
+		if (lockRootOk && lockEntryOk && depsIntact) {
+			fs.writeFileSync(lockPath, updatedLock, 'utf8');
+			lockOk = true;
+		}
+	} catch {
+		// Se deja el lock como estaba.
+	}
+
+	if (!lockOk) {
+		console.warn(
+			`Aviso: no se pudo sincronizar package-lock.json a ${newVersion}. ` +
+				`Ejecutá "npm install --package-lock-only" para regenerarlo.`
+		);
+	}
+} else {
+	console.warn('Aviso: no se encontró package-lock.json; solo se actualizó package.json.');
+}
 
 // Asegurarse que la carpeta existe
 fs.mkdirSync(path.dirname(versionFilePath), { recursive: true });
