@@ -32,7 +32,7 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
-		"reinstall": "rm -rf node_modules package-lock.json && npm install"
+		"reinstall": "rm -rf node_modules && GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=\"url.https://github.com/.insteadOf\" GIT_CONFIG_VALUE_0=\"git+ssh://git@github.com/\" npm ci"
 	},
 	"exports": {
 		".": {
