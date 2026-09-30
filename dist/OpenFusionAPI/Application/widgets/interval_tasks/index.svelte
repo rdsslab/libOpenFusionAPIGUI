@@ -16,8 +16,7 @@
 		defaultValuesIntervalTask,
 		getIntervalTaskLastResultStatus,
 		getIntervalTaskRuntimeStatus,
-		INTERVAL_TASK_RUNTIME_FIELDS,
-		IntervalTaskStatus
+		INTERVAL_TASK_RUNTIME_FIELDS
 	} from '../../utils/static_values.js';
 	import { url_paths } from '../../utils/paths.js';
 	import uFetch from '@rdsslab/uFetch';
@@ -40,7 +39,7 @@
 		restoreSystemEndpoints
 	} from '../../utils/request.js';
 
-	let { idapp = $bindable(), onchange = () => {} } = $props();
+	let { idapp = $bindable() } = $props();
 
 	const uF = new uFetch();
 	const notify = new Notifications();
@@ -278,7 +277,7 @@
 
 		try {
 			return JSON.stringify(value, null, 2);
-		} catch (error) {
+		} catch {
 			return String(value);
 		}
 	});
@@ -390,7 +389,7 @@
 		if (typeof row.params === 'string') {
 			try {
 				row.params = JSON.parse(row.params || '{}');
-			} catch (error) {
+			} catch {
 				row.params = {};
 			}
 		} else if (!row.params || typeof row.params !== 'object') {

@@ -1,9 +1,5 @@
 <script>
-	import {
-		GetAppVars,
-		UpsertAppVar,
-		migrateAppVars
-	} from '$lib/OpenFusionAPI/Application/utils/request.js';
+	import { GetAppVars, migrateAppVars } from '$lib/OpenFusionAPI/Application/utils/request.js';
 	import {
 		userStore,
 		storeServerModelChanged
@@ -24,7 +20,6 @@
 		onchange = () => {}
 	} = $props();
 
-	let app = $state({ idapp: 0, app: '', enabled: false, description: '' });
 	let ShowDialogCopyEndpoint = $state(false);
 	let var_replace_copy = $state(false);
 	let var_to_copy = $state({});
@@ -66,13 +61,10 @@
 
 	$effect(async () => {
 		//idapp;
-		if (isNewApp(idapp)) {
-			//	console.log('Resetear variables');
-			resetValues();
-		} else {
-			//	console.log('Cargar datos de la app');
+		// La app nueva todavia no tiene variables que cargar. El estado `app` que
+		// se reseteaba en ambas ramas no lo leia nadie, asi que queda solo la carga.
+		if (!isNewApp(idapp)) {
 			//	await GetListEnvironment();
-			resetValues();
 			await GetData();
 		}
 	});
@@ -94,10 +86,6 @@
 	$effect(() => {
 		handleServerModelChanged($storeServerModelChanged);
 	});
-
-	function resetValues() {
-		app = { idapp: 0, vars: {} };
-	}
 
 	async function SaveAppVarCopyReplace() {
 		try {
@@ -294,7 +282,6 @@
 			</div>
 		{/if}
 
-		<!-- svelte-ignore block_empty -->
 		{#if var_to_copy && var_to_copy.idvar_destination}
 			<label class="checkbox">
 				<input type="checkbox" bind:checked={var_replace_copy} />

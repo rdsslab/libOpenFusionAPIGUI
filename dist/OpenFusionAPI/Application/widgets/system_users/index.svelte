@@ -1,12 +1,10 @@
 <script>
-	import { onMount } from 'svelte';
 	import {
 		Table,
 		ColumnTypes,
 		SlideFullScreen,
 		Level,
 		Input,
-		BasicSelect,
 		DialogModal,
 		Notifications
 	} from '@rdsslab/svelte-components';

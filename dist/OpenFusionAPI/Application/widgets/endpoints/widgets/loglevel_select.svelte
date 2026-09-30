@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 
-	let { level = $bindable(0), ondata = (d) => {} } = $props();
+	let { level = $bindable(0) } = $props();
 
 	let options = $state([
 		{ id: 0, value: `Disabled`, enabled: true },

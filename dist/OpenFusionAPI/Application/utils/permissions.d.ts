@@ -1,4 +1,8 @@
 /**
+ * Client-side permission evaluation for internal users.
+ * Mirrors the backend permissions.js logic.
+ */
+/**
  * Core permission check.
  * @param {object|null} userCtrl - User.ctrl value
  * @param {string} environment - dev|qa|prd

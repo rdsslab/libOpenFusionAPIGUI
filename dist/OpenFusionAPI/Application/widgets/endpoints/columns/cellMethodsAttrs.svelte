@@ -1,14 +1,5 @@
 <script>
 	let { value = $bindable(), row = $bindable() } = $props();
-
-	const classMap = {
-		GET: 'tag is-success',
-		POST: 'tag is-info',
-		DELETE: 'tag is-danger',
-		PUT: 'tag is-warning',
-		PATCH: 'tag is-link',
-		HEADER: 'tag is-primary'
-	};
 </script>
 
 <div class="table-container">

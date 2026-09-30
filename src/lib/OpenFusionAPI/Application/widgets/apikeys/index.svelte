@@ -14,11 +14,7 @@
 
 	import { url_paths } from '$lib/OpenFusionAPI/Application/utils/paths.js';
 	import uFetch from '@rdsslab/uFetch';
-	import CellMethod from '$lib/OpenFusionAPI/Application/widgets/endpoints/columns/cellMethod.svelte';
-	import {
-		userStore,
-		statusSystemEndpointsStore
-	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
+	import { userStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import {
 		currentUserHasPermission,
 		getDefaultEnvironment
@@ -26,7 +22,7 @@
 	import { GetAPIKeys, GetAPIClients } from '$lib/OpenFusionAPI/Application/utils/request.js';
 	import CellToken from './cellToken.svelte';
 
-	let { idapp = $bindable(), onchange = () => {} } = $props();
+	let { idapp = $bindable() } = $props();
 
 	const uF = new uFetch();
 	const permEnv = getDefaultEnvironment();
@@ -170,7 +166,7 @@
 				if (text) {
 					try {
 						jresp = JSON.parse(text);
-					} catch (e) {
+					} catch {
 						jresp = null;
 					}
 				}
@@ -287,9 +283,7 @@
 		});
 
 		console.log('deleteTasks >>>>>>>>>>>>>', idtasks, url_paths.deleteIntervalTasksByIdTask);
-		let resp = await uF.DELETE({ url: url_paths.deleteIntervalTasksByIdTask, data: idtasks });
-		let jresp = await resp.json();
-		//console.log('saveAPIKey >>>>>>>>>>>>>', selectedRow, jresp);
+		await uF.DELETE({ url: url_paths.deleteIntervalTasksByIdTask, data: idtasks });
 		await loadAPIKeys();
 	}
 

@@ -91,7 +91,6 @@
 
 	// === Detalle ===
 	let showDetail = $state(false);
-	let selectedRow = $state(null);
 	let detailData = $state(null);
 	let detailLoading = $state(false);
 
@@ -261,7 +260,6 @@
 	}
 
 	async function onRowClick({ row }) {
-		selectedRow = row;
 		showDetail = true;
 		detailData = null;
 		detailLoading = true;

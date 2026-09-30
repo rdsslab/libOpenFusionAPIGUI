@@ -58,7 +58,10 @@
 
 <div class="permission-editor">
 	<div class="field mb-4">
-		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<!-- El checkbox de Bulma envuelve al <input>: el click en toda la fila lo
+		     alterna. Los avisos reales son los de elemento no interactivo, no los
+		     que se silenciaban antes, asi que el codigo de a11y va corregido. -->
+		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<label class="checkbox" onclick={toggleAsAdmin}>
 			<input

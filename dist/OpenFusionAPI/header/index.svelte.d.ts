@@ -2,8 +2,6 @@ export default Index;
 type Index = SvelteComponent<{
     [x: string]: never;
 }, {
-    login: CustomEvent<any>;
-} & {
     [evt: string]: CustomEvent<any>;
 }, {}> & {
     $$bindings?: string;
@@ -11,8 +9,6 @@ type Index = SvelteComponent<{
 declare const Index: $$__sveltets_2_IsomorphicComponent<{
     [x: string]: never;
 }, {
-    login: CustomEvent<any>;
-} & {
     [evt: string]: CustomEvent<any>;
 }, {}, {}, string>;
 interface $$__sveltets_2_IsomorphicComponent<Props extends Record<string, any> = any, Events extends Record<string, any> = any, Slots extends Record<string, any> = any, Exports = {}, Bindings = string> {

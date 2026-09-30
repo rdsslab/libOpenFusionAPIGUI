@@ -85,7 +85,7 @@
 					>$nameparameter</span
 				>
 				to bind, or <span style="font-style: oblique; font-weight: bold;">:nameparameter</span> to
-				replacements. The values ​​you send in the request. For more information you can consult the
+				replacements. The values you send in the request. For more information you can consult the
 				<a href="https://sequelize.org/docs/v6/core-concepts/raw-queries/#bind-parameter"
 					>sequelize</a
 				>

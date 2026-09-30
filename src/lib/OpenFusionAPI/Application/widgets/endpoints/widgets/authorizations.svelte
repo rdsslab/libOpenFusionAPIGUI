@@ -58,23 +58,6 @@
 		}
 	}
 
-	function setUsers() {
-		defaultValue();
-
-		if (users) {
-			users =
-				table_users && Array.isArray(table_users)
-					? table_users
-							.filter((u) => {
-								return u.auth;
-							})
-							.map((u) => {
-								return u.iduser;
-							})
-					: [];
-		}
-	}
-
 	function buildTableUsers() {
 		defaultValue();
 

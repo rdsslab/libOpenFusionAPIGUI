@@ -50,7 +50,6 @@
 	let serverAPILastVersionCheckedAt = $state(null);
 	let serverDDBB = $state('?');
 	let TableObject = $state();
-	let idendpoint_selected = $state();
 	let loadingEndpoints = $state(false);
 
 	$effect(() => {
@@ -397,7 +396,6 @@
 			}}
 			onnewrow={() => {
 				if (idapp && idapp.length > 5) {
-					idendpoint_selected = 0;
 					showEndpointEdit = true;
 					EndpointEditorWidget.setData({ app: app });
 				} else {
@@ -405,7 +403,6 @@
 				}
 			}}
 			oneditrow={(data) => {
-				idendpoint_selected = data.idendpoint;
 				showEndpointEdit = true;
 				EndpointEditorWidget.setData({ app: app, idendpoint: data.idendpoint });
 			}}

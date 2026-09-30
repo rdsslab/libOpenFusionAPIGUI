@@ -9,9 +9,8 @@
 	} from '@rdsslab/svelte-components';
 	import SelectEnvironment from '$lib/OpenFusionAPI/Application/widgets/common/Select.svelte';
 	import MethodSelect from '$lib/OpenFusionAPI/Application/widgets/common/methods_select.svelte';
-	import { listHandlerStore, userStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';
+	import { listHandlerStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import { validateURL, createEndpoint } from '$lib/OpenFusionAPI/Application/utils/utils.js';
-	import { getHandlerParams } from '$lib/OpenFusionAPI/Application/utils/utils.js';
 	import {
 		listAccessMethod,
 		Environment
@@ -37,16 +36,6 @@
 	let list_keywords = $derived.by(() => {
 		return endpoint && endpoint.keywords ? endpoint.keywords.split(',') : [];
 	});
-
-	function defaultValues() {
-		if (!endpoint) {
-			endpoint = { method: 'X', access: 0 };
-		}
-
-		if (endpoint && endpoint.access == undefined) {
-			endpoint.access = 0;
-		}
-	}
 
 	let available_environments_list = $derived.by(() => {
 		return environment_list && Array.isArray(environment_list)
@@ -479,7 +468,6 @@
 			</p>
 		</div>
 
-		<!-- svelte-ignore block_empty -->
 		{#if endpoint_copied && endpoint_copied.idendpoint && endpoint_copied.idendpoint.length > 0}
 			<label class="checkbox">
 				<input type="checkbox" bind:checked={endpoint_replace_copy} />

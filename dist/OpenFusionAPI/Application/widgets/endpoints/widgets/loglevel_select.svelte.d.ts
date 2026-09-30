@@ -5,9 +5,7 @@ type LoglevelSelect = {
 };
 declare const LoglevelSelect: import("svelte").Component<{
     level?: number;
-    ondata?: Function;
 }, {}, "level">;
 type $$ComponentProps = {
     level?: number;
-    ondata?: Function;
 };

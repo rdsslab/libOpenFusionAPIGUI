@@ -1,9 +1,8 @@
 <script>
 	import uFetch from '@rdsslab/uFetch';
 	import { Table } from '@rdsslab/svelte-components';
-	import { onMount, onDestroy } from 'svelte';
-	import { userStore } from '$lib/OpenFusionAPI/utils.js';
 	import CellAttrs from '$lib/OpenFusionAPI/app/cellMethodsAttrs.svelte';
+	import { onMount } from 'svelte';
 
 	let uf = new uFetch();
 

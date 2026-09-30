@@ -37,7 +37,7 @@
 	import { restoreSystemEndpoints } from '../../utils/request.js';
 	import AppVarsSelector from '../endpoints/widgets/params_json_selector.svelte';
 
-	let { idapp = $bindable(), onchange = () => {} } = $props();
+	let { idapp = $bindable() } = $props();
 
 	let notify = new Notifications();
 	const uF = new uFetch();
@@ -104,7 +104,7 @@
 		if (typeof row.params === 'string') {
 			try {
 				row.params = JSON.parse(row.params || '{}');
-			} catch (error) {
+			} catch {
 				row.params = {};
 			}
 		} else if (!row.params || typeof row.params !== 'object') {
@@ -398,7 +398,7 @@
 								// tanto si el guardado tuvo éxito como si falló.
 								try {
 									await saveBot();
-								} catch (error) {
+								} catch {
 									// Error already notified; keep editor open for correction
 								}
 							}}

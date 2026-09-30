@@ -13,7 +13,7 @@
 	import { onMount } from 'svelte';
 
 	let vars_widget;
-	let { idapp = $bindable(0), onsavedeploy = () => {} } = $props();
+	let { idapp = $bindable(0) } = $props();
 
 	const permEnv = getDefaultEnvironment();
 	const currentUser = $derived($userStore?.user);

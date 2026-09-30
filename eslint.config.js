@@ -38,6 +38,16 @@ export default [
 				$inspect: 'readonly',
 				$host: 'readonly'
 			}
+		},
+		rules: {
+			// Los parametros de funcion quedan fuera del chequeo a proposito.
+			// Esta libreria mantiene firmas publicas estables: request.js expone
+			// ~19 funciones con un `token` que ya no se usa (la autorizacion la
+			// maneja uFetch), y varias funciones flecha reciben un parametro que
+			// ignoran. Borrarlos cambia la API exportada y rompe los callers, que
+			// es justo lo que `no-unused-vars` no debe decidir solo.
+			// Las variables, imports y bindings de catch si se siguen chequeando.
+			'no-unused-vars': ['error', { args: 'none' }]
 		}
 	}
 ];

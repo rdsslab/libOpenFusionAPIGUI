@@ -3,8 +3,6 @@
  * Mirrors the backend permissions.js logic.
  */
 
-const VALID_ACTIONS = ['read', 'create', 'edit', 'delete'];
-
 /**
  * Core permission check.
  * @param {object|null} userCtrl - User.ctrl value

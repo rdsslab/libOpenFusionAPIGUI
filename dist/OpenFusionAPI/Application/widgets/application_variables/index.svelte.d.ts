@@ -5,9 +5,7 @@ type Index = {
 };
 declare const Index: import("svelte").Component<{
     idapp?: number;
-    onsavedeploy?: Function;
 }, {}, "idapp">;
 type $$ComponentProps = {
     idapp?: number;
-    onsavedeploy?: Function;
 };

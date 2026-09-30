@@ -58,12 +58,6 @@
 		}
 	}
 
-	// Función para obtener la hora actual formateada
-	function getCurrentTime() {
-		const now = new Date();
-		return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-	}
-
 	// Desplazar al final cuando el componente se monta
 	onMount(() => {
 		if (chatMessages) {

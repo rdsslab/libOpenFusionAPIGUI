@@ -35,8 +35,6 @@
 	let { showEditor = $bindable(false), onsave = (d) => {}, oncopy = () => {} } = $props();
 
 	let noty = new Notifications();
-	let json_schema_in_enabled = $state(false);
-	let json_schema_in_schema = $state({});
 	let endpoint = $state(structuredClone(defaultEndpoint));
 	let app = $state({});
 	let idendpoint = $state();
@@ -363,7 +361,7 @@
 				// Intentar JSON.stringify
 				try {
 					cadena = JSON.stringify(valor, null, 2);
-				} catch (jsonError) {
+				} catch {
 					// Si falla (referencias circulares, etc.), usar toString()
 					cadena = Object.prototype.toString.call(valor);
 				}
@@ -372,7 +370,7 @@
 			else {
 				cadena = String(valor);
 			}
-		} catch (error) {
+		} catch {
 			// En caso de cualquier error inesperado
 			cadena = '[Error al convertir valor]';
 		}

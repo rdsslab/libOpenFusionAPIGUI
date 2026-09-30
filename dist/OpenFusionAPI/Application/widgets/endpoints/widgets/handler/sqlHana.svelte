@@ -75,7 +75,7 @@
 				<div class="content is-small">
 					<span style="font-style: oblique; font-weight: bold;">$nameparameter</span>
 					to bind, or <span style="font-style: oblique; font-weight: bold;">:nameparameter</span> to use
-					array bind. The values ​​you send in the request. For more information go to the "Pass parameters"
+					array bind. The values you send in the request. For more information go to the "Pass parameters"
 					tab.
 				</div>
 			</div>
@@ -122,8 +122,8 @@
 				<div class="block">
 					If in the query you use the parameter with the prefix <strong>":"</strong> (<code
 						>:param_name</code
-					>), this variable is expected to contain an array of values ​​that will be injected into
-					the query.
+					>), this variable is expected to contain an array of values that will be injected into the
+					query.
 					<br />
 					<div class="block">
 						For example the following query: <br /> <code>{query_sample_post}</code>

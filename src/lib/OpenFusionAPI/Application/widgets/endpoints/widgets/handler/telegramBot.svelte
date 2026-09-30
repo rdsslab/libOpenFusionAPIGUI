@@ -1,5 +1,4 @@
 <script>
-	import { onMount } from 'svelte';
 	import { Tab, EditorCode, Input } from '@rdsslab/svelte-components';
 
 	//	import PredefinedVars from '$lib/OpenFusionAPI/app/endpoint/widgets/js_predefined_vars.svelte';

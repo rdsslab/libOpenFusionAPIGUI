@@ -2,11 +2,6 @@
 	import { Modal, Notifications, copyTextToClipboard } from '@rdsslab/svelte-components';
 	import { DateTime } from 'luxon';
 	import { httpStatusText } from '../../utils/httpStatus.js';
-	import {
-		getTraceSummary,
-		getTraceErrorsOnly,
-		getTraceSlowestHops
-	} from '../../utils/request.js';
 
 	let { show = $bindable(false), trace_id = $bindable('') } = $props();
 
@@ -28,30 +23,6 @@
 		if (v == null) return '—';
 		if (Number.isFinite(Number(v))) return `${Number(v).toLocaleString('en-US')} ms`;
 		return String(v);
-	}
-
-	async function loadTrace() {
-		if (!trace_id || !show) return;
-		loading = true;
-		errorText = '';
-		summary = null;
-		errors = [];
-		slowest = [];
-		try {
-			const base = { trace_id };
-			const [sum, errs, slw] = await Promise.all([
-				getTraceSummary(base),
-				getTraceErrorsOnly(base),
-				getTraceSlowestHops(base)
-			]);
-			summary = sum;
-			errors = Array.isArray(errs) ? errs : [];
-			slowest = Array.isArray(slw) ? slw : [];
-		} catch (e) {
-			errorText = e?.message || String(e);
-		} finally {
-			loading = false;
-		}
 	}
 
 	async function copyId() {

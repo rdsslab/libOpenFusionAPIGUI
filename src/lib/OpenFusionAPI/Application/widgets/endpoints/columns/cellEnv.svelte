@@ -1,38 +1,14 @@
 <script>
-	import { onDestroy, onMount } from 'svelte';
 	//	import { env_params } from '../utils.js';
-	import { storeEndpointOnStart } from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import { Environment } from '$lib/OpenFusionAPI/Application/utils/static_values.js';
 
 	let { value = $bindable(), row = $bindable() } = $props();
-	let isRunning = $state(false);
-	let timeoutIsRunning;
 	let env_params = $derived.by(() => {
 		return Environment && Array.isArray(Environment)
 			? Environment.find((item) => {
 					return row.environment == item.id;
 				})
 			: [];
-	});
-
-	let unsubscribe;
-
-	onDestroy(() => {
-		clearTimeout(timeoutIsRunning);
-		unsubscribe();
-	});
-	onMount(() => {
-		unsubscribe = storeEndpointOnStart.subscribe((data) => {
-			//
-			//	console.log('CELL PATH :::::> ', data);
-			if (row && row.idendpoint == data.idendpoint) {
-				isRunning = true;
-				clearTimeout(timeoutIsRunning);
-				timeoutIsRunning = setTimeout(() => {
-					isRunning = false;
-				}, 5000);
-			}
-		});
 	});
 </script>
 

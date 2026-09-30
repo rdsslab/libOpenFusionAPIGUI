@@ -121,7 +121,6 @@
 					</p>
 
 					<p class="control">
-						<!-- svelte-ignore a11y_consider_explicit_label -->
 						<button
 							class="button is-small is-outlined is-success"
 							title="Apply"
@@ -150,7 +149,6 @@
 					</p>
 
 					<p class="control">
-						<!-- svelte-ignore a11y_consider_explicit_label -->
 						<button
 							class="button is-small is-outlined is-danger"
 							title="Cancel"
@@ -171,7 +169,6 @@
 					</p>
 				{:else}
 					<p class="control">
-						<!-- svelte-ignore a11y_consider_explicit_label -->
 						<button
 							class="button is-small"
 							title="Edit variable name"
@@ -195,7 +192,6 @@
 			{/if}
 
 			<p class="control">
-				<!-- svelte-ignore a11y_consider_explicit_label -->
 				<button
 					class="button is-small"
 					title="Copy Name"
@@ -225,7 +221,6 @@
 		{#if !isReadOnly}
 			<div class="field has-addons">
 				<p class="control">
-					<!-- svelte-ignore a11y_consider_explicit_label -->
 					<button
 						class="button is-small is-outlined is-link"
 						title="Copy to another environment"
@@ -239,7 +234,6 @@
 					</button>
 				</p>
 				<p class="control">
-					<!-- svelte-ignore a11y_consider_explicit_label -->
 					<button
 						class="button is-small is-outlined is-warning"
 						title="Save & Deploy"
@@ -284,7 +278,6 @@
 					</button>
 				</p>
 				<p class="control">
-					<!-- svelte-ignore a11y_consider_explicit_label -->
 					<button
 						class="button is-small is-outlined is-danger"
 						title="Delete variable"

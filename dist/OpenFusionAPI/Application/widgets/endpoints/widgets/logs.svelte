@@ -16,8 +16,7 @@
 			status_redirect: 1,
 			status_client_error: 2,
 			status_server_error: 3
-		}),
-		ondata = (d) => {}
+		})
 	} = $props();
 
 	let dataLogs = $state([]);

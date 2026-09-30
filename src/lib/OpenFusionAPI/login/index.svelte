@@ -85,7 +85,7 @@
 		try {
 			const versionRes = await GetServerAPIVersion();
 			serverVersion = versionRes?.version || 'Unknown';
-		} catch (error) {
+		} catch {
 			serverVersion = 'Unknown';
 		}
 	}
@@ -130,7 +130,7 @@
 			if (res && (res.email || res.telegram)) {
 				recoveryOptions = res;
 			}
-		} catch (error) {
+		} catch {
 			// Endpoint no disponible (servidor antiguo): se oculta la opción.
 			recoveryOptions = null;
 		}

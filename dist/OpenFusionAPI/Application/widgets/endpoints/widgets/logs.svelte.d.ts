@@ -6,10 +6,8 @@ type Logs = {
 declare const Logs: import("svelte").Component<{
     endpoint?: Record<string, any>;
     log?: Record<string, any>;
-    ondata?: Function;
 }, {}, "endpoint" | "log">;
 type $$ComponentProps = {
     endpoint?: Record<string, any>;
     log?: Record<string, any>;
-    ondata?: Function;
 };
