@@ -2,6 +2,11 @@
 	import { Modal, Notifications, copyTextToClipboard } from '@rdsslab/svelte-components';
 	import { DateTime } from 'luxon';
 	import { httpStatusText } from '../../utils/httpStatus.js';
+	import {
+		getTraceSummary,
+		getTraceErrorsOnly,
+		getTraceSlowestHops
+	} from '../../utils/request.js';
 
 	let { show = $bindable(false), trace_id = $bindable('') } = $props();
 
@@ -23,6 +28,40 @@
 		if (v == null) return '—';
 		if (Number.isFinite(Number(v))) return `${Number(v).toLocaleString('en-US')} ms`;
 		return String(v);
+	}
+
+	/**
+	 * Carga los datos del trace. Es el unico escritor de `summary` / `errors` /
+	 * `slowest`, que son los que pinta el template: sin esto la vista queda
+	 * siempre en "No trace data".
+	 *
+	 *Todavia no la invoca nadie (no hay onMount ni $effect que la dispare), asi
+	 * que eslint la marca como no usada. Se conserva a proposito -- es el punto
+	 * de entrada pendiente de conectar cuando el modal se abra.
+	 */
+	// eslint-disable-next-line no-unused-vars
+	async function loadTrace() {
+		if (!trace_id || !show) return;
+		loading = true;
+		errorText = '';
+		summary = null;
+		errors = [];
+		slowest = [];
+		try {
+			const base = { trace_id };
+			const [sum, errs, slw] = await Promise.all([
+				getTraceSummary(base),
+				getTraceErrorsOnly(base),
+				getTraceSlowestHops(base)
+			]);
+			summary = sum;
+			errors = Array.isArray(errs) ? errs : [];
+			slowest = Array.isArray(slw) ? slw : [];
+		} catch (e) {
+			errorText = e?.message || String(e);
+		} finally {
+			loading = false;
+		}
 	}
 
 	async function copyId() {
