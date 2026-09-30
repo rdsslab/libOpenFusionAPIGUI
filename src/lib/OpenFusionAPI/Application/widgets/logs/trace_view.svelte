@@ -30,39 +30,50 @@
 		return String(v);
 	}
 
+	// Cada apertura arranca una generacion. Si el usuario abre otro trace antes de
+	// que termine el anterior, la respuesta vieja se descarta en vez de pisar la
+	// nueva (mismo patron que `runtimeEventGeneration` en interval_tasks).
+	let loadGeneration = 0;
+
 	/**
 	 * Carga los datos del trace. Es el unico escritor de `summary` / `errors` /
 	 * `slowest`, que son los que pinta el template: sin esto la vista queda
 	 * siempre en "No trace data".
-	 *
-	 *Todavia no la invoca nadie (no hay onMount ni $effect que la dispare), asi
-	 * que eslint la marca como no usada. Se conserva a proposito -- es el punto
-	 * de entrada pendiente de conectar cuando el modal se abra.
 	 */
-	// eslint-disable-next-line no-unused-vars
 	async function loadTrace() {
 		if (!trace_id || !show) return;
+		const gen = ++loadGeneration;
+		const id = trace_id;
 		loading = true;
 		errorText = '';
 		summary = null;
 		errors = [];
 		slowest = [];
 		try {
-			const base = { trace_id };
+			const base = { trace_id: id };
 			const [sum, errs, slw] = await Promise.all([
 				getTraceSummary(base),
 				getTraceErrorsOnly(base),
 				getTraceSlowestHops(base)
 			]);
+			if (gen !== loadGeneration) return;
 			summary = sum;
 			errors = Array.isArray(errs) ? errs : [];
 			slowest = Array.isArray(slw) ? slw : [];
 		} catch (e) {
+			if (gen !== loadGeneration) return;
 			errorText = e?.message || String(e);
 		} finally {
-			loading = false;
+			if (gen === loadGeneration) loading = false;
 		}
 	}
+
+	// El padre asigna `trace_id` y despues `show = true` (ver `openTrace` en
+	// logs/index.svelte), asi que el guard de `loadTrace` recien se cumple cuando
+	// el modal termina de abrir: la carga arranca sola en cada apertura.
+	$effect(() => {
+		if (show && trace_id) loadTrace();
+	});
 
 	async function copyId() {
 		const { result, error } = await copyTextToClipboard(String(trace_id));
