@@ -68,6 +68,7 @@
 
 	let activeTab = $state(0);
 	const TAB_HISTORY = 2;
+	const TAB_RESPONSE = 3;
 	let tabList = $state([
 		{
 			name: 'config',
@@ -89,6 +90,16 @@
 			disabled: true
 		},
 		{
+			// El cuerpo de la última respuesta era un bloque suelto al final del panel de
+			// runtime: competía en altura con el formulario y había que desplegarlo con la
+			// página para leerlo. Como pestaña tiene todo el espacio y no empuja nada.
+			name: 'response',
+			label: 'Response',
+			component: tab_response,
+			classIcon: 'fa-solid fa-file-lines',
+			disabled: true
+		},
+		{
 			name: 'guide',
 			label: 'Guide',
 			component: tab_guide,
@@ -96,10 +107,11 @@
 		}
 	]);
 
-	/** Abre siempre en Configuration; History solo existe si la tarea ya está guardada. */
+	/** Abre siempre en Configuration; History y Response solo existen si la tarea ya está guardada. */
 	function resetTabs() {
 		activeTab = 0;
 		tabList[TAB_HISTORY].disabled = !selectedRow.idtask;
+		tabList[TAB_RESPONSE].disabled = !selectedRow.idtask;
 	}
 
 	// BasicSelect espera {id, value}: `id` es el valor guardado y `value` la etiqueta.
@@ -732,11 +744,6 @@
 						</p>
 					</div>
 				</div>
-
-				{#if lastResponse}
-					<p class="heading">Last response</p>
-					<pre class="is-size-7 last-response">{lastResponse}</pre>
-				{/if}
 			</div>
 		{/if}
 
@@ -923,6 +930,24 @@
 	{/if}
 {/snippet}
 
+{#snippet tab_response()}
+	<!-- Lo escribe el planificador, igual que el panel de runtime: se lee de `runtime`
+	     (derivado de la fila viva de la tabla), nunca del borrador editable. No necesita
+	     el guard de `activeTab` que usa History porque no hace ninguna consulta. -->
+	<p class="heading">Last response</p>
+	{#if lastResponse}
+		<p class="help mb-2">
+			Body returned by the last execution ({formatMoment(runtime.last_run)}).
+		</p>
+		<pre class="is-size-7 last-response">{lastResponse}</pre>
+	{:else}
+		<p class="help">
+			This task has no recorded response yet: it has never run, the last run returned an empty body,
+			or it is running right now.
+		</p>
+	{/if}
+{/snippet}
+
 {#snippet tab_guide()}
 	<div class="content is-small">
 		<h4>How to schedule an endpoint</h4>
@@ -955,9 +980,10 @@
 {/snippet}
 
 <style>
-	/* Una respuesta larga no debe empujar el formulario fuera de la pantalla. */
+	/* Ya no comparte pantalla con el formulario (vive en su propia pestaña), así que puede
+	   ocupar el alto disponible en vez de los 12rem de cuando estaba dentro del panel. */
 	.last-response {
-		max-height: 12rem;
+		max-height: 60vh;
 		overflow: auto;
 		white-space: pre-wrap;
 		word-break: break-word;

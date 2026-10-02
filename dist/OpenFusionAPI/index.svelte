@@ -143,6 +143,25 @@
 {/if}
 
 <style>
+	/*
+	 * Bulma declara `.tag.is-light.is-light` pero nunca define el token al que apunta
+	 * (`--bulma-light-light-invert-l`). Una clase repetida en un selector compuesto también
+	 * se cumple con una sola ocurrencia, así que esa regla -y no `.tag.is-light`- es la que
+	 * gana en todo `<span class="tag is-light">`: columna Status de Tasks, Stopped de bots,
+	 * etiquetas de Logs/Audit, etc.
+	 *
+	 * Con el token sin definir, `color` queda invalido y se hereda; dentro de una celda de
+	 * tabla eso es `--bulma-text-strong`, que en dark theme esta al 93% de luminosidad:
+	 * texto blanco sobre el chip casi blanco. En light theme esta al 21% y por eso el
+	 * fallo solo se ve en dark mode.
+	 *
+	 * Definir el token que falta devuelve el color que Bulma pretendia, sin pelear por
+	 * especificidad ni depender del orden en que se carguen las hojas de estilo.
+	 */
+	:global(:root) {
+		--bulma-light-light-invert-l: var(--bulma-light-invert-l);
+	}
+
 	.overlay-container {
 		position: absolute;
 		top: 0;
