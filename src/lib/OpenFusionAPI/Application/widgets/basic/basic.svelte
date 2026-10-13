@@ -5,12 +5,11 @@
 	import SaveDeploy from '../common/saveDeploy.svelte';
 	import TextAreaWidget from '../common/textArea.svelte';
 	import { url_paths } from '../../utils/paths.js';
-	import { userStore, statusSystemEndpointsStore } from '../../utils/stores.js';
+	import { userStore } from '../../utils/stores.js';
 	import {
 		GetApp as GetAppRequest,
 		GetAppBackup,
-		RestoreAppBackup,
-		restoreSystemEndpoints
+		RestoreAppBackup
 	} from '../../utils/request.js';
 	import { Notifications } from '@rdsslab/svelte-components';
 
@@ -95,8 +94,6 @@
 				clearDataVars();
 			}
 
-			let status_sys_endp = await restoreSystemEndpoints(false, $userStore.token);
-			statusSystemEndpointsStore.set(status_sys_endp);
 		} catch (error) {
 			console.error(error);
 		}

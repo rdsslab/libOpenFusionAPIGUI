@@ -4,7 +4,6 @@
 	import { isNewApp } from '../../utils/utils.js';
 	import {
 		userStore,
-		statusSystemEndpointsStore,
 		storeCountResponseStatusCode,
 		storeServerModelChanged
 	} from '../../utils/stores.js';
@@ -20,7 +19,6 @@
 		getServerAPIVersion,
 		getAppDocumentation,
 		GetAppVars,
-		restoreSystemEndpoints,
 		getLogSummaryByAppStatusCode,
 		getServerAPILastVersion,
 		migrateEndpoints
@@ -354,12 +352,6 @@
 					notify.push({ message: error.message, color: 'danger' });
 				});
 
-				// Verificación de system endpoints ya corrida al cargar la app
-				// (Application/index.svelte): aquí solo se refresca en segundo plano.
-				runInBackground(async () => {
-					let status_sys_endp = await restoreSystemEndpoints(false);
-					statusSystemEndpointsStore.set(status_sys_endp);
-				});
 			}
 		} catch (error) {
 			console.error(error);

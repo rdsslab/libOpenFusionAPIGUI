@@ -4,8 +4,7 @@
 	import {
 		storeEndpointOnComplete,
 		storeServerDynamicInformation,
-		userStore,
-		statusSystemEndpointsStore
+		userStore
 	} from '../../utils/stores.js';
 	import {
 		getLogsRecordsPerMinute,
@@ -13,8 +12,7 @@
 		getLogs as getRequestLogs,
 		getLogSummaryByAppStatusCode,
 		getAppEndpointUsageSummary,
-		getTopErrorEndpointsByTime,
-		restoreSystemEndpoints
+		getTopErrorEndpointsByTime
 	} from '../../utils/request.js';
 	import { httpStatusText } from '../../utils/httpStatus.js';
 	let { idapp = $bindable() } = $props();
@@ -496,9 +494,6 @@
 					console.error('getLogsStatusClassPerMinute did not return an array:', data_status);
 					data_status_class = [];
 				}
-
-				let status_sys_endp = await restoreSystemEndpoints(false, $userStore.token);
-				statusSystemEndpointsStore.set(status_sys_endp);
 
 				let summary = await getLogSummaryByAppStatusCode(
 					{ idapp: idapp, environment: selectedEnvironment },

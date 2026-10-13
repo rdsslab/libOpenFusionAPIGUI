@@ -26,7 +26,6 @@
 	import BotLogs from './bot_logs.svelte';
 	import {
 		userStore,
-		statusSystemEndpointsStore,
 		storeBotStatusChanged,
 		storeBotChanged
 	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
@@ -34,7 +33,6 @@
 		currentUserHasPermission,
 		getDefaultEnvironment
 	} from '$lib/OpenFusionAPI/Application/utils/permissions.js';
-	import { restoreSystemEndpoints } from '$lib/OpenFusionAPI/Application/utils/request.js';
 	import AppVarsSelector from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/params_json_selector.svelte';
 
 	let { idapp = $bindable() } = $props();
@@ -191,9 +189,6 @@
 				let resp = await uF.get({ url: `${url_paths.bots}/prd`, data: { idapp } });
 				let jresp = await resp.json();
 				// console.log('loadBots >>>>>>>>>>>>>', jresp);
-
-				let status_sys_endp = await restoreSystemEndpoints(false, $userStore.token);
-				statusSystemEndpointsStore.set(status_sys_endp);
 
 				if (jresp && jresp.success && Array.isArray(jresp.data)) {
 					DataTableBots = jresp.data;

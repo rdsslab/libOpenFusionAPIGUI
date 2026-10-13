@@ -28,7 +28,6 @@
 	import TaskHistory from '$lib/OpenFusionAPI/Application/widgets/interval_tasks/history.svelte';
 	import {
 		userStore,
-		statusSystemEndpointsStore,
 		storeIntervalTaskEvent
 	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import {
@@ -37,8 +36,7 @@
 	} from '$lib/OpenFusionAPI/Application/utils/permissions.js';
 	import {
 		GetEndpointsByIdapp,
-		GetAPIKeys,
-		restoreSystemEndpoints
+		GetAPIKeys
 	} from '$lib/OpenFusionAPI/Application/utils/request.js';
 
 	let { idapp = $bindable() } = $props();
@@ -386,8 +384,6 @@
 			const requestedGeneration = runtimeEventGeneration;
 			let resp = await uF.get({ url: url_paths.getListIntervalTasksByIdApp, data: { idapp } });
 			let jresp = await resp.json();
-			let status_sys_endp = await restoreSystemEndpoints(false, $userStore.token);
-			statusSystemEndpointsStore.set(status_sys_endp);
 
 			if (Array.isArray(jresp)) {
 				DataTableTasks = jresp.map((task) => {
