@@ -13,6 +13,15 @@ export function getIntervalTaskRuntimeStatus(value: any): {
  * permite corregir corridas antiguas que se guardaron como OK pese a `success: false`.
  */
 export function getIntervalTaskLastResultStatus(value: any, response: any): any;
+/** Devuelve el estado de suspensión, o `null` si el planificador no la suspendió. */
+export function getIntervalTaskSuspensionStatus(task: any): {
+    label: string;
+    background: string;
+    icon: string;
+    description: string;
+};
+/** `true` cuando la tarea está suspendida por el planificador (no por el usuario). */
+export function isIntervalTaskSuspended(task: any): boolean;
 export const listAccessMethod: {
     value: string;
     id: number;
@@ -159,6 +168,8 @@ export function defaultValuesIntervalTask(task: any): {
     window_days: string;
     max_failed_attempts: number;
     history_limit: number;
+    disabled_by: any;
+    disabled_reason: any;
     note: string;
 };
 /**
@@ -211,6 +222,16 @@ export namespace IntervalTaskStatusFallback {
     let description_2: string;
     export { description_2 as description };
 }
+export namespace IntervalTaskSuspendedStatus {
+    let label_1: string;
+    export { label_1 as label };
+    let background_1: string;
+    export { background_1 as background };
+    let icon_6: string;
+    export { icon_6 as icon };
+    let description_3: string;
+    export { description_3 as description };
+}
 /**
  * Campos de `ofapi_intervaltask` que escribe el planificador, no el usuario. El editor
  * los muestra como solo lectura y no los reenvía al guardar.
@@ -219,87 +240,87 @@ export const INTERVAL_TASK_RUNTIME_FIELDS: string[];
 export function defaultValuesBot(bot: any): any;
 export namespace BotRuntimeStatus {
     namespace STOPPED {
-        let label_1: string;
-        export { label_1 as label };
-        let color_5: string;
-        export { color_5 as color };
-        let background_1: string;
-        export { background_1 as background };
-        let icon_6: string;
-        export { icon_6 as icon };
-        export let needsAction: boolean;
-        let description_3: string;
-        export { description_3 as description };
-    }
-    namespace STARTING {
         let label_2: string;
         export { label_2 as label };
-        let color_6: string;
-        export { color_6 as color };
+        let color_5: string;
+        export { color_5 as color };
         let background_2: string;
         export { background_2 as background };
         let icon_7: string;
         export { icon_7 as icon };
-        let needsAction_1: boolean;
-        export { needsAction_1 as needsAction };
+        export let needsAction: boolean;
         let description_4: string;
         export { description_4 as description };
     }
-    namespace RUNNING {
+    namespace STARTING {
         let label_3: string;
         export { label_3 as label };
-        let color_7: string;
-        export { color_7 as color };
+        let color_6: string;
+        export { color_6 as color };
         let background_3: string;
         export { background_3 as background };
         let icon_8: string;
         export { icon_8 as icon };
-        let needsAction_2: boolean;
-        export { needsAction_2 as needsAction };
+        let needsAction_1: boolean;
+        export { needsAction_1 as needsAction };
         let description_5: string;
         export { description_5 as description };
     }
-    namespace BACKOFF {
+    namespace RUNNING {
         let label_4: string;
         export { label_4 as label };
-        let color_8: string;
-        export { color_8 as color };
+        let color_7: string;
+        export { color_7 as color };
         let background_4: string;
         export { background_4 as background };
         let icon_9: string;
         export { icon_9 as icon };
-        let needsAction_3: boolean;
-        export { needsAction_3 as needsAction };
+        let needsAction_2: boolean;
+        export { needsAction_2 as needsAction };
         let description_6: string;
         export { description_6 as description };
     }
-    namespace QUARANTINED {
+    namespace BACKOFF {
         let label_5: string;
         export { label_5 as label };
-        let color_9: string;
-        export { color_9 as color };
+        let color_8: string;
+        export { color_8 as color };
         let background_5: string;
         export { background_5 as background };
         let icon_10: string;
         export { icon_10 as icon };
-        let needsAction_4: boolean;
-        export { needsAction_4 as needsAction };
+        let needsAction_3: boolean;
+        export { needsAction_3 as needsAction };
         let description_7: string;
         export { description_7 as description };
     }
-    namespace DISABLED_ERROR {
+    namespace QUARANTINED {
         let label_6: string;
         export { label_6 as label };
-        let color_10: string;
-        export { color_10 as color };
+        let color_9: string;
+        export { color_9 as color };
         let background_6: string;
         export { background_6 as background };
         let icon_11: string;
         export { icon_11 as icon };
-        let needsAction_5: boolean;
-        export { needsAction_5 as needsAction };
+        let needsAction_4: boolean;
+        export { needsAction_4 as needsAction };
         let description_8: string;
         export { description_8 as description };
+    }
+    namespace DISABLED_ERROR {
+        let label_7: string;
+        export { label_7 as label };
+        let color_10: string;
+        export { color_10 as color };
+        let background_7: string;
+        export { background_7 as background };
+        let icon_12: string;
+        export { icon_12 as icon };
+        let needsAction_5: boolean;
+        export { needsAction_5 as needsAction };
+        let description_9: string;
+        export { description_9 as description };
     }
 }
 export namespace BotRuntimeStatusFallback { }

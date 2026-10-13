@@ -136,6 +136,8 @@ export const defaultValuesIntervalTask = (task) => {
 		window_days: '',
 		max_failed_attempts: 10,
 		history_limit: 50,
+		disabled_by: null,
+		disabled_reason: null,
 		note: ''
 	};
 
@@ -236,6 +238,32 @@ export function getIntervalTaskLastResultStatus(value, response) {
 }
 
 /**
+ * Suspensión del planificador. Cuando una tarea agota `max_failed_attempts` el servidor
+ * deja de programarla SIN apagar `enabled`: esa bandera es la intención del usuario y se
+ * conserva. Lo que cambia es `disabled_by`, que pasa a `'system'`. Por eso es un estado
+ * distinto de "Unabled" y merece su propia etiqueta: el usuario quiere que corra, pero
+ * no correrá hasta que se corrija la causa y se reinicien los intentos.
+ */
+export const IntervalTaskSuspendedStatus = {
+	label: 'Suspended',
+	background: 'danger',
+	icon: ' fa-solid fa-triangle-exclamation ',
+	description:
+		'The scheduler stopped this task after it reached Max failed attempts. The task stays ' +
+		'Enabled, but it will not run until you fix the cause and use Reset attempts.'
+};
+
+/** Devuelve el estado de suspensión, o `null` si el planificador no la suspendió. */
+export function getIntervalTaskSuspensionStatus(task) {
+	return task?.disabled_by === 'system' ? IntervalTaskSuspendedStatus : null;
+}
+
+/** `true` cuando la tarea está suspendida por el planificador (no por el usuario). */
+export function isIntervalTaskSuspended(task) {
+	return task?.disabled_by === 'system';
+}
+
+/**
  * Campos de `ofapi_intervaltask` que escribe el planificador, no el usuario. El editor
  * los muestra como solo lectura y no los reenvía al guardar.
  */
@@ -244,7 +272,9 @@ export const INTERVAL_TASK_RUNTIME_FIELDS = [
 	'last_run',
 	'next_run',
 	'last_exec_time',
-	'last_response'
+	'last_response',
+	'disabled_by',
+	'disabled_reason'
 ];
 
 export const defaultValuesBot = (bot) => {

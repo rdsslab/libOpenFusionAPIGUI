@@ -16,6 +16,8 @@
 		defaultValuesIntervalTask,
 		getIntervalTaskLastResultStatus,
 		getIntervalTaskRuntimeStatus,
+		getIntervalTaskSuspensionStatus,
+		isIntervalTaskSuspended,
 		INTERVAL_TASK_RUNTIME_FIELDS
 	} from '$lib/OpenFusionAPI/Application/utils/static_values.js';
 	import { url_paths } from '$lib/OpenFusionAPI/Application/utils/paths.js';
@@ -136,6 +138,8 @@
 		'last_exec_time',
 		'last_response',
 		'failed_attempts',
+		'disabled_by',
+		'disabled_reason',
 		'task_enabled'
 	];
 
@@ -237,6 +241,8 @@
 		window_end: { label: 'Window to' },
 		window_days: { label: 'Days' },
 		history_limit: { hidden: true },
+		disabled_by: { hidden: true },
+		disabled_reason: { hidden: true },
 		note: { hidden: true },
 		access: { hidden: true },
 		app: { hidden: true },
@@ -255,6 +261,7 @@
 			: null
 	);
 	let runtimeStatus = $derived(runtime ? getIntervalTaskRuntimeStatus(runtime.status) : null);
+	let suspensionStatus = $derived(runtime ? getIntervalTaskSuspensionStatus(runtime) : null);
 	let lastResultStatus = $derived(
 		runtime ? getIntervalTaskLastResultStatus(runtime.status, runtime.last_response) : null
 	);
@@ -268,6 +275,7 @@
 			? DataTableTasks.find((t) => String(t.idtask) === String(historyTask.idtask)) || null
 			: null
 	);
+	let historyTaskSuspended = $derived(isIntervalTaskSuspended(historyTaskRuntime));
 
 	let nextIn = $derived.by(() => {
 		if (!runtime?.next_run) return '';
@@ -587,8 +595,12 @@
 			<p class="control">
 				<button
 					class="button is-small"
-					disabled={!historyTask?.idtask}
-					title="Despierta el planificador y ejecuta la tarea inmediatamente"
+					disabled={!historyTask?.idtask || historyTaskSuspended}
+					title={!historyTask?.idtask
+						? 'Select a single task to act on it'
+						: historyTaskSuspended
+							? 'The scheduler suspended this task: fix the cause and use Reset attempts'
+							: 'Despierta el planificador y ejecuta la tarea inmediatamente'}
 					onclick={() => runNow(historyTask)}
 				>
 					<span class="icon is-small"><i class="fa-solid fa-bolt"></i></span>
@@ -614,7 +626,7 @@
 				<button
 					class="button is-small"
 					disabled={!historyTask?.idtask}
-					title="Reinicia el contador de fallos y reactiva la tarea si el backoff la deshabilitó"
+					title="Reinicia el contador de fallos y levanta la suspensión si el planificador la detuvo. No reactiva una tarea apagada por el usuario"
 					onclick={() => resetAttempts(historyTask)}
 				>
 					<span class="icon is-small"><i class="fa-solid fa-rotate-left"></i></span>
@@ -637,12 +649,15 @@
 								class:is-loading={runNowPending}
 								disabled={runNowPending ||
 									!runtime?.task_enabled ||
+									Boolean(suspensionStatus) ||
 									(Number(runtime?.status) === 1 && !runtime?.allow_concurrent)}
 								title={!runtime?.task_enabled
 									? 'Enable and save the task before running it'
-									: Number(runtime?.status) === 1 && !runtime?.allow_concurrent
-										? 'The task is already running and does not allow concurrency'
-										: 'Runs the last saved configuration immediately'}
+									: suspensionStatus
+										? 'The scheduler suspended this task: fix the cause and use Reset attempts'
+										: Number(runtime?.status) === 1 && !runtime?.allow_concurrent
+											? 'The task is already running and does not allow concurrency'
+											: 'Runs the last saved configuration immediately'}
 								onclick={() => runNow(runtime)}
 							>
 								<span class="icon is-small"><i class="fa-solid fa-bolt"></i></span>
@@ -710,6 +725,12 @@
 					</div>
 					<div class="level-right">
 						<div class="tags">
+							{#if suspensionStatus}
+								<span class="tag is-{suspensionStatus.background}">
+									<span class="icon is-small"><i class={suspensionStatus.icon}></i></span>
+									<span>{suspensionStatus.label}</span>
+								</span>
+							{/if}
 							<span class="tag is-{runtimeStatus.background}">{runtimeStatus.label}</span>
 							{#if lastResultStatus}
 								<span class="tag is-{lastResultStatus.background}">
@@ -720,6 +741,17 @@
 					</div>
 				</div>
 				<p class="help mb-3">{runtimeStatus.description}</p>
+
+				{#if suspensionStatus}
+					<article class="message is-danger">
+						<div class="message-body">
+							{suspensionStatus.description}
+							{#if runtime.disabled_reason}
+								<br /><span class="is-size-7">{runtime.disabled_reason}</span>
+							{/if}
+						</div>
+					</article>
+				{/if}
 
 				<div class="columns is-multiline is-mobile mb-0">
 					<div class="column is-one-quarter">
@@ -952,7 +984,10 @@
 	<div class="content is-small">
 		<h4>How to schedule an endpoint</h4>
 		<ol>
-			<li>Select an existing endpoint and keep the new task disabled.</li>
+			<li>
+				Select an existing endpoint. Give the task a long <strong>interval</strong> (or a far cron) so
+				it does not fire on its own yet.
+			</li>
 			<li>
 				Choose <strong>Interval</strong> for every N seconds or <strong>Cron</strong> for calendar times.
 			</li>
@@ -960,7 +995,11 @@
 			<li>
 				Save, select the task, run it once with <strong>Run now</strong>, and inspect History.
 			</li>
-			<li>Enable it only after the test succeeds.</li>
+			<li>
+				Once the test succeeds, set the real interval (or cron) and make sure <strong
+					>Enabled</strong
+				> is on.
+			</li>
 		</ol>
 
 		<h4>Schedule fields</h4>
@@ -973,8 +1012,11 @@
 		<h4>Parameters and failures</h4>
 		<p>
 			Use <code>{JSON.stringify({ data: { id: 42 }, headers: { 'x-source': 'scheduler' } })}</code>
-			in Parameters. Failed executions use exponential backoff and the task is disabled after Max failed
-			attempts. Reset attempts only after correcting the cause.
+			in Parameters. Failed executions use exponential backoff and, after Max failed attempts consecutive
+			failures, the scheduler <strong>suspends</strong> the task: it stays Enabled (your intent) but
+			stops running, and the status cell shows a red <strong>Suspended</strong> tag. Correct the
+			cause first, then use <strong>Reset attempts</strong> to clear the counter and lift the suspension.
+			A task you turned off yourself stays off after a reset.
 		</p>
 	</div>
 {/snippet}
