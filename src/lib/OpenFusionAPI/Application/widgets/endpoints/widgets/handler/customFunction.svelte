@@ -34,7 +34,12 @@
 		}
 
 		if (!endpoint?.data_test) {
-			endpoint.data_test = {};
+			endpoint.data_test = {
+				query: [],
+				body: { selection: 0 },
+				headers: [],
+				auth: { selection: 0 }
+			};
 		}
 
 		if (!endpoint?.method) {

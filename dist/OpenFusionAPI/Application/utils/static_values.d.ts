@@ -109,7 +109,7 @@ export namespace defaultEndpoint {
         namespace body {
             let selection: number;
         }
-        let headers: {};
+        let headers: any[];
         namespace auth {
             let selection_1: number;
             export { selection_1 as selection };

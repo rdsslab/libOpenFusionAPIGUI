@@ -28,7 +28,10 @@
 	import { userStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import AppVars from '$lib/OpenFusionAPI/Application/widgets/application_variables/variables.svelte';
 	import { defaultEndpoint } from '$lib/OpenFusionAPI/Application/utils/static_values.js';
-	import { mergeSourceOverwrite } from '$lib/OpenFusionAPI/Application/utils/utils.js';
+	import {
+		mergeSourceOverwrite,
+		ensureDataTestShape
+	} from '$lib/OpenFusionAPI/Application/utils/utils.js';
 	import { getHandlerDocs, EndpointSave } from '$lib/OpenFusionAPI/Application/utils/request.js';
 	import SaveDeploy from '$lib/OpenFusionAPI/Application/widgets/common/saveDeploy.svelte';
 
@@ -65,6 +68,63 @@
 		app = data.app || {};
 		idendpoint = data.idendpoint || undefined;
 		setValuesEndpoint();
+	}
+
+	/**
+	 * Rescata un `data_test` que una versión anterior guardó envuelto:
+	 *   { body: { selection, json: { code: <data_test real> } } }
+	 *
+	 * Ese envoltorio nació de confundir la config vacía del Tester con un body
+	 * crudo (ver `normalizeDataTest` en libOpenFusionAPI): al reabrir el endpoint
+	 * la config aparecía como JSON dentro de la pestaña Body. Se devuelve el
+	 * `data_test` interno cuando es reconocible y el envoltorio no aporta datos
+	 * propios, para que la config vuelva a sus pestañas y quede corregida al
+	 * guardar.
+	 */
+	function unwrapNestedDataTest(data_test) {
+		if (!data_test || typeof data_test !== 'object' || Array.isArray(data_test)) return data_test;
+
+		const TESTER_KEYS = ['query', 'headers', 'body', 'auth', 'last_response'];
+		if (!Object.keys(data_test).every((k) => TESTER_KEYS.includes(k))) return data_test;
+
+		const body = data_test.body;
+		if (!body || typeof body !== 'object' || Array.isArray(body)) return data_test;
+		// El body externo debe ser solo el envoltorio (selection + json).
+		if (Object.keys(body).some((k) => k !== 'selection' && k !== 'json')) return data_test;
+		const json = body.json;
+		if (!json || typeof json !== 'object' || Array.isArray(json)) return data_test;
+		const code = json.code;
+		if (!code || typeof code !== 'object' || Array.isArray(code)) return data_test;
+		if (Object.keys(code).length === 0) return data_test;
+		if (!Object.keys(code).every((k) => TESTER_KEYS.includes(k))) return data_test;
+
+		// El `code` interno debe traer señales de config del Tester.
+		const esObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
+		const senal =
+			Array.isArray(code.query) ||
+			Array.isArray(code.headers) ||
+			esObj(code.body) ||
+			esObj(code.auth);
+		if (!senal) return data_test;
+
+		// No pisar datos reales que ya vengan en el contenedor.
+		const filaConDatos = (rows) =>
+			Array.isArray(rows) &&
+			rows.some(
+				(r) =>
+					r &&
+					typeof r === 'object' &&
+					(String(r.key ?? '').length > 0 || String(r.value ?? '').length > 0)
+			);
+		const authConDatos =
+			esObj(data_test.auth) &&
+			((data_test.auth.basic && String(data_test.auth.basic.username ?? '').length > 0) ||
+				(data_test.auth.bearer && String(data_test.auth.bearer.token ?? '').length > 0));
+		if (filaConDatos(data_test.query) || filaConDatos(data_test.headers) || authConDatos) {
+			return data_test;
+		}
+
+		return code;
 	}
 
 	function normalizeEndpoint(ep) {
@@ -109,7 +169,7 @@
 		ep.ctrl ??= {};
 		ep.ctrl.users ??= [];
 		ep.ctrl.log ??= {};
-		ep.data_test ??= {};
+		ep.data_test = ensureDataTestShape(unwrapNestedDataTest(ep.data_test));
 
 		return ep;
 	}
@@ -681,7 +741,7 @@
 			url={endpoint.endpoint}
 			methodDisabled={true}
 			onchange={(d) => {
-				endpoint.data_test = d.data;
+				endpoint.data_test = ensureDataTestShape(d.data);
 
 				// Limita el tamaño de la respuesta (guard para evitar TypeError si last_response es null)
 				if (d.last_response) {

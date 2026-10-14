@@ -83,7 +83,7 @@ export const defaultEndpoint = {
 		body: {
 			selection: 0
 		},
-		headers: {},
+		headers: [],
 		auth: {
 			selection: 0
 		}

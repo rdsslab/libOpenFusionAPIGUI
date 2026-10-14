@@ -1,6 +1,31 @@
 import { get } from 'svelte/store';
 import { listHandlerStore } from './stores.js';
 
+/**
+ * Normaliza un `data_test` a la forma canónica que espera el `RESTTester` y que
+ * el backend reconoce como suya: `query`/`headers` como arrays y `body`/`auth`
+ * como objetos con `selection` numérico.
+ *
+ * El `selection` no es cosmético: el backend (`normalizeDataTest` en
+ * libOpenFusionAPI) envuelve en `body.json.code` cualquier `data_test` que no
+ * traiga ninguna señal del Tester, y un `body`/`auth` vacío sin `selection` era
+ * justo el disparador de que la configuración de query/headers acabara dentro
+ * del Body como JSON.
+ */
+export const ensureDataTestShape = (data_test) => {
+	const dt =
+		data_test && typeof data_test === 'object' && !Array.isArray(data_test) ? data_test : {};
+
+	if (!Array.isArray(dt.query)) dt.query = [];
+	if (!Array.isArray(dt.headers)) dt.headers = [];
+	if (dt.body == null || typeof dt.body !== 'object' || Array.isArray(dt.body)) dt.body = {};
+	if (typeof dt.body.selection !== 'number') dt.body.selection = 0;
+	if (dt.auth == null || typeof dt.auth !== 'object' || Array.isArray(dt.auth)) dt.auth = {};
+	if (typeof dt.auth.selection !== 'number') dt.auth.selection = 0;
+
+	return dt;
+};
+
 export const getHandlerParams = (handler) => {
 	const list = get(listHandlerStore); // ← obtiene el valor actual del store
 	return Array.isArray(list) ? list.find((item) => item.id == handler) : {};
@@ -103,7 +128,7 @@ export const defaultValuesEndpointRow = (row) => {
 	}
 
 	if (row && row.data_test == null) {
-		row.data_test = {};
+		row.data_test = ensureDataTestShape({});
 	}
 
 	if (row && row.rowkey == null) {
@@ -142,11 +167,13 @@ export const defaultValuesEndpointRow = (row) => {
 	}
 
 	if (row && row.data_test == null) {
-		row.data_test = { query: {}, body: {}, headers: {}, auth: {} };
+		row.data_test = ensureDataTestShape({});
 	}
 
 	if (row && row.data_test.query == null) {
-		row.data_test.query = {};
+		row.data_test.query = [];
+	} else if (!Array.isArray(row.data_test.query)) {
+		row.data_test.query = [];
 	}
 
 	if (row && row.data_test.body == null) {
@@ -154,11 +181,19 @@ export const defaultValuesEndpointRow = (row) => {
 	}
 
 	if (row && row.data_test.headers == null) {
-		row.data_test.headers = {};
+		row.data_test.headers = [];
+	} else if (!Array.isArray(row.data_test.headers)) {
+		row.data_test.headers = [];
 	}
 
 	if (row && row.data_test.auth == null) {
 		row.data_test.auth = {};
+	}
+
+	// Forma canónica que espera el Tester y acepta el backend: query/headers
+	// como arrays y body/auth con `selection` numérico.
+	if (row) {
+		row.data_test = ensureDataTestShape(row.data_test);
 	}
 
 	return row;
@@ -202,7 +237,11 @@ export const mergeSourceOverwrite = (target, source) => {
 		const srcVal = source[key];
 		const tarVal = target[key];
 
-		if (isPlainObject(tarVal) && isPlainObject(srcVal)) {
+		// data_test se une aparte para no perder los tipos del Tester
+		// (query/headers arrays; body/auth con `selection`).
+		if (key === 'data_test' && isPlainObject(srcVal)) {
+			result[key] = ensureDataTestShape(mergeSourceOverwrite(tarVal || {}, srcVal));
+		} else if (isPlainObject(tarVal) && isPlainObject(srcVal)) {
 			// Merge profundo inmutable
 			result[key] = mergeSourceOverwrite(tarVal, srcVal);
 		} else {
