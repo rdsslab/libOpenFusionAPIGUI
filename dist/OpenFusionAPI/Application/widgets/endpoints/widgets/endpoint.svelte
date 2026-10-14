@@ -91,6 +91,18 @@
 		return !check;
 	}
 
+	function openCopyDialog() {
+		// El modal no se desmonta al cerrarse (solo alterna `is-active`), asi que el
+		// estado del dialogo sobrevive de una apertura a la siguiente. Sin este reset
+		// el <select> conservaria el destino previo, `endpoint_copied` quedaria del
+		// ultimo copiado y `endpoint_replace_copy` seguiria marcado: reabrir y aceptar
+		// volveria a copiar (o duplicar) en silencio, sin pedir confirmacion otra vez.
+		endpoint_env_copy = '';
+		endpoint_replace_copy = false;
+		endpoint_copied = {};
+		ShowDialogCopyEndpoint = true;
+	}
+
 	onMount(async () => {
 		console.log('onMount endpoint');
 		endpoint_copied = {};
@@ -113,7 +125,7 @@
 							class="button is-small is-info"
 							onclick={() => {
 								//console.log('<<<<<<<<<<<<---- ', $state.snapshot(app));
-								ShowDialogCopyEndpoint = true;
+								openCopyDialog();
 							}}
 						>
 							<span class="icon is-small">
@@ -377,7 +389,14 @@
 	onaccept={async () => {
 		//console.log($state.snapshot(endpoint), $state.snapshot(endpoint_copied));
 		//let eps = [...app.endpoints];
-		const is_new = !endpoint_copied.idendpoint || endpoint_copied.idendpoint.length === 0;
+		if (!endpoint_env_copy) {
+			notify.push({
+				message: 'You must select an environment to copy the endpoint to.',
+				color: 'warning'
+			});
+			return;
+		}
+		const is_new = !endpoint_copied?.idendpoint;
 
 		if (is_new || endpoint_replace_copy) {
 			if (endpoint_env_copy && endpoint_env_copy !== '') {
@@ -406,7 +425,7 @@
 		} else {
 			notify.push({
 				message: 'You must accept overwriting the endpoint data.',
-				color: 'success'
+				color: 'warning'
 			});
 		}
 	}}
@@ -437,7 +456,7 @@
 							let endpoint_find = app.endpoints.find((ep) => {
 								//console.log('-------> ', ep.environment, endpoint_env_copy);
 								return (
-									ep.environment == endpoint_env_copy &&
+									ep.environment == e &&
 									ep.handler == endpoint.handler &&
 									ep.method == endpoint.method &&
 									ep.resource == endpoint.resource
@@ -445,7 +464,7 @@
 							}); //
 
 							endpoint_copied = { ...endpoint };
-							endpoint_copied.environment = endpoint_env_copy;
+							endpoint_copied.environment = e;
 							endpoint_copied.idendpoint = null;
 							endpoint_copied.endpoint = createEndpoint(
 								endpoint_copied.method,
