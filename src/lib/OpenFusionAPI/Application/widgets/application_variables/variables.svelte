@@ -23,6 +23,14 @@
 	let ShowDialogCopyEndpoint = $state(false);
 	let var_replace_copy = $state(false);
 	let var_to_copy = $state({});
+	// El <select> de destino vive dentro del modal y el modal NO se desmonta al
+	// cerrarse (solo alterna la clase `is-active`), asi que su `option` interna
+	// sobrevive de una apertura a la siguiente. Si no la reseteamos, al reabrir
+	// el dialogo el desplegable ya muestra el entorno elegido antes pero no se
+	// dispara `change`, `env_destination` queda vacio y el promote falla con
+	// "Missing idappvar or target_env". Esta variable bindea el `option` del
+	// desplegable y se limpia en cada apertura.
+	let target_env_selected = $state('');
 	let Datavars = $state({});
 	let DataAppVars = $state([]);
 
@@ -151,8 +159,13 @@
 	}
 
 	function internalOncopy(v) {
+		// Copia del appvar (no mutar el objeto de DataAppVars) y reset del estado
+		// del dialogo: sin esto el desplegable conserva el destino de la apertura
+		// anterior y el ACEPTAR manda target_env vacio.
+		var_to_copy = { ...v };
+		var_replace_copy = false;
+		target_env_selected = '';
 		ShowDialogCopyEndpoint = true;
-		var_to_copy = v;
 	}
 
 	onMount(async () => {
@@ -221,6 +234,13 @@
 	title={titleModal}
 	body={bodyDialogModal}
 	onaccept={async () => {
+		if (!var_to_copy.env_destination) {
+			noty.push({
+				message: 'You must select an environment to copy the variable to.',
+				color: 'danger'
+			});
+			return;
+		}
 		if (var_to_copy.idvar_destination && !var_replace_copy) {
 			noty.push({
 				message: 'You must agree to replace the variable.',
@@ -252,11 +272,15 @@
 
 			<p class="control">
 				<SelectEnvironment
+					bind:option={target_env_selected}
 					options={available_environments_list}
 					onchange={(e) => {
 						//console.log('SELECCIONADO TO COPY >>>> ', e);
 						var_to_copy.env_destination = e;
-						// Validar si no existe la variable en el nuevo destino
+						// Al cambiar de destino se recalcula si existe la variable en el
+						// nuevo entorno; si no existe hay que limpiar el idvar de destino
+						// que haya quedado de una seleccion previa.
+						var_to_copy.idvar_destination = undefined;
 						if (DataAppVars && Array.isArray(DataAppVars)) {
 							let var_exists = DataAppVars.find((item) => {
 								return (
