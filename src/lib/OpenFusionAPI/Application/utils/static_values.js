@@ -134,7 +134,7 @@ export const defaultValuesIntervalTask = (task) => {
 		window_start: '',
 		window_end: '',
 		window_days: '',
-		max_failed_attempts: 10,
+		max_failed_attempts: 0,
 		history_limit: 50,
 		disabled_by: null,
 		disabled_reason: null,
