@@ -231,7 +231,15 @@
 		params: {},
 		exec_time_limit: {},
 		failed_attempts: {},
-		max_failed_attempts: { label: 'Max fails' },
+		max_failed_attempts: {
+			label: 'Max fails',
+			decorator: {
+				component: ColumnTypes.Text,
+				props: {
+					suffix: (row) => row?.disabled_by === 'system' ? ' ⚠ Suspended by errors' : ''
+				}
+			}
+		},
 		last_exec_time: {},
 		last_response: {},
 		timezone: { hidden: true },
@@ -388,6 +396,16 @@
 			if (Array.isArray(jresp)) {
 				DataTableTasks = jresp.map((task) => {
 					const ev = latestRuntimeEvents.get(String(task.idtask));
+					// Resolver url/method/resource del endpoint asociado (idendpoint) para que
+					// la columna url no quede vacía cuando la API solo envía idendpoint.
+					if (endpoints && endpoints.length > 0 && task.idendpoint) {
+						const ep = endpoints.find((e) => String(e.idendpoint) === String(task.idendpoint));
+						if (ep) {
+							task.url = ep.endpoint || task.url || '';
+							task.method = ep.method || task.method || '';
+							task.resource = ep.resource || task.resource || '';
+						}
+					}
 					if (!ev || ev.generation <= requestedGeneration) return task;
 
 					return applyRuntimeEvent(task, ev);
@@ -922,11 +940,14 @@
 				<Input
 					type="number"
 					label="Max failed attempts: "
-					placeholder="10"
-					min={1}
+					placeholder="0"
+					min={0}
 					step={1}
 					bind:value={selectedRow.max_failed_attempts}
 				></Input>
+			{#if Number(selectedRow.max_failed_attempts ?? 0) === 0}
+				<p class="is-size-7 has-text-info mt-1">Task will not be disabled due to errors.</p>
+			{/if}
 			</div>
 			<div class="column is-one-third">
 				<Input
