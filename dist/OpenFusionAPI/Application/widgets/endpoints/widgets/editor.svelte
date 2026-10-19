@@ -15,6 +15,7 @@
 	import SqlCode from './handler/sql.svelte';
 	import SqlBulkInsert from './handler/sqlBulkInsert.svelte';
 	import SqlHana from './handler/sqlHana.svelte';
+import HiveDriver from './handler/hiveDriver.svelte';
 	import TextCode from './handler/text.svelte';
 	import MongoDB from './handler/mongodb.svelte';
 	import CustomFn from './handler/customFunction.svelte';
@@ -361,6 +362,20 @@
 			'json_schema',
 			'app_vars',
 			'mcp'
+		]),
+		HIVE_DRIVER: new Set([
+			'endpoint',
+			'config',
+			'docs',
+			'auth',
+			'cors',
+			'price',
+			'tester',
+			'backups',
+			'logs',
+			'json_schema',
+			'app_vars',
+			'mcp'
 		])
 	};
 
@@ -606,6 +621,8 @@
 				<SqlCode bind:endpoint onchange={onChangeValueHandler} />
 			{:else if endpoint?.handler == 'HANA'}
 				<SqlHana bind:endpoint onchange={onChangeValueHandler} />
+			{:else if endpoint?.handler == 'HIVE_DRIVER'}
+				<HiveDriver bind:endpoint onchange={onChangeValueHandler} />
 			{:else if endpoint?.handler == 'SQL_BULK_I'}
 				<SqlBulkInsert bind:endpoint onchange={onChangeValueHandler} />
 			{:else if endpoint?.handler == 'FETCH'}

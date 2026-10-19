@@ -15,6 +15,7 @@
 	import SqlCode from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/sql.svelte';
 	import SqlBulkInsert from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/sqlBulkInsert.svelte';
 	import SqlHana from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/sqlHana.svelte';
+import HiveDriver from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/hiveDriver.svelte';
 	import TextCode from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/text.svelte';
 	import MongoDB from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/mongodb.svelte';
 	import CustomFn from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/customFunction.svelte';
@@ -361,6 +362,20 @@
 			'json_schema',
 			'app_vars',
 			'mcp'
+		]),
+		HIVE_DRIVER: new Set([
+			'endpoint',
+			'config',
+			'docs',
+			'auth',
+			'cors',
+			'price',
+			'tester',
+			'backups',
+			'logs',
+			'json_schema',
+			'app_vars',
+			'mcp'
 		])
 	};
 
@@ -606,6 +621,8 @@
 				<SqlCode bind:endpoint onchange={onChangeValueHandler} />
 			{:else if endpoint?.handler == 'HANA'}
 				<SqlHana bind:endpoint onchange={onChangeValueHandler} />
+			{:else if endpoint?.handler == 'HIVE_DRIVER'}
+				<HiveDriver bind:endpoint onchange={onChangeValueHandler} />
 			{:else if endpoint?.handler == 'SQL_BULK_I'}
 				<SqlBulkInsert bind:endpoint onchange={onChangeValueHandler} />
 			{:else if endpoint?.handler == 'FETCH'}
