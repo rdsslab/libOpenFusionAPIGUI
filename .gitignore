@@ -18,3 +18,7 @@ vite.config.ts.timestamp-*
 
 # VSCode
 .vscode/
+
+# Graphify outputs (solo el informe se publica)
+graphify-out/*
+!graphify-out/GRAPH_REPORT.md
