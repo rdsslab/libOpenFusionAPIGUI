@@ -19,7 +19,7 @@ export function getIntervalTaskSuspensionStatus(task: any): {
     background: string;
     icon: string;
     description: string;
-};
+} | null;
 /** `true` cuando la tarea está suspendida por el planificador (no por el usuario). */
 export function isIntervalTaskSuspended(task: any): boolean;
 export const listAccessMethod: {
@@ -70,10 +70,10 @@ export namespace defaultApp {
         let prd: {};
     }
     let params: {};
-    let idapp: any;
+    let idapp: undefined;
     let app: string;
     let rowkey: number;
-    let iduser: any;
+    let iduser: null;
     let enabled: boolean;
     let description: string;
 }
@@ -88,7 +88,7 @@ export namespace defaultEndpoint {
     export let cache_time: number;
     export namespace ctrl {
         let admin: boolean;
-        let users: any[];
+        let users: never[];
         let log: {};
     }
     export let resource: string;
@@ -109,13 +109,13 @@ export namespace defaultEndpoint {
         namespace body {
             let selection: number;
         }
-        let headers: any[];
+        let headers: never[];
         namespace auth {
             let selection_1: number;
             export { selection_1 as selection };
         }
     }
-    export let latest_updater: any;
+    export let latest_updater: null;
     export let environment: string;
     export namespace json_schema {
         export namespace _in {
@@ -144,9 +144,9 @@ export namespace defaultEndpoint {
     }
 }
 export function defaultValuesIntervalTask(task: any): {
-    idtask: any;
+    idtask: null;
     idendpoint: string;
-    iduser: any;
+    iduser: null;
     idapp: string;
     enabled: boolean;
     interval: number;
@@ -159,7 +159,7 @@ export function defaultValuesIntervalTask(task: any): {
     status: number;
     params: {};
     allow_concurrent: boolean;
-    idkey: any;
+    idkey: null;
     schedule_mode: string;
     cron: string;
     timezone: string;
@@ -168,8 +168,8 @@ export function defaultValuesIntervalTask(task: any): {
     window_days: string;
     max_failed_attempts: number;
     history_limit: number;
-    disabled_by: any;
-    disabled_reason: any;
+    disabled_by: null;
+    disabled_reason: null;
     note: string;
 };
 /**

@@ -4,12 +4,12 @@
 	import {
 		userStore,
 		storeEndpointOnComplete
-	} from '../../utils/stores.js';
+	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import {
 		getLogs,
 		getListApps,
 		GetEndpointsByIdapp
-	} from '../../utils/request.js';
+	} from '$lib/OpenFusionAPI/Application/utils/request.js';
 	import CellStatusCode from './cellStatusCode.svelte';
 	import CellTraceId from './cellTraceId.svelte';
 	import RequestDetail from './request_detail.svelte';

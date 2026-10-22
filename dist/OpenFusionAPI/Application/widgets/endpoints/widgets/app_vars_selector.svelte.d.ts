@@ -11,7 +11,7 @@ declare const AppVarsSelector: import("svelte").Component<{
     value?: string;
     environment?: string;
     onselect?: Function;
-}, {}, "value" | "label" | "placeholder" | "environment" | "freeTyping" | "classIcon">;
+}, {}, "environment" | "value" | "label" | "placeholder" | "freeTyping" | "classIcon">;
 type $$ComponentProps = {
     freeTyping?: boolean;
     placeholder?: string;

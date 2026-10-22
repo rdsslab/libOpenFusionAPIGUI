@@ -1,8 +1,8 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
-	import { storeUsersList } from '../../../utils/stores.js';
+	import { storeUsersList } from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import { Table, ColumnTypes } from '@rdsslab/svelte-components';
-	//import { TimeOutChangeValue } from '../../../../app/utils.js';
+	//import { TimeOutChangeValue } from '$lib/OpenFusionAPI/app/utils.js';
 
 	let { users = $bindable({}) } = $props();
 

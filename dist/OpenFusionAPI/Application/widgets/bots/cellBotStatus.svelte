@@ -2,7 +2,7 @@
 	import {
 		BotRuntimeStatus,
 		BotRuntimeStatusFallback
-	} from '../../utils/static_values.js';
+	} from '$lib/OpenFusionAPI/Application/utils/static_values.js';
 
 	let { value = $bindable(), row = $bindable() } = $props();
 

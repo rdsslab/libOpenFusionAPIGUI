@@ -16,11 +16,11 @@ export function syncCurrentUserCtrl(users: Array<{
  *   { type: 'unauthorized' }
  *   { type: 'token_expiring', minutesLeft: number }
  */
-export const authEventStore: import("svelte/store").Writable<any>;
+export const authEventStore: import("svelte/store").Writable<null>;
 export const userStore: import("svelte/store").Writable<{}>;
 export const statusSystemEndpointsStore: import("svelte/store").Writable<{}>;
 export const listMethodStore: import("svelte/store").Writable<{}>;
-export const listHandlerStore: import("svelte/store").Writable<any[]>;
+export const listHandlerStore: import("svelte/store").Writable<never[]>;
 export const listFunctionStoreDev: import("svelte/store").Writable<{}>;
 export const listFunctionStoreQA: import("svelte/store").Writable<{}>;
 export const listFunctionStorePRD: import("svelte/store").Writable<{}>;
@@ -37,19 +37,19 @@ export const storeServerModelChanged: import("svelte/store").Writable<{}>;
  * terminar cada ejecución, para que la tabla de interval tasks refleje el estado sin
  * necesidad de recargar.
  */
-export const storeIntervalTaskEvent: import("svelte/store").Writable<any>;
+export const storeIntervalTaskEvent: import("svelte/store").Writable<null>;
 /**
  * Cambio de estado runtime de un bot (bot_status_changed).
  * Contiene { idbot, idapp, runtime_status, failure_count, ... } para que la tabla
  * y el editor de bots actualicen sin recarga.
  */
-export const storeBotStatusChanged: import("svelte/store").Writable<any>;
+export const storeBotStatusChanged: import("svelte/store").Writable<null>;
 /**
  * Cambio estructural en la tabla de bots (bot_changed): alta, edición o borrado.
  * Contiene { idbot, idapp, action } para que la lista se recargue.
  */
-export const storeBotChanged: import("svelte/store").Writable<any>;
+export const storeBotChanged: import("svelte/store").Writable<null>;
 /**
  * Lista de usuarios internos del sistema (System Users).
  */
-export const storeSystemUsersList: import("svelte/store").Writable<any[]>;
+export const storeSystemUsersList: import("svelte/store").Writable<never[]>;

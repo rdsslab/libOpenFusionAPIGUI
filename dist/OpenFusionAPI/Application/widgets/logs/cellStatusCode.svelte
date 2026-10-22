@@ -1,5 +1,5 @@
 <script>
-	import { httpStatusText } from '../../utils/httpStatus.js';
+	import { httpStatusText } from '$lib/OpenFusionAPI/Application/utils/httpStatus.js';
 
 	let { value = $bindable(), row = $bindable() } = $props();
 

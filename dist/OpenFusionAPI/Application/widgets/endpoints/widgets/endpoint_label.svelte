@@ -2,8 +2,8 @@
 	import {
 		listHTTPMethods,
 		Environment
-	} from '../../../utils/static_values.js';
-	import { getHandlerParams } from '../../../utils/utils.js';
+	} from '$lib/OpenFusionAPI/Application/utils/static_values.js';
+	import { getHandlerParams } from '$lib/OpenFusionAPI/Application/utils/utils.js';
 	import { copyTextToClipboard } from '@rdsslab/svelte-components';
 
 	let {

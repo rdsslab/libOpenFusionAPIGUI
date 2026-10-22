@@ -234,7 +234,7 @@
 		max_failed_attempts: {
 			label: 'Max fails',
 			decorator: {
-				component: ColumnTypes.Text,
+				component: ColumnTypes.TextLimit,
 				props: {
 					suffix: (row) => row?.disabled_by === 'system' ? ' ⚠ Suspended by errors' : ''
 				}

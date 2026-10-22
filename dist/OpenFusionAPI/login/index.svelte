@@ -8,15 +8,15 @@
 		GetRecoveryOptions,
 		ForgotPassword,
 		ConfirmResetPassword
-	} from '../Application/utils/request.js';
-	import { userStore } from '../Application/utils/stores.js';
+	} from '$lib/OpenFusionAPI/Application/utils/request.js';
+	import { userStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import {
 		getJwtExpiresInMinutes,
 		formatJwtTimeLeft,
 		logJwtExpiration
-	} from '../Application/utils/jwtUtils.js';
-	import { getDefaultEnvironment } from '../Application/utils/permissions.js';
-	import logo from '../img/favicon.png';
+	} from '$lib/OpenFusionAPI/Application/utils/jwtUtils.js';
+	import { getDefaultEnvironment } from '$lib/OpenFusionAPI/Application/utils/permissions.js';
+	import logo from '$lib/OpenFusionAPI/img/favicon.png';
 	import {
 		Notifications,
 		Modal,
@@ -24,7 +24,7 @@
 		Input,
 		BasicSelect
 	} from '@rdsslab/svelte-components';
-	import { version } from '../version.js';
+	import { version } from '$lib/OpenFusionAPI/version.js';
 
 	let noty = new Notifications();
 	let { onlogin = () => {}, onfail = () => {}, isOverlay = false } = $props();

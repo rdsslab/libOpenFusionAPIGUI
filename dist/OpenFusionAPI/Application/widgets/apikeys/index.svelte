@@ -12,14 +12,14 @@
 		copyTextToClipboard
 	} from '@rdsslab/svelte-components';
 
-	import { url_paths } from '../../utils/paths.js';
+	import { url_paths } from '$lib/OpenFusionAPI/Application/utils/paths.js';
 	import uFetch from '@rdsslab/uFetch';
-	import { userStore } from '../../utils/stores.js';
+	import { userStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import {
 		currentUserHasPermission,
 		getDefaultEnvironment
-	} from '../../utils/permissions.js';
-	import { GetAPIKeys, GetAPIClients } from '../../utils/request.js';
+	} from '$lib/OpenFusionAPI/Application/utils/permissions.js';
+	import { GetAPIKeys, GetAPIClients } from '$lib/OpenFusionAPI/Application/utils/request.js';
 	import CellToken from './cellToken.svelte';
 
 	let { idapp = $bindable() } = $props();

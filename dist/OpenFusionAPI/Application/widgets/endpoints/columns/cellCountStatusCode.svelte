@@ -1,7 +1,7 @@
 <script>
 	'use strict';
 	import { onDestroy, onMount } from 'svelte';
-	import { storeCountResponseStatusCode } from '../../../utils/stores.js';
+	import { storeCountResponseStatusCode } from '$lib/OpenFusionAPI/Application/utils/stores.js';
 
 	let { value = $bindable(), row = $bindable() } = $props();
 	let value_count_status_code = $state({});

@@ -5,7 +5,7 @@
 		getIntervalTaskSuspensionStatus,
 		IntervalTaskStatus,
 		IntervalTaskStatusFallback
-	} from '../../utils/static_values.js';
+	} from '$lib/OpenFusionAPI/Application/utils/static_values.js';
 
 	let { value = $bindable(), row = $bindable(), currentState = false } = $props();
 

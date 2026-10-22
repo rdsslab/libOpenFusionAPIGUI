@@ -1,7 +1,7 @@
 <script>
 	import { onDestroy, onMount } from 'svelte';
 	import { BasicSelect } from '@rdsslab/svelte-components';
-	import { listMethodStore } from '../../utils/stores.js';
+	import { listMethodStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';
 
 	let { disabled = $bindable(false), option = $bindable({}), onselect } = $props();
 

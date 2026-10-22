@@ -5,7 +5,7 @@
 		storeEndpointOnComplete,
 		storeServerDynamicInformation,
 		userStore
-	} from '../../utils/stores.js';
+	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import {
 		getLogsRecordsPerMinute,
 		getLogsStatusClassPerMinute,
@@ -13,8 +13,8 @@
 		getLogSummaryByAppStatusCode,
 		getAppEndpointUsageSummary,
 		getTopErrorEndpointsByTime
-	} from '../../utils/request.js';
-	import { httpStatusText } from '../../utils/httpStatus.js';
+	} from '$lib/OpenFusionAPI/Application/utils/request.js';
+	import { httpStatusText } from '$lib/OpenFusionAPI/Application/utils/httpStatus.js';
 	let { idapp = $bindable() } = $props();
 	let data_request_series = $state([]);
 

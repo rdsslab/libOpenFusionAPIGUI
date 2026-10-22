@@ -8,7 +8,7 @@ declare const EndpointLabel: import("svelte").Component<{
     endpoint?: string;
     method?: string;
     handler?: string;
-}, {}, "method" | "endpoint" | "environment" | "handler">;
+}, {}, "environment" | "endpoint" | "method" | "handler">;
 type $$ComponentProps = {
     environment?: string;
     endpoint?: string;

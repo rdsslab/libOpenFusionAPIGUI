@@ -4,8 +4,8 @@
 		listFunctionStoreDev,
 		listFunctionStoreQA,
 		listFunctionStorePRD
-	} from '../../../../utils/stores.js';
-	import SelectFns from '../../../common/Select.svelte';
+	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
+	import SelectFns from '$lib/OpenFusionAPI/Application/widgets/common/Select.svelte';
 	import { Tab } from '@rdsslab/svelte-components';
 
 	let { endpoint = $bindable({}), onchange = () => {} } = $props();

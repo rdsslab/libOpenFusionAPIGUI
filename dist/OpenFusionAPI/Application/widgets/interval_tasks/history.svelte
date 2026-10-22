@@ -4,9 +4,9 @@
 	// corrida con su duración, su código HTTP y su error.
 	import { onMount } from 'svelte';
 	import { Table, ColumnTypes } from '@rdsslab/svelte-components';
-	import { url_paths } from '../../utils/paths.js';
-	import CellTaskStatus from './cellTaskStatus.svelte';
-	import { storeIntervalTaskEvent } from '../../utils/stores.js';
+	import { url_paths } from '$lib/OpenFusionAPI/Application/utils/paths.js';
+	import CellTaskStatus from '$lib/OpenFusionAPI/Application/widgets/interval_tasks/cellTaskStatus.svelte';
+	import { storeIntervalTaskEvent } from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import uFetch from '@rdsslab/uFetch';
 
 	let { task = $bindable({}) } = $props();

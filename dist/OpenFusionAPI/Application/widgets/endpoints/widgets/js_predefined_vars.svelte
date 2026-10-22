@@ -1,7 +1,7 @@
 <script>
 	import uFetch from '@rdsslab/uFetch';
 	import { onMount } from 'svelte';
-	import { url_paths } from '../../../utils/paths.js';
+	import { url_paths } from '$lib/OpenFusionAPI/Application/utils/paths.js';
 	import { copyTextToClipboard } from '@rdsslab/svelte-components';
 
 	let uF;

@@ -1,7 +1,7 @@
 <script>
 	import { Modal, JSONView } from '@rdsslab/svelte-components';
 	import { DateTime } from 'luxon';
-	import { httpStatusText } from '../../utils/httpStatus.js';
+	import { httpStatusText } from '$lib/OpenFusionAPI/Application/utils/httpStatus.js';
 
 	let { show = $bindable(false), row = $bindable(), appName = $bindable('') } = $props();
 

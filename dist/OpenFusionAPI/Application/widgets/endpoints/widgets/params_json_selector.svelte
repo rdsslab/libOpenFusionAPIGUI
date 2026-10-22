@@ -1,6 +1,6 @@
 <script>
 	import { EditorCode } from '@rdsslab/svelte-components';
-	import AppVarsSelector from './app_vars_selector.svelte';
+	import AppVarsSelector from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/app_vars_selector.svelte';
 
 	// Props (Svelte 5 Runes)
 	// No usar fallback en $bindable() para evitar error props_invalid_value

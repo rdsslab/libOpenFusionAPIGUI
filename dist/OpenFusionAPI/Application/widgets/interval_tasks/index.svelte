@@ -19,25 +19,25 @@
 		getIntervalTaskSuspensionStatus,
 		isIntervalTaskSuspended,
 		INTERVAL_TASK_RUNTIME_FIELDS
-	} from '../../utils/static_values.js';
-	import { url_paths } from '../../utils/paths.js';
+	} from '$lib/OpenFusionAPI/Application/utils/static_values.js';
+	import { url_paths } from '$lib/OpenFusionAPI/Application/utils/paths.js';
 	import uFetch from '@rdsslab/uFetch';
-	import CellMethod from '../endpoints/columns/cellMethod.svelte';
-	import CellTaskStatus from './cellTaskStatus.svelte';
-	import CellTaskSchedule from './cellTaskSchedule.svelte';
-	import TaskHistory from './history.svelte';
+	import CellMethod from '$lib/OpenFusionAPI/Application/widgets/endpoints/columns/cellMethod.svelte';
+	import CellTaskStatus from '$lib/OpenFusionAPI/Application/widgets/interval_tasks/cellTaskStatus.svelte';
+	import CellTaskSchedule from '$lib/OpenFusionAPI/Application/widgets/interval_tasks/cellTaskSchedule.svelte';
+	import TaskHistory from '$lib/OpenFusionAPI/Application/widgets/interval_tasks/history.svelte';
 	import {
 		userStore,
 		storeIntervalTaskEvent
-	} from '../../utils/stores.js';
+	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import {
 		currentUserHasPermission,
 		getDefaultEnvironment
-	} from '../../utils/permissions.js';
+	} from '$lib/OpenFusionAPI/Application/utils/permissions.js';
 	import {
 		GetEndpointsByIdapp,
 		GetAPIKeys
-	} from '../../utils/request.js';
+	} from '$lib/OpenFusionAPI/Application/utils/request.js';
 
 	let { idapp = $bindable() } = $props();
 
@@ -234,7 +234,7 @@
 		max_failed_attempts: {
 			label: 'Max fails',
 			decorator: {
-				component: ColumnTypes.Text,
+				component: ColumnTypes.TextLimit,
 				props: {
 					suffix: (row) => row?.disabled_by === 'system' ? ' ⚠ Suspended by errors' : ''
 				}

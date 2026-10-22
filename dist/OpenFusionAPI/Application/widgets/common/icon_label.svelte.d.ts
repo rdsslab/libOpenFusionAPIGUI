@@ -7,7 +7,7 @@ declare const IconLabel: import("svelte").Component<{
     color?: string;
     label?: string;
     icon?: string;
-}, {}, "icon" | "label" | "color">;
+}, {}, "label" | "color" | "icon">;
 type $$ComponentProps = {
     color?: string;
     label?: string;

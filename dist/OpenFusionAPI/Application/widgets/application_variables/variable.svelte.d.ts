@@ -12,7 +12,7 @@ declare const Variable: import("svelte").Component<{
     environment?: string;
     onchange?: Function;
     oncopy?: Function;
-}, {}, "idapp" | "title" | "isReadOnly" | "showCode" | "appVars" | "environment">;
+}, {}, "idapp" | "isReadOnly" | "showCode" | "appVars" | "title" | "environment">;
 type $$ComponentProps = {
     idapp?: string;
     isReadOnly?: boolean;

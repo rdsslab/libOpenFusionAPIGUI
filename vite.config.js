@@ -3,6 +3,11 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [sveltekit()],
+	resolve: {
+		alias: {
+			'$lib': 'src/lib'
+		}
+	},
 	build: {
 		sourcemap: false
 	},

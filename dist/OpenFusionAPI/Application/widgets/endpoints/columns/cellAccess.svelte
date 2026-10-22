@@ -1,7 +1,7 @@
 <script>
 	'use strict';
 	import { onMount } from 'svelte';
-	import { listAccessMethod } from '../../../utils/static_values.js';
+	import { listAccessMethod } from '$lib/OpenFusionAPI/Application/utils/static_values.js';
 
 	let { value = $bindable(), row = $bindable() } = $props();
 
