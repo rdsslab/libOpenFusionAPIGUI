@@ -15,7 +15,7 @@
 	import SqlCode from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/sql.svelte';
 	import SqlBulkInsert from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/sqlBulkInsert.svelte';
 	import SqlHana from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/sqlHana.svelte';
-import HiveDriver from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/hiveDriver.svelte';
+	import HiveDriver from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/hiveDriver.svelte';
 	import TextCode from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/text.svelte';
 	import MongoDB from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/mongodb.svelte';
 	import CustomFn from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/customFunction.svelte';
@@ -266,7 +266,10 @@ import HiveDriver from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets
 			name: 'tester',
 			label: 'Tester',
 			component: tab_tester,
-			classIcon: ' fa-solid fa-microscope '
+			classIcon: ' fa-solid fa-microscope ',
+			// El Tester mantiene en su propio estado la petición en vuelo y el
+			// resultado; sin keepAlive el Tab lo desmonta al cambiar de pestaña.
+			keepAlive: true
 		},
 		{
 			name: 'backups',
@@ -762,10 +765,16 @@ import HiveDriver from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets
 
 				// Limita el tamaño de la respuesta (guard para evitar TypeError si last_response es null)
 				if (d.last_response) {
+					const last = d.last_response;
 					endpoint.data_test.last_response = {
-						data: getResultLimited(d.last_response.data),
-						sizeKBResponse: d.last_response.sizeKBResponse,
-						MimeType: d.last_response.MimeType
+						data: getResultLimited(last.data),
+						sizeKBResponse: last.sizeKBResponse,
+						// RESTTester emite `contentType`; el formato histórico guardado
+						// por el editor usa `MimeType`. Aceptamos ambos.
+						MimeType: last.MimeType ?? last.contentType ?? '',
+						status: last.status ?? null,
+						statusText: last.statusText ?? '',
+						fileName: last.fileName ?? null
 					};
 				}
 			}}
