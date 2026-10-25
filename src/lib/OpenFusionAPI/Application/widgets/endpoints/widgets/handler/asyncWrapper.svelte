@@ -1,9 +1,11 @@
 <script>
-	import { Input, TextArea } from '@rdsslab/svelte-components';
+	import { Input, BasicSelect } from '@rdsslab/svelte-components';
 	/**
-	 * @type {{endpoint: any, onchange: Function}}
+	 * @type {{endpoint: any, onchange: Function, app: any}}
 	 */
-	let { endpoint = $bindable({}), onchange = () => {} } = $props();
+	let { endpoint = $bindable({}), onchange = () => {}, app = $bindable({}) } = $props();
+
+	let endpointOptions = $state([]);
 
 	function ensureAsyncConfig() {
 		if (!endpoint.custom_data) endpoint.custom_data = {};
@@ -12,9 +14,29 @@
 		}
 	}
 
+	function loadOptions() {
+		const list = app?.endpoints || [];
+		endpointOptions = list
+			.filter((e) => e && e.idendpoint && e.handler !== 'ASYNC_WRAPPER' && e.handler !== 'TELEGRAM_BOT' && e.handler !== 'MCP')
+			.map((e) => ({
+				id: e.idendpoint,
+				value: e.idendpoint,
+				text: `${e.resource || ''} [${e.method || ''}] - ${e.title || e.handler || e.idendpoint}`,
+				endpoint: e
+			}));
+	}
+
 	$effect(() => {
 		ensureAsyncConfig();
+		loadOptions();
 	});
+
+	function onSelectBase(e) {
+		if (e?.detail?.value) {
+			endpoint.code = e.detail.value;
+		}
+		update();
+	}
 
 	function update() {
 		onchange({ code: endpoint.code, custom_data: endpoint.custom_data, data_test: endpoint.data_test });
@@ -26,9 +48,15 @@
 		<strong>ASYNC_WRAPPER</strong> — The <code>code</code> field must contain <strong>ONLY</strong> the <code>idendpoint</code> of the base endpoint (UUID). Configuration is read from <code>custom_data.async</code> of this async endpoint.
 	</div>
 
-	<TextArea
+	<BasicSelect
+		label="Base endpoint"
+		options={endpointOptions}
+		bind:option={endpoint.code}
+		onselect={onSelectBase}
+	/>
+
+	<Input
 		label="Base endpoint ID (code)"
-		rows="2"
 		bind:value={endpoint.code}
 		placeholder="e.g. c80415fa-1d7b-48c2-93aa-2607fd0f3804"
 		onchange={update}

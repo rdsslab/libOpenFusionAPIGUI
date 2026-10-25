@@ -642,7 +642,7 @@
 			{:else if endpoint?.handler == 'HIVE_DRIVER'}
 				<HiveDriver bind:endpoint onchange={onChangeValueHandler} />
 			{:else if endpoint?.handler == 'ASYNC_WRAPPER'}
-				<AsyncWrapper bind:endpoint onchange={onChangeValueHandler} />
+				<AsyncWrapper bind:endpoint bind:app onchange={onChangeValueHandler} />
 			{:else if endpoint?.handler == 'SQL_BULK_I'}
 				<SqlBulkInsert bind:endpoint onchange={onChangeValueHandler} />
 			{:else if endpoint?.handler == 'FETCH'}

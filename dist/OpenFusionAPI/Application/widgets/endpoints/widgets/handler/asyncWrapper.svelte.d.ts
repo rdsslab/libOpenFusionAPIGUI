@@ -6,8 +6,10 @@ type AsyncWrapper = {
 declare const AsyncWrapper: import("svelte").Component<{
     endpoint: any;
     onchange: Function;
-}, {}, "endpoint">;
+    app: any;
+}, {}, "endpoint" | "app">;
 type $$ComponentProps = {
     endpoint: any;
     onchange: Function;
+    app: any;
 };
