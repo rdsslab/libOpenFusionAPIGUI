@@ -25,7 +25,7 @@
 				return true;
 			})
 			.map((e) => ({
-				name: `[${e.method || ''}] ${e.resource || e.endpoint || e.idendpoint}`,
+				name: `[${e.method || ''}] ${e.resource || e.endpoint || ''}`.trim() || `[${e.method || ''}] ${e.idendpoint}`,
 				value: e.idendpoint
 			}));
 	}
@@ -56,7 +56,10 @@
 			if (found) return found.name;
 			const list = app?.endpoints || [];
 			const e = list.find((x) => x && x.idendpoint === val);
-			if (e) return `[${e.method || ''}] ${e.resource || e.endpoint || e.idendpoint}`;
+			if (e) {
+				const n = `[${e.method || ''}] ${e.resource || e.endpoint || ''}`.trim();
+				return n || `[${e.method || ''}] ${e.idendpoint}`;
+			}
 			return val;
 		}}
 		onselect={update}
