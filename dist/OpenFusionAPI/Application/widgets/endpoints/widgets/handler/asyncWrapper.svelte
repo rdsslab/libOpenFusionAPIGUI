@@ -41,10 +41,6 @@
 </script>
 
 <div class="block">
-	<div class="notification is-info is-light">
-		<strong>ASYNC_WRAPPER</strong> — The <code>code</code> field must contain <strong>ONLY</strong> the <code>idendpoint</code> of the base endpoint (UUID). Configuration is read from <code>custom_data.async</code> of this async endpoint.
-	</div>
-
 	<PredictiveInput
 		label="Url"
 		placeholder="Select the base endpoint this async wrapper will call"
@@ -60,7 +56,8 @@
 		label="Base endpoint ID (code)"
 		bind:value={endpoint.code}
 		placeholder="e.g. c80415fa-1d7b-48c2-93aa-2607fd0f3804"
-		onchange={update}
+		readonly
+		disabled
 	/>
 
 	<div class="columns">

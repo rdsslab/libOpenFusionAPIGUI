@@ -244,7 +244,8 @@
 			name: 'config',
 			label: 'Configuration',
 			component: tab_config,
-			classIcon: ' fa-solid fa-screwdriver-wrench '
+			classIcon: ' fa-solid fa-screwdriver-wrench ',
+			keepAlive: true
 		},
 		{
 			name: 'app_vars',
