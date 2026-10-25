@@ -17,12 +17,16 @@
 	function loadOptions() {
 		const list = app?.endpoints || [];
 		endpointOptions = list
-			.filter((e) => e && e.idendpoint && e.handler !== 'ASYNC_WRAPPER' && e.handler !== 'TELEGRAM_BOT' && e.handler !== 'MCP')
+			.filter((e) => {
+				if (!e || !e.idendpoint) return false;
+				if (e.handler === 'MCP') return false;
+				if (e.handler === 'ASYNC_WRAPPER') return false;
+				if (e.handler === 'TELEGRAM_BOT') return false;
+				return true;
+			})
 			.map((e) => ({
-				id: e.idendpoint,
-				value: e.idendpoint,
-				text: `${e.resource || ''} [${e.method || ''}] - ${e.title || e.handler || e.idendpoint}`,
-				label: `${e.resource || ''} [${e.method || ''}] - ${e.title || e.handler || e.idendpoint}`
+				name: `[${e.method || ''}] ${e.resource || e.endpoint || e.idendpoint}`,
+				value: e.idendpoint
 			}));
 	}
 
@@ -30,13 +34,6 @@
 		ensureAsyncConfig();
 		loadOptions();
 	});
-
-	function onSelectBase(e) {
-		if (e?.detail?.value || e?.value) {
-			endpoint.code = e?.detail?.value || e?.value;
-		}
-		update();
-	}
 
 	function update() {
 		onchange({ code: endpoint.code, custom_data: endpoint.custom_data, data_test: endpoint.data_test });
@@ -49,10 +46,13 @@
 	</div>
 
 	<PredictiveInput
-		label="Base endpoint"
-		bind:value={endpoint.code}
+		label="Url"
+		placeholder="Select the base endpoint this async wrapper will call"
+		classLabel="is-small"
+		classInput="is-small"
 		bind:options={endpointOptions}
-		onselect={onSelectBase}
+		bind:selectedValue={endpoint.code}
+		onselect={update}
 		onchange={update}
 	/>
 
