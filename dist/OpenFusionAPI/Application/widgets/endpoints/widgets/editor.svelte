@@ -16,6 +16,7 @@
 	import SqlBulkInsert from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/sqlBulkInsert.svelte';
 	import SqlHana from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/sqlHana.svelte';
 	import HiveDriver from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/hiveDriver.svelte';
+	import AsyncWrapper from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/asyncWrapper.svelte';
 	import TextCode from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/text.svelte';
 	import MongoDB from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/mongodb.svelte';
 	import CustomFn from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/customFunction.svelte';
@@ -379,6 +380,20 @@
 			'json_schema',
 			'app_vars',
 			'mcp'
+		]),
+		ASYNC_WRAPPER: new Set([
+			'endpoint',
+			'config',
+			'docs',
+			'auth',
+			'cors',
+			'price',
+			'tester',
+			'backups',
+			'logs',
+			'json_schema',
+			'app_vars',
+			'mcp'
 		])
 	};
 
@@ -626,6 +641,8 @@
 				<SqlHana bind:endpoint onchange={onChangeValueHandler} />
 			{:else if endpoint?.handler == 'HIVE_DRIVER'}
 				<HiveDriver bind:endpoint onchange={onChangeValueHandler} />
+			{:else if endpoint?.handler == 'ASYNC_WRAPPER'}
+				<AsyncWrapper bind:endpoint onchange={onChangeValueHandler} />
 			{:else if endpoint?.handler == 'SQL_BULK_I'}
 				<SqlBulkInsert bind:endpoint onchange={onChangeValueHandler} />
 			{:else if endpoint?.handler == 'FETCH'}
