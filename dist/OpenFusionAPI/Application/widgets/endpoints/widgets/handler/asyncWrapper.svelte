@@ -1,5 +1,5 @@
 <script>
-	import { Input, BasicSelect } from '@rdsslab/svelte-components';
+	import { Input, PredictiveInput } from '@rdsslab/svelte-components';
 	/**
 	 * @type {{endpoint: any, onchange: Function, app: any}}
 	 */
@@ -22,7 +22,7 @@
 				id: e.idendpoint,
 				value: e.idendpoint,
 				text: `${e.resource || ''} [${e.method || ''}] - ${e.title || e.handler || e.idendpoint}`,
-				endpoint: e
+				label: `${e.resource || ''} [${e.method || ''}] - ${e.title || e.handler || e.idendpoint}`
 			}));
 	}
 
@@ -32,8 +32,8 @@
 	});
 
 	function onSelectBase(e) {
-		if (e?.detail?.value) {
-			endpoint.code = e.detail.value;
+		if (e?.detail?.value || e?.value) {
+			endpoint.code = e?.detail?.value || e?.value;
 		}
 		update();
 	}
@@ -48,11 +48,12 @@
 		<strong>ASYNC_WRAPPER</strong> — The <code>code</code> field must contain <strong>ONLY</strong> the <code>idendpoint</code> of the base endpoint (UUID). Configuration is read from <code>custom_data.async</code> of this async endpoint.
 	</div>
 
-	<BasicSelect
+	<PredictiveInput
 		label="Base endpoint"
-		options={endpointOptions}
-		bind:option={endpoint.code}
+		bind:value={endpoint.code}
+		bind:options={endpointOptions}
 		onselect={onSelectBase}
+		onchange={update}
 	/>
 
 	<Input
