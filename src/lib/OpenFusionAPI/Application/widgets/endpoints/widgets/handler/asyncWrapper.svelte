@@ -48,6 +48,17 @@
 		classInput="is-small"
 		bind:options={endpointOptions}
 		bind:selectedValue={endpoint.code}
+		optionValueKey="value"
+		optionLabelKey="name"
+		displayValue={(val) => {
+			if (!val) return '';
+			const found = endpointOptions.find((o) => o.value === val);
+			if (found) return found.name;
+			const list = app?.endpoints || [];
+			const e = list.find((x) => x && x.idendpoint === val);
+			if (e) return `[${e.method || ''}] ${e.resource || e.endpoint || e.idendpoint}`;
+			return val;
+		}}
 		onselect={update}
 		onchange={update}
 	/>
