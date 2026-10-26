@@ -158,7 +158,7 @@
 					class="input is-small"
 					type="text"
 					placeholder="Resourse"
-					disabled={endpoint.handler == 'MCP'}
+					disabled={endpoint.handler == 'MCP' || endpoint.handler == 'ASYNC_WRAPPER'}
 					bind:value={endpoint.resource}
 				/>
 			</p>

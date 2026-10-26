@@ -422,6 +422,10 @@
 			if (v.custom_data) {
 				endpoint.custom_data = v.custom_data;
 			}
+			if (v.resource !== undefined) endpoint.resource = v.resource;
+			if (v.method !== undefined) endpoint.method = v.method;
+			if (v.environment !== undefined) endpoint.environment = v.environment;
+			if (v.endpoint !== undefined) endpoint.endpoint = v.endpoint;
 		}
 	}
 
