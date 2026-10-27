@@ -16,7 +16,7 @@ type Navbar = SvelteComponent<{
     end4: {};
     end5: {};
 }> & {
-    $$bindings?: string;
+    $$bindings?: string | undefined;
 };
 declare const Navbar: $$__sveltets_2_IsomorphicComponent<{
     [x: string]: never;

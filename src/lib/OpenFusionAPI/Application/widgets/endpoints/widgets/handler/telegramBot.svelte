@@ -53,7 +53,7 @@
 			placeholder="Telegram Bot Token"
 			onchange={(v) => {
 				endpoint.custom_data.token = v;
-				onchange(endpoint);
+				fnOnChange();
 			}}
 		></Input>
 	{/if}

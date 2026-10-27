@@ -63,8 +63,10 @@
 		}
 
 		if (endpoint) {
-			validateResource = validateURL(endpoint.resource);
-			availableURL = checkEndpointConstraint();
+			const newValidateResource = validateURL(endpoint.resource);
+			const newAvailableURL = checkEndpointConstraint();
+			if (validateResource !== newValidateResource) validateResource = newValidateResource;
+			if (availableURL !== newAvailableURL) availableURL = newAvailableURL;
 			endpoint.endpoint = createEndpoint(
 				endpoint.method,
 				app?.app || '',
@@ -158,7 +160,7 @@
 					class="input is-small"
 					type="text"
 					placeholder="Resourse"
-					disabled={endpoint.handler == 'MCP'}
+					disabled={endpoint.handler == 'MCP' || endpoint.handler == 'ASYNC_WRAPPER'}
 					bind:value={endpoint.resource}
 				/>
 			</p>

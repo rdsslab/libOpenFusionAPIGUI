@@ -43,7 +43,15 @@
 	});
 
 	function fnOnChange() {
-		onchange({ code: endpoint.code });
+		onchange({
+			code: endpoint.code,
+			custom_data: $state.snapshot(endpoint.custom_data),
+			data_test: $state.snapshot(endpoint.data_test),
+			resource: endpoint.resource,
+			method: endpoint.method,
+			environment: endpoint.environment,
+			endpoint: endpoint.endpoint
+		});
 	}
 </script>
 

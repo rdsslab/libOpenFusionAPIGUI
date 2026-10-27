@@ -6,13 +6,31 @@
 
 	let tabList = $state([{ label: 'Url', isActive: true, component: tab_url }]);
 
+	let lastCode = $state('');
+
 	function getData() {
-		return { code: endpoint.code, data_test: $state.snapshot(endpoint.data_test) };
+		return {
+			code: endpoint.code,
+			custom_data: $state.snapshot(endpoint.custom_data),
+			data_test: $state.snapshot(endpoint.data_test),
+			resource: endpoint.resource,
+			method: endpoint.method,
+			environment: endpoint.environment,
+			endpoint: endpoint.endpoint
+		};
 	}
 
 	function fnOnChange() {
 		onchange(getData());
 	}
+
+	$effect(() => {
+		endpoint?.code;
+		if (endpoint.code !== lastCode) {
+			lastCode = endpoint.code;
+			fnOnChange();
+		}
+	});
 </script>
 
 {#snippet tab_url()}

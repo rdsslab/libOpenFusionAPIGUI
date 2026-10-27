@@ -4,7 +4,7 @@ type JsPredefinedVars = SvelteComponent<{
 }, {
     [evt: string]: CustomEvent<any>;
 }, {}> & {
-    $$bindings?: string;
+    $$bindings?: string | undefined;
 };
 declare const JsPredefinedVars: $$__sveltets_2_IsomorphicComponent<{
     [x: string]: never;

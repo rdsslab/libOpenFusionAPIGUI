@@ -15,7 +15,8 @@
 	import SqlCode from './handler/sql.svelte';
 	import SqlBulkInsert from './handler/sqlBulkInsert.svelte';
 	import SqlHana from './handler/sqlHana.svelte';
-import HiveDriver from './handler/hiveDriver.svelte';
+	import HiveDriver from './handler/hiveDriver.svelte';
+	import AsyncWrapper from './handler/asyncWrapper.svelte';
 	import TextCode from './handler/text.svelte';
 	import MongoDB from './handler/mongodb.svelte';
 	import CustomFn from './handler/customFunction.svelte';
@@ -46,6 +47,7 @@ import HiveDriver from './handler/hiveDriver.svelte';
 	let markdown_docs = $state('');
 
 	let deploying = $state({ show: false, message: '', error: false });
+	let dirty = $state(false);
 
 	// Cache del último handler consultado para evitar re-fetch innecesarios
 	// NOTA: getHandlerDocsRequest() se llama directamente desde setValuesEndpoint().
@@ -243,7 +245,8 @@ import HiveDriver from './handler/hiveDriver.svelte';
 			name: 'config',
 			label: 'Configuration',
 			component: tab_config,
-			classIcon: ' fa-solid fa-screwdriver-wrench '
+			classIcon: ' fa-solid fa-screwdriver-wrench ',
+			keepAlive: true
 		},
 		{
 			name: 'app_vars',
@@ -266,7 +269,10 @@ import HiveDriver from './handler/hiveDriver.svelte';
 			name: 'tester',
 			label: 'Tester',
 			component: tab_tester,
-			classIcon: ' fa-solid fa-microscope '
+			classIcon: ' fa-solid fa-microscope ',
+			// El Tester mantiene en su propio estado la petición en vuelo y el
+			// resultado; sin keepAlive el Tab lo desmonta al cambiar de pestaña.
+			keepAlive: true
 		},
 		{
 			name: 'backups',
@@ -376,6 +382,20 @@ import HiveDriver from './handler/hiveDriver.svelte';
 			'json_schema',
 			'app_vars',
 			'mcp'
+		]),
+		ASYNC_WRAPPER: new Set([
+			'endpoint',
+			'config',
+			'docs',
+			'auth',
+			'cors',
+			'price',
+			'tester',
+			'backups',
+			'logs',
+			'json_schema',
+			'app_vars',
+			'mcp'
 		])
 	};
 
@@ -395,6 +415,7 @@ import HiveDriver from './handler/hiveDriver.svelte';
 	function onChangeValueHandler(v) {
 		console.trace('onChangeValueHandler', v);
 		if (v) {
+			dirty = true;
 			endpoint.data_test = v.data_test;
 			endpoint.code = v.code;
 			endpoint.docs = v.docs;
@@ -403,6 +424,10 @@ import HiveDriver from './handler/hiveDriver.svelte';
 			if (v.custom_data) {
 				endpoint.custom_data = v.custom_data;
 			}
+			if (v.resource !== undefined) endpoint.resource = v.resource;
+			if (v.method !== undefined) endpoint.method = v.method;
+			if (v.environment !== undefined) endpoint.environment = v.environment;
+			if (v.endpoint !== undefined) endpoint.endpoint = v.endpoint;
 		}
 	}
 
@@ -623,6 +648,8 @@ import HiveDriver from './handler/hiveDriver.svelte';
 				<SqlHana bind:endpoint onchange={onChangeValueHandler} />
 			{:else if endpoint?.handler == 'HIVE_DRIVER'}
 				<HiveDriver bind:endpoint onchange={onChangeValueHandler} />
+			{:else if endpoint?.handler == 'ASYNC_WRAPPER'}
+				<AsyncWrapper bind:endpoint bind:app onchange={onChangeValueHandler} />
 			{:else if endpoint?.handler == 'SQL_BULK_I'}
 				<SqlBulkInsert bind:endpoint onchange={onChangeValueHandler} />
 			{:else if endpoint?.handler == 'FETCH'}
@@ -762,10 +789,16 @@ import HiveDriver from './handler/hiveDriver.svelte';
 
 				// Limita el tamaño de la respuesta (guard para evitar TypeError si last_response es null)
 				if (d.last_response) {
+					const last = d.last_response;
 					endpoint.data_test.last_response = {
-						data: getResultLimited(d.last_response.data),
-						sizeKBResponse: d.last_response.sizeKBResponse,
-						MimeType: d.last_response.MimeType
+						data: getResultLimited(last.data),
+						sizeKBResponse: last.sizeKBResponse,
+						// RESTTester emite `contentType`; el formato histórico guardado
+						// por el editor usa `MimeType`. Aceptamos ambos.
+						MimeType: last.MimeType ?? last.contentType ?? '',
+						status: last.status ?? null,
+						statusText: last.statusText ?? '',
+						fileName: last.fileName ?? null
 					};
 				}
 			}}
@@ -776,8 +809,10 @@ import HiveDriver from './handler/hiveDriver.svelte';
 <SlideFullScreen bind:show={showEditor}>
 	<SaveDeploy
 		bind:deploying
+		bind:dirty={dirty}
 		left={[endpoint_path]}
 		onsavedeploy={async () => {
+			dirty = false;
 			if (!validateResource) {
 				deploying.show = true;
 				deploying.error = true;
@@ -795,6 +830,7 @@ import HiveDriver from './handler/hiveDriver.svelte';
 			}
 		}}
 		oncancel={() => {
+			dirty = false;
 			idendpoint = undefined;
 			showEditor = false;
 		}}

@@ -7,6 +7,7 @@
 	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
 	import SelectFns from '$lib/OpenFusionAPI/Application/widgets/common/Select.svelte';
 	import { Tab } from '@rdsslab/svelte-components';
+	import { ensureDataTestShape } from '$lib/OpenFusionAPI/Application/utils/utils.js';
 
 	let { endpoint = $bindable({}), onchange = () => {} } = $props();
 	let functions = $derived.by(() => {
@@ -30,28 +31,34 @@
 
 	function defaultValues() {
 		if (!endpoint) {
-			endpoint = { data_test: {}, method: 'GET', url: '' };
+			endpoint = { data_test: {}, method: 'GET', resource: '', endpoint: '' };
 		}
 
 		if (!endpoint?.data_test) {
-			endpoint.data_test = {
-				query: [],
-				body: { selection: 0 },
-				headers: [],
-				auth: { selection: 0 }
-			};
+			endpoint.data_test = ensureDataTestShape({});
 		}
 
 		if (!endpoint?.method) {
 			endpoint.method = 'GET';
 		}
-		if (!endpoint?.url) {
-			endpoint.url = '';
+		if (!endpoint?.resource) {
+			endpoint.resource = '';
+		}
+		if (!endpoint?.endpoint) {
+			endpoint.endpoint = '';
 		}
 	}
 
 	function getData() {
-		return { code: endpoint.code, data_test: $state.snapshot(endpoint.data_test) };
+		return {
+			code: endpoint.code,
+			custom_data: $state.snapshot(endpoint.custom_data),
+			data_test: $state.snapshot(endpoint.data_test),
+			resource: endpoint.resource,
+			method: endpoint.method,
+			environment: endpoint.environment,
+			endpoint: endpoint.endpoint
+		};
 	}
 
 	function fnOnChange() {

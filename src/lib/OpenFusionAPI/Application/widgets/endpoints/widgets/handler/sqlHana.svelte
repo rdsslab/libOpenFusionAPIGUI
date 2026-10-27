@@ -61,7 +61,11 @@
 				cnx_appvar && typeof cnx_appvar === 'string' && cnx_appvar.trim().length > 0
 					? cnx_appvar
 					: cnx_custom,
-			data_test: $state.snapshot(endpoint.data_test)
+			data_test: $state.snapshot(endpoint.data_test),
+			resource: endpoint.resource,
+			method: endpoint.method,
+			environment: endpoint.environment,
+			endpoint: endpoint.endpoint
 		};
 		console.log(data);
 		return data;

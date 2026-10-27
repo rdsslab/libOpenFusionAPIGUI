@@ -506,6 +506,19 @@ export const getServerAPILastVersion = async (maxCacheMs = 600000) => {
 	}
 };
 
+export const DeleteEndpoint = async (idendpoint) => {
+	if (!idendpoint) return {};
+	let uf = new uFetch();
+	let request = checkStatus(
+		await uf.DELETE({
+			url: url_paths.endpoint,
+			data: { idendpoint: idendpoint }
+		})
+	);
+	let response = await request.json();
+	return response;
+};
+
 export const EndpointSave = async (endpoint) => {
 	// console.trace('EndpointSave >>>>>>>>>>>>>', endpoint);
 

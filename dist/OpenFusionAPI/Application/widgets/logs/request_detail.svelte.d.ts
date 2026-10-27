@@ -7,7 +7,7 @@ declare const RequestDetail: import("svelte").Component<{
     show?: boolean;
     row?: any;
     appName?: string;
-}, {}, "show" | "row" | "appName">;
+}, {}, "row" | "show" | "appName">;
 type $$ComponentProps = {
     show?: boolean;
     row?: any;

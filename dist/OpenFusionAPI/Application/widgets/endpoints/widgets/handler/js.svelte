@@ -15,7 +15,15 @@
 	});
 
 	function getData() {
-		return { code: internal_code, data_test: $state.snapshot(endpoint.data_test) };
+		return {
+			code: internal_code,
+			custom_data: $state.snapshot(endpoint.custom_data),
+			data_test: $state.snapshot(endpoint.data_test),
+			resource: endpoint.resource,
+			method: endpoint.method,
+			environment: endpoint.environment,
+			endpoint: endpoint.endpoint
+		};
 	}
 
 	function fnOnChange() {
