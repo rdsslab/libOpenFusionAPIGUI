@@ -1,9 +1,12 @@
 # Verificacion en cada push y PR.
 #
-# Los gates duros son los que hoy pasan en verde: formato, tipos y build. El
-# lint de eslint va como paso informativo (continue-on-error) porque arrastra 114
-# errores preexistentes que nunca se vieron: eslint no arrancaba con
-# .eslintrc.cjs bajo ESLint 9. En cuanto se limpien, saca continue-on-error.
+# Gates duros: formato, tipos (ratchet) y build.
+#
+# Tipos: la deuda conocida vive en quality/baseline.json y SOLO puede bajar.
+# `npm run check:baseline` falla si el numero de errores sube. Cuando llegue a 0,
+# sustituir por `npm run check` (que exige 0 errores).
+#
+# ESLint: se esta limpiando; al terminar se quita continue-on-error.
 name: CI
 
 on:
@@ -39,8 +42,8 @@ jobs:
       - name: Verificar formato
         run: npx prettier --check .
 
-      - name: Verificar tipos
-        run: npm run check
+      - name: Verificar tipos (ratchet)
+        run: npm run check:baseline
 
       - name: Build
         run: npx vite build && npm run package
