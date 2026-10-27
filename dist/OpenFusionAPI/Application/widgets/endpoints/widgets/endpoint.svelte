@@ -63,8 +63,10 @@
 		}
 
 		if (endpoint) {
-			validateResource = validateURL(endpoint.resource);
-			availableURL = checkEndpointConstraint();
+			const newValidateResource = validateURL(endpoint.resource);
+			const newAvailableURL = checkEndpointConstraint();
+			if (validateResource !== newValidateResource) validateResource = newValidateResource;
+			if (availableURL !== newAvailableURL) availableURL = newAvailableURL;
 			endpoint.endpoint = createEndpoint(
 				endpoint.method,
 				app?.app || '',

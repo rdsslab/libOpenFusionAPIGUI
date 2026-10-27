@@ -35,6 +35,7 @@ export function migrateEndpoints(data: any): Promise<any>;
 export function migrateAppVars(data: any): Promise<any>;
 export function getServerAPIVersion(token: any): Promise<any>;
 export function getServerAPILastVersion(maxCacheMs?: number): Promise<any>;
+export function DeleteEndpoint(idendpoint: any): Promise<any>;
 export function EndpointSave(endpoint: any): Promise<any>;
 export function getLogsRecordsPerMinute(options: any, token: any): Promise<any>;
 export function getLogsStatusClassPerMinute(options: any, token: any): Promise<any>;

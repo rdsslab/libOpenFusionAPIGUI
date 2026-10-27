@@ -8,10 +8,12 @@ declare const SaveDeploy: import("svelte").Component<{
     onsavedeploy?: Function;
     oncancel?: Function;
     deploying?: Record<string, any>;
-}, {}, "left" | "deploying">;
+    dirty?: boolean;
+}, {}, "left" | "deploying" | "dirty">;
 type $$ComponentProps = {
     left?: any[];
     onsavedeploy?: Function;
     oncancel?: Function;
     deploying?: Record<string, any>;
+    dirty?: boolean;
 };

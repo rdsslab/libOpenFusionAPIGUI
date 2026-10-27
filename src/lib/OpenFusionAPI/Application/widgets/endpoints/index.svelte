@@ -21,7 +21,8 @@
 		GetAppVars,
 		getLogSummaryByAppStatusCode,
 		getServerAPILastVersion,
-		migrateEndpoints
+		migrateEndpoints,
+		DeleteEndpoint
 	} from '$lib/OpenFusionAPI/Application/utils/request.js';
 	import EndPointEditor from './widgets/editor.svelte';
 
@@ -380,9 +381,23 @@
 			left_items={[lt01]}
 			right_items={[rt3, rt2, rt1]}
 			ondeleterow={(data) => {
-				if (confirm('Do you want to delete the endpoints selected? - NO IMPLEMENTED')) {
-					app.endpoints = app.endpoints.filter((item) => {
-						return !data.rows.some((element) => element.idendpoint == item.idendpoint);
+				if (confirm('Do you want to delete the endpoints selected?')) {
+					const rows = data.rows || [];
+					Promise.all(
+						rows.map((element) =>
+							DeleteEndpoint(element.idendpoint).then((result) => {
+								if (!result || result.result?.idapp !== app?.idapp) {
+									notify.push({
+										message: `Error deleting endpoint ${element.idendpoint}`,
+										color: 'danger'
+									});
+								}
+							})
+						)
+					).finally(() => {
+						app.endpoints = app.endpoints.filter((item) => {
+							return !rows.some((element) => element.idendpoint == item.idendpoint);
+						});
 					});
 				}
 			}}

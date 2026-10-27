@@ -4,7 +4,8 @@
 		left = $bindable([]),
 		onsavedeploy = () => {},
 		oncancel = () => {},
-		deploying = $bindable({ show: false, error: false, message: '' })
+		deploying = $bindable({ show: false, error: false, message: '' }),
+		dirty = $bindable(false)
 	} = $props();
 </script>
 
@@ -37,18 +38,17 @@
 				<button
 					class="button is-small"
 					onclick={() => {
-						//console.log('app Actual', app, app_vars);
-						/*
-						if (
-							oncancel &&
-							confirm(
-								'If you cancel, you will lose absolutely all changes made to the app. Do you want to continue?'
-							)
-						) {
+						if (dirty) {
+							if (
+								confirm(
+									'If you cancel, you will lose absolutely all changes made to the app. Do you want to continue?'
+								)
+							) {
+								oncancel();
+							}
+						} else {
 							oncancel();
 						}
-						*/
-						oncancel();
 					}}
 				>
 					<span class="icon is-small">

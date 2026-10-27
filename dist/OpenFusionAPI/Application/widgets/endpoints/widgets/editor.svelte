@@ -47,6 +47,7 @@
 	let markdown_docs = $state('');
 
 	let deploying = $state({ show: false, message: '', error: false });
+	let dirty = $state(false);
 
 	// Cache del último handler consultado para evitar re-fetch innecesarios
 	// NOTA: getHandlerDocsRequest() se llama directamente desde setValuesEndpoint().
@@ -414,6 +415,7 @@
 	function onChangeValueHandler(v) {
 		console.trace('onChangeValueHandler', v);
 		if (v) {
+			dirty = true;
 			endpoint.data_test = v.data_test;
 			endpoint.code = v.code;
 			endpoint.docs = v.docs;
@@ -807,8 +809,10 @@
 <SlideFullScreen bind:show={showEditor}>
 	<SaveDeploy
 		bind:deploying
+		bind:dirty={dirty}
 		left={[endpoint_path]}
 		onsavedeploy={async () => {
+			dirty = false;
 			if (!validateResource) {
 				deploying.show = true;
 				deploying.error = true;
@@ -826,6 +830,7 @@
 			}
 		}}
 		oncancel={() => {
+			dirty = false;
 			idendpoint = undefined;
 			showEditor = false;
 		}}

@@ -44,8 +44,13 @@
 
 	function parseCode() {
 		query_code = endpoint.code ?? 'SELECT 1;';
-		cnx_custom = endpoint.custom_data || {};
-		cnx_appvar = endpoint.custom_data || {};
+		if (typeof endpoint.custom_data === 'string') {
+			cnx_appvar = endpoint.custom_data;
+			cnx_custom = {};
+		} else {
+			cnx_custom = endpoint.custom_data || {};
+			cnx_appvar = '';
+		}
 	}
 
 	function fnOnChange() {
@@ -59,7 +64,11 @@
 				cnx_appvar && typeof cnx_appvar === 'string' && cnx_appvar.trim().length > 0
 					? cnx_appvar
 					: cnx_custom,
-			data_test: $state.snapshot(endpoint.data_test)
+			data_test: $state.snapshot(endpoint.data_test),
+			resource: endpoint.resource,
+			method: endpoint.method,
+			environment: endpoint.environment,
+			endpoint: endpoint.endpoint
 		};
 		return data;
 	}

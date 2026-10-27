@@ -1,197 +1,217 @@
-# Graph Report - libOpenFusionAPIGUI  (2026-10-19)
+# Graph Report - libOpenFusionAPIGUI  (2026-10-26)
 
 ## Corpus Check
-- 105 files · ~85,315 words
-- Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 4 file(s) not represented in the graph (top: (none) 3, .css 1)
+- cluster-only mode — file stats not available
 
 ## Summary
-- 1072 nodes · 1812 edges · 84 communities (71 shown, 13 thin omitted)
+- 1080 nodes · 1398 edges · 87 communities (71 shown, 16 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 19 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
+## Graph Freshness
+- Built from commit: `28a32e18`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
+
 ## Community Hubs (Navigation)
-- Community 0
-- Community 1
-- Community 2
-- Community 3
-- Community 4
-- Community 5
-- Community 6
-- Community 7
-- Community 8
-- Community 9
-- Community 10
-- Community 11
-- Community 12
-- Community 13
-- Community 14
-- Community 15
-- Community 16
-- Community 17
-- Community 18
-- Community 19
-- Community 20
-- Community 21
-- Community 22
-- Community 23
-- Community 24
-- Community 25
-- Community 26
-- Community 27
-- Community 28
-- Community 29
-- Community 30
-- Community 31
-- Community 32
-- Community 33
-- Community 34
-- Community 35
-- Community 36
-- Community 37
-- Community 38
-- Community 39
-- Community 40
-- Community 41
-- Community 42
-- Community 43
-- Community 44
-- Community 45
-- Community 46
-- Community 47
-- Community 48
-- Community 49
-- Community 50
-- Community 51
-- Community 52
-- Community 53
-- Community 54
-- Community 55
-- Community 56
-- Community 57
-- Community 58
-- Community 59
-- Community 60
-- Community 61
-- Community 62
-- Community 63
-- Community 64
-- Community 66
-- Community 67
-- Community 68
-- Community 69
-- Community 70
-- Community 71
-- Community 72
-- Community 73
-- Community 74
-- Community 75
-- Community 76
-- Community 77
-- Community 78
-- Community 79
-- Community 80
-- Community 81
-- Community 82
+- request.js
+- dashboard.svelte
+- interval_tasks/index.svelte
+- logs/index.svelte
+- audit_logs/index.svelte
+- login/index.svelte
+- bots/index.svelte
+- endpoints/index.svelte
+- apikeys/index.svelte
+- system_users/index.svelte
+- variables.svelte
+- package.json
+- Application/index.svelte
+- editor.svelte
+- widgets/users/index.svelte
+- trace_view.svelte
+- stores.js
+- devDependencies
+- static_values.js
+- logs.svelte
+- basic.svelte
+- endpoint.svelte
+- ref_lib
+- columns/index.svelte
+- compilerOptions
+- scripts
+- text.svelte
+- svelte
+- endpoint_bkp.svelte
+- utils.js
+- hiveDriver.svelte
+- sql.svelte
+- sqlHana.svelte
+- @rdsslab/uFetch
+- mongodb.svelte
+- sqlBulkInsert.svelte
+- @rdsslab/svelte-components
+- cellTaskStatus.svelte
+- set_version.js
+- audit_detail.svelte
+- buildQuery
+- cellHandler.svelte
+- authorizations.svelte
+- asyncWrapper.svelte
+- jwtUtils.js
+- manifest.json
+- bot_logs.svelte
+- customFunction.svelte
+- soap.svelte
+- telegramBot.svelte
+- history.svelte
+- loadLogs
+- dependencies
+- js.svelte
+- js_predefined_vars.svelte
+- cellStatusCode.svelte
+- OpenFusionAPI/index.svelte
+- eslint.config.js
+- application_variables/index.svelte
+- cellBotStatus.svelte
+- cellMethod.svelte
+- app_vars_selector.svelte
+- endpoint_label.svelte
+- fetch.svelte
+- params_json_selector.svelte
+- cellTaskSchedule.svelte
+- cellTraceId.svelte
+- app.d.ts
+- vite.config.js
+- permissions.js
+- cellAction.svelte
+- cellEntity.svelte
+- cellPath.svelte
+- loglevel_select.svelte
+- repository
+- httpStatus.js
+- refreshAll
+- common/Select.svelte
+- widgets/Select.svelte
+- bugs
+- peerDependencies
+- icon_label.svelte
+- cellMethodsAttrs.svelte
+- eventMatchesFilters
+- global_states.svelte.js
+- version.js
 
 ## God Nodes (most connected - your core abstractions)
-1. `@rdsslab/svelte-components` - 52 edges
+1. `@rdsslab/svelte-components` - 53 edges
 2. `checkStatus()` - 52 edges
 3. `svelte` - 41 edges
-4. `userStore` - 17 edges
-5. `@rdsslab/uFetch` - 14 edges
-6. `url_paths` - 13 edges
-7. `scripts` - 12 edges
-8. `currentUserHasPermission()` - 12 edges
-9. `getDefaultEnvironment()` - 10 edges
-10. `GetEndpointsByIdapp()` - 9 edges
+4. `@rdsslab/uFetch` - 14 edges
+5. `scripts` - 12 edges
+6. `loadTasks()` - 7 edges
+7. `compilerOptions` - 7 edges
+8. `createLeadingTrailingThrottle()` - 6 edges
+9. `buildQuery()` - 6 edges
+10. `loadLogs()` - 6 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `loadEndpointOptions()` --calls--> `GetEndpointsByIdapp()`  [EXTRACTED]
-  src/lib/OpenFusionAPI/Application/widgets/logs/index.svelte → src/lib/OpenFusionAPI/Application/utils/request.js
-- `loadApps()` --calls--> `getListApps()`  [EXTRACTED]
-  src/lib/OpenFusionAPI/Application/widgets/logs/index.svelte → src/lib/OpenFusionAPI/Application/utils/request.js
-- `refreshCurrentUserCtrl()` --calls--> `currentUserHasPermission()`  [EXTRACTED]
-  src/lib/OpenFusionAPI/Application/index.svelte → src/lib/OpenFusionAPI/Application/utils/permissions.js
-- `refreshCurrentUserCtrl()` --calls--> `GetSystemUsersList()`  [EXTRACTED]
-  src/lib/OpenFusionAPI/Application/index.svelte → src/lib/OpenFusionAPI/Application/utils/request.js
-- `menu` --calls--> `currentUserHasPermission()`  [EXTRACTED]
-  src/lib/OpenFusionAPI/Application/index.svelte → src/lib/OpenFusionAPI/Application/utils/permissions.js
+- `refreshAll()` --calls--> `loadAudit()`  [EXTRACTED]
+  src/lib/OpenFusionAPI/Application/widgets/audit_logs/index.svelte → src/lib/OpenFusionAPI/Application/widgets/audit_logs/index.svelte  _Bridges community 40 → community 76_
 
 ## Import Cycles
 - None detected.
 
-## Communities (84 total, 13 thin omitted)
+## Communities (87 total, 16 thin omitted)
 
-### Community 0 - "Community 0"
+### Community 0 - "request.js"
+Cohesion: 0.07
+Nodes (52): ChangeAPIClientPassword(), ChangeSystemUserPassword(), changeUserPassword(), checkStatus(), clearCache(), CreateAPIClient(), CreateSystemUser(), DeleteAppVar() (+44 more)
+
+### Community 1 - "dashboard.svelte"
 Cohesion: 0.05
-Nodes (40): aggregateThrottle, cpuUsage, createLeadingTrailingThrottle(), tick(), trigger(), createTrailingThrottle(), cancel(), trigger() (+32 more)
+Nodes (41): aggregateThrottle, cpuUsage, createLeadingTrailingThrottle(), tick(), trigger(), createTrailingThrottle(), cancel(), trigger() (+33 more)
 
-### Community 1 - "Community 1"
+### Community 2 - "interval_tasks/index.svelte"
 Cohesion: 0.05
-Nodes (43): isCron, label, title, { value = $bindable(), row = $bindable() }, activeTab, applyRuntimeEvent(), canCreate, canDelete (+35 more)
+Nodes (39): activeTab, applyRuntimeEvent(), canCreate, canDelete, canEdit, columns, currentUser, DataTableTasks (+31 more)
 
-### Community 2 - "Community 2"
+### Community 3 - "logs/index.svelte"
 Cohesion: 0.05
-Nodes (35): activeStatusFilter, appNameById, columns, endDate, endpointsOptions, environment, ENVIRONMENTS, eventName (+27 more)
+Nodes (33): activeStatusFilter, appNameById, columns, endDate, endpointsOptions, environment, ENVIRONMENTS, eventName (+25 more)
 
-### Community 3 - "Community 3"
-Cohesion: 0.06
-Nodes (38): clearCache(), GetAppVars(), getListFunction(), migrateEndpoints(), app, avisoVersionTitulo, canCreate, canDelete (+30 more)
-
-### Community 4 - "Community 4"
-Cohesion: 0.11
-Nodes (37): getListAppsInternal(), onRestoreAllFileSelected(), changeUserPassword(), checkStatus(), DeleteAppVar(), GetAllAppsBackup(), GetApp(), GetAppBackup() (+29 more)
-
-### Community 5 - "Community 5"
+### Community 4 - "audit_logs/index.svelte"
 Cohesion: 0.05
 Nodes (35): action, ACTIONS, ACTOR_KINDS, actorKind, actorUsername, columns, detailData, detailLoading (+27 more)
 
-### Community 6 - "Community 6"
+### Community 5 - "login/index.svelte"
 Cohesion: 0.06
-Nodes (30): ForgotPassword(), GetRecoveryOptions(), changePwd, changePwdMatch, environment, forcedChangeError, lastToken, loadRecoveryOptions() (+22 more)
+Nodes (29): changePwd, changePwdMatch, environment, forcedChangeError, handleSubmit(), lastToken, mounted, mustChangePassword (+21 more)
 
-### Community 7 - "Community 7"
-Cohesion: 0.08
-Nodes (30): GetAPIClients(), GetAPIKeys(), canCreate, canDelete, canEdit, clientLabel, closeEditor(), columns (+22 more)
+### Community 6 - "bots/index.svelte"
+Cohesion: 0.06
+Nodes (30): class_search, columns, data_backup, dataBackups, {
+		idbot = $bindable(),
 
-### Community 8 - "Community 8"
-Cohesion: 0.08
-Nodes (21): luxon, HTTP_STATUS_TEXT, httpStatusText(), isAttack, messageObj, statusClass, titleText, { value = $bindable(), row = $bindable() } (+13 more)
+		onselect = (d) => {}
+	}, selectionType, uF, activeTab (+22 more)
 
-### Community 9 - "Community 9"
-Cohesion: 0.09
-Nodes (27): CreateSystemUser(), DeleteSystemUser(), GetSystemUsersList(), ResetSystemUserPassword(), UpdateSystemUser(), canCreate, canDelete, canEdit (+19 more)
+### Community 7 - "endpoints/index.svelte"
+Cohesion: 0.06
+Nodes (32): app, avisoVersionTitulo, canCreate, canDelete, canEdit, currentUser, downloadFileAppDoc(), EndpointEditorWidget (+24 more)
 
-### Community 10 - "Community 10"
-Cohesion: 0.08
-Nodes (23): activeTab, canCreate, canDelete, canEdit, columns, currentUser, customToken, DataTableBots (+15 more)
+### Community 8 - "apikeys/index.svelte"
+Cohesion: 0.07
+Nodes (30): copied, isExpanded, { value = '' }, canCreate, canDelete, canEdit, clientLabel, closeEditor() (+22 more)
 
-### Community 11 - "Community 11"
-Cohesion: 0.10
-Nodes (24): ChangeAPIClientPassword(), CreateAPIClient(), GetAPIClientsList(), UpdateAPIClient(), canCreate, canEdit, changePassword(), columns (+16 more)
+### Community 9 - "system_users/index.svelte"
+Cohesion: 0.07
+Nodes (28): canCreate, canDelete, canEdit, columns, currentUser, DataTableUsers, deleteUser(), environment (+20 more)
 
-### Community 12 - "Community 12"
+### Community 10 - "variables.svelte"
+Cohesion: 0.07
+Nodes (22): appVarsFiltered, appVarsInternal, classAnimationCopyName, {
+		idapp = $bindable('-'),
+		isReadOnly = $bindable(false),
+		showCode = $bindable(false),
+		appVars = $bindable([]),
+		title = $bindable(''),
+		environment = $bindable(''),
+		onchange = () => {},
+		oncopy = () => {}
+	}, new_var_name, noty, search_var, available_environments_list (+14 more)
+
+### Community 11 - "package.json"
 Cohesion: 0.08
 Nodes (23): author, description, exports, files, homepage, keywords, license, main (+15 more)
 
-### Community 13 - "Community 13"
-Cohesion: 0.11
-Nodes (20): EndpointSave(), app, availableURL, clearValues(), deploying, derivedtabList, endpoint, getHandlerDocsRequest() (+12 more)
+### Community 12 - "Application/index.svelte"
+Cohesion: 0.09
+Nodes (21): backupAllApps(), changepwd_compare_verify, currentUser, defaultPasswordChange, downloadFullBackupFile(), getListAppsInternal(), idapp, loading (+13 more)
 
-### Community 14 - "Community 14"
-Cohesion: 0.11
-Nodes (21): BOT_RUNTIME_FIELDS, defaultApp, defaultEndpoint, defaultValuesBot(), defaultValuesIntervalTask(), getIntervalTaskLastResultStatus(), getIntervalTaskRuntimeStatus(), getIntervalTaskSuspensionStatus() (+13 more)
-
-### Community 15 - "Community 15"
-Cohesion: 0.10
-Nodes (20): backupAllApps(), changepwd_compare_verify, currentUser, defaultPasswordChange, downloadFullBackupFile(), idapp, loading, loading_full_backup (+12 more)
-
-### Community 16 - "Community 16"
+### Community 13 - "editor.svelte"
 Cohesion: 0.12
-Nodes (15): available_environments_list, DataAppVars, Datavars, env_dev, env_prd, env_qa, GetData(), handleServerModelChanged() (+7 more)
+Nodes (18): app, availableURL, clearValues(), deploying, derivedtabList, endpoint, getHandlerDocsRequest(), HANDLER_TABS (+10 more)
 
-### Community 17 - "Community 17"
+### Community 14 - "widgets/users/index.svelte"
+Cohesion: 0.10
+Nodes (19): canCreate, canEdit, columns, currentUser, DataTableUsers, getDefaultValues(), isEditing, loadUsers() (+11 more)
+
+### Community 15 - "trace_view.svelte"
+Cohesion: 0.10
+Nodes (14): luxon, formattedDate, hasMessage, isAttack, jsonFields, { show = $bindable(false), row = $bindable(), appName = $bindable('') }, errors, errorText (+6 more)
+
+### Community 16 - "stores.js"
+Cohesion: 0.10
+Nodes (19): authEventStore, listAppVars, listFunctionStoreDev, listFunctionStorePRD, listFunctionStoreQA, listHandlerStore, listMethodStore, statusSystemEndpointsStore (+11 more)
+
+### Community 17 - "devDependencies"
+Cohesion: 0.11
+Nodes (18): devDependencies, eslint, eslint-config-prettier, @eslint/js, eslint-plugin-svelte, globals, prettier, prettier-plugin-svelte (+10 more)
+
+### Community 18 - "static_values.js"
+Cohesion: 0.11
+Nodes (11): BOT_RUNTIME_FIELDS, BotRuntimeStatus, BotRuntimeStatusFallback, defaultEndpoint, Environment, INTERVAL_TASK_RUNTIME_FIELDS, IntervalTaskStatus, IntervalTaskStatusFallback (+3 more)
+
+### Community 19 - "logs.svelte"
 Cohesion: 0.11
 Nodes (14): active_tab, columns_logs, columns_trace, dataLogs, datatraceLogs, {
 		endpoint = $bindable({}),
@@ -204,23 +224,11 @@ Nodes (14): active_tab, columns_logs, columns_trace, dataLogs, datatraceLogs, {
 		})
 	}, formattedNow, now (+6 more)
 
-### Community 18 - "Community 18"
-Cohesion: 0.12
-Nodes (17): devDependencies, eslint, eslint-config-prettier, @eslint/js, eslint-plugin-svelte, globals, prettier, prettier-plugin-svelte (+9 more)
+### Community 20 - "basic.svelte"
+Cohesion: 0.13
+Nodes (12): defaultApp, userStore, app, clearDataVars(), deploying, GetApp(), { idapp = $bindable(), onsavedeploy = () => {} }, notify (+4 more)
 
-### Community 19 - "Community 19"
-Cohesion: 0.15
-Nodes (14): listFunctionStoreDev, listFunctionStorePRD, listFunctionStoreQA, css_class, css_icon, error_function, label, searchFunction() (+6 more)
-
-### Community 20 - "Community 20"
-Cohesion: 0.14
-Nodes (11): isNewApp(), app, clearDataVars(), deploying, GetApp(), { idapp = $bindable(), onsavedeploy = () => {} }, notify, SaveApp() (+3 more)
-
-### Community 21 - "Community 21"
-Cohesion: 0.25
-Nodes (13): RFC-7515, decodeJwtPayload(), formatJwtTimeLeft(), getJwtExpiresInMinutes(), isJwtExpiringSoon(), logJwtExpiration(), authEventStore, failedLogins (+5 more)
-
-### Community 22 - "Community 22"
+### Community 21 - "endpoint.svelte"
 Cohesion: 0.13
 Nodes (12): available_environments_list, {
 		endpoint = $bindable({ method: 'X', access: 0, handler: '?', environment: '?' }),
@@ -230,218 +238,29 @@ Nodes (12): available_environments_list, {
 		oncopy = () => {}
 	}, endpoint_copied, endpoint_env_copy, endpoint_replace_copy, environment_list, handlers, list_keywords (+4 more)
 
-### Community 23 - "Community 23"
+### Community 22 - "ref_lib"
+Cohesion: 0.19
+Nodes (5): { disabled = $bindable(false), option = $bindable({}), onselect }, methods, unsubscribe, labelx, { value = $bindable(), row = $bindable() }
+
+### Community 23 - "columns/index.svelte"
+Cohesion: 0.15
+Nodes (9): unsubscribe, { value = $bindable(), row = $bindable() }, value_cache, unsubscribe, { value = $bindable(), row = $bindable() }, value_count_status_code, env_params, { value = $bindable(), row = $bindable() } (+1 more)
+
+### Community 24 - "compilerOptions"
 Cohesion: 0.17
-Nodes (7): @rdsslab/uFetch, $lib/OpenFusionAPI/app/cellMethodsAttrs.svelte, messages, { url = $bindable(''), init_prompts = $bindable([]) }, appDataTable, columns, uf
+Nodes (11): compilerOptions, esModuleInterop, forceConsistentCasingInFileNames, moduleResolution, resolveJsonModule, skipLibCheck, sourceMap, exclude (+3 more)
 
-### Community 24 - "Community 24"
-Cohesion: 0.21
-Nodes (4): svelte, { value = $bindable(), row = $bindable() }, { value = $bindable(), row = $bindable(), onchangecell = () => {} }, { mcp = $bindable({}) }
-
-### Community 25 - "Community 25"
-Cohesion: 0.17
-Nodes (9): equalObjs(), appVarsFiltered, appVarsInternal, classAnimationCopyName, {
-		idapp = $bindable('-'),
-		isReadOnly = $bindable(false),
-		showCode = $bindable(false),
-		appVars = $bindable([]),
-		title = $bindable(''),
-		environment = $bindable(''),
-		onchange = () => {},
-		oncopy = () => {}
-	}, internalOnchange(), new_var_name, noty (+1 more)
-
-### Community 26 - "Community 26"
+### Community 25 - "scripts"
 Cohesion: 0.17
 Nodes (12): scripts, build, check, check:watch, dev, dev_proxy, format, lint (+4 more)
 
-### Community 27 - "Community 27"
-Cohesion: 0.20
-Nodes (6): @rdsslab/svelte-components, {
-		left = $bindable([]),
-		onsavedeploy = () => {},
-		oncancel = () => {},
-		deploying = $bindable({ show: false, error: false, message: '' })
-	}, ListTypes, { value = $bindable(), row = $bindable() }, notify, { value = $bindable(), row = $bindable(), onOpenTrace = undefined }
-
-### Community 28 - "Community 28"
-Cohesion: 0.18
-Nodes (8): { endpoint = $bindable({}), onchange = () => {} }, fnOnChange(), getData(), internal_code, tabList, activeItems, copiedStates, vars_js
-
-### Community 29 - "Community 29"
-Cohesion: 0.17
-Nodes (7): code_desc, code_sample_options, { endpoint = $bindable(), onchange = () => {} }, jsonParams, tabList, {
-		freeTyping = $bindable(),
-		placeholder = $bindable(),
-		classIcon = $bindable(),
-		label = $bindable(),
-		custom = $bindable(),
-		appvar = $bindable(),
-		environment = $bindable(),
-		langEditor = $bindable(),
-		onselect = () => {}
-	}, use_var_app
-
-### Community 30 - "Community 30"
+### Community 26 - "text.svelte"
 Cohesion: 0.18
 Nodes (10): custom_data, { endpoint = $bindable({}), onchange = () => {} }, file_selected, fnOnChange(), getData(), langEditor, mimeTypes, notify (+2 more)
 
-### Community 31 - "Community 31"
+### Community 27 - "svelte"
 Cohesion: 0.18
-Nodes (8): listAccessMethod, storeCacheSize, labelx, { value = $bindable(), row = $bindable() }, unsubscribe, { value = $bindable(), row = $bindable() }, value_cache, endpointColumns
-
-### Community 32 - "Community 32"
-Cohesion: 0.20
-Nodes (8): listAppVars, {
-		freeTyping = $bindable(false),
-		placeholder = $bindable('$_VAR_NAME'),
-		classIcon = $bindable(''),
-		label = $bindable('Application Variable'),
-		value = $bindable(''),
-		environment = $bindable(''),
-		onselect = () => {}
-	}, options_app_vars, value_selected, { endpoint = $bindable({}), onchange = () => {} }, fnOnChange(), getData(), tabList
-
-### Community 33 - "Community 33"
-Cohesion: 0.20
-Nodes (9): TimeOutChangeValue(), cnx_appvar, cnx_custom, data_example, { endpoint = $bindable({ endpoint: '', method: '', environment: '' }), onchange = () => {} }, fnOnChange(), getData(), table_name (+1 more)
-
-### Community 34 - "Community 34"
-Cohesion: 0.20
-Nodes (9): cnx_appvar, cnx_custom, cnx_sample, { endpoint = $bindable({}), onchange = () => {} }, fnOnChange(), getData(), query_code, sample_bind_post (+1 more)
-
-### Community 35 - "Community 35"
-Cohesion: 0.20
-Nodes (9): cnx_appvar, cnx_custom, { endpoint = $bindable({ endpoint: '', method: '', environment: '' }), onchange = () => {} }, fnOnChange(), getData(), query_code, sample_bind_post, sample_replace_post (+1 more)
-
-### Community 36 - "Community 36"
-Cohesion: 0.20
-Nodes (9): cnx_appvar, cnx_custom, cnx_sample, { endpoint = $bindable({}), onchange = () => {} }, fnOnChange(), getData(), query_code, sample_bind_post (+1 more)
-
-### Community 37 - "Community 37"
-Cohesion: 0.20
-Nodes (9): compilerOptions, esModuleInterop, forceConsistentCasingInFileNames, moduleResolution, resolveJsonModule, skipLibCheck, sourceMap, extends (+1 more)
-
-### Community 38 - "Community 38"
-Cohesion: 0.24
-Nodes (9): $lib/OpenFusionAPI/app/utils.js, storeUsersList, buildTableUsers(), columns, data_users, defaultValue(), table_users, unsubscribe (+1 more)
-
-### Community 39 - "Community 39"
-Cohesion: 0.27
-Nodes (8): menu, currentUserHasPermission(), getDefaultEnvironment(), hasPermission(), canEdit, currentUser, { idapp = $bindable(0) }, permEnv
-
-### Community 40 - "Community 40"
-Cohesion: 0.22
-Nodes (8): Environment, storeEndpointOnStart, env_params, { value = $bindable(), row = $bindable() }, env_params, isRunning, { value = $bindable(), row = $bindable() }, ../utils.js
-
-### Community 41 - "Community 41"
-Cohesion: 0.22
-Nodes (8): cnx_appvar, cnx_custom, cnx_param_sample, { endpoint = $bindable({ endpoint: '', method: '', environment: '' }), onchange = () => {} }, fnOnChange(), getData(), js_code, tabList
-
-### Community 42 - "Community 42"
-Cohesion: 0.25
-Nodes (6): url_paths, columns, dataLogs, { idbot = $bindable(), hours = 24 }, inputHours, uF
-
-### Community 43 - "Community 43"
-Cohesion: 0.22
-Nodes (8): statusSystemEndpointsStore, storeBotChanged, storeBotStatusChanged, storeEndpointOnComplete, storeServerDynamicInformation, storeServerModelChanged, storeSystemUsersList, userStore
-
-### Community 44 - "Community 44"
-Cohesion: 0.22
-Nodes (7): class_search, columns, data_backup, dataBackups, {
-		idbot = $bindable(),
-
-		onselect = (d) => {}
-	}, selectionType, uF
-
-### Community 45 - "Community 45"
-Cohesion: 0.22
-Nodes (7): class_search, columns, data_backup, dataBackups, {
-		idendpoint = $bindable(),
-
-		onselect = (d) => {}
-	}, selectionType, uF
-
-### Community 46 - "Community 46"
-Cohesion: 0.28
-Nodes (7): activeTab, { ctrl = $bindable({}) }, ensureCtrl(), environments, resources, toggleAsAdmin(), togglePermission()
-
-### Community 47 - "Community 47"
-Cohesion: 0.25
-Nodes (4): packageData, packagePath, parts, versionFilePath
-
-### Community 48 - "Community 48"
-Cohesion: 0.29
-Nodes (6): $lib/OpenFusionAPI/app/endpoint/widgets/js_predefined_vars.svelte, { endpoint = $bindable({}), onchange = () => {} }, fnOnChange(), getData(), internal_code, tabList
-
-### Community 49 - "Community 49"
-Cohesion: 0.25
-Nodes (5): listHTTPMethods, {
-		color = $bindable(''),
-		label = $bindable(' Label '),
-		icon = $bindable('fas fa-home')
-	}, css_class_method, css_icon, { value = $bindable(''), row = $bindable() }
-
-### Community 50 - "Community 50"
-Cohesion: 0.25
-Nodes (6): storeIntervalTaskEvent, columns, dataRuns, loading, { task = $bindable({}) }, uF
-
-### Community 51 - "Community 51"
-Cohesion: 0.25
-Nodes (5): hasAfter, hasBefore, hasSnapshots, { show = $bindable(false), detail = $bindable(null), loading = $bindable(false) }, statusText
-
-### Community 52 - "Community 52"
-Cohesion: 0.29
-Nodes (8): buildQuery(), decorateRow(), isNumeric(), isValidRange(), loadAudit(), loadMore(), normalizedLimit(), scheduleReload()
-
-### Community 53 - "Community 53"
-Cohesion: 0.29
-Nodes (6): BotRuntimeStatus, BotRuntimeStatusFallback, retryIn, status, title, { value = $bindable(), row = $bindable() }
-
-### Community 54 - "Community 54"
-Cohesion: 0.38
-Nodes (5): listHandlerStore, defaultValuesEndpointRow(), ensureDataTestShape(), mergeSourceOverwrite(), validateURL()
-
-### Community 55 - "Community 55"
-Cohesion: 0.33
-Nodes (6): getHandlerParams(), setCSS(), copied, env_selected, {
-		environment = $bindable('?'),
-		endpoint = $bindable('?'),
-		method = $bindable('?'),
-		handler = $bindable('?')
-	}, handler_params
-
-### Community 56 - "Community 56"
-Cohesion: 0.29
-Nodes (7): buildQuery(), decorateRow(), isValidRange(), loadLogs(), refreshAll(), scheduleRealtimeRefresh(), scheduleReload()
-
-### Community 57 - "Community 57"
-Cohesion: 0.33
-Nodes (6): dependencies, bulma, @fortawesome/fontawesome-free, luxon, @rdsslab/svelte-components, @rdsslab/uFetch
-
-### Community 58 - "Community 58"
-Cohesion: 0.33
-Nodes (3): copied, isExpanded, { value = '' }
-
-### Community 59 - "Community 59"
-Cohesion: 0.40
-Nodes (4): eslint-config-prettier, @eslint/js, eslint-plugin-svelte, globals
-
-### Community 60 - "Community 60"
-Cohesion: 0.40
-Nodes (5): ChangeSystemUserPassword(), getListHandler(), getListMethods(), changePassword(), submitForcedChange()
-
-### Community 61 - "Community 61"
-Cohesion: 0.40
-Nodes (4): listMethodStore, { disabled = $bindable(false), option = $bindable({}), onselect }, methods, unsubscribe
-
-### Community 62 - "Community 62"
-Cohesion: 0.40
-Nodes (4): storeCountResponseStatusCode, unsubscribe, { value = $bindable(), row = $bindable() }, value_count_status_code
-
-### Community 63 - "Community 63"
-Cohesion: 0.40
-Nodes (3): {
+Nodes (6): svelte, { value = $bindable(), row = $bindable() }, { value = $bindable(), row = $bindable(), onchangecell = () => {} }, {
 		class_content = $bindable('is-small'),
 		onmessage = () => {},
 		currentChat = $bindable({
@@ -476,53 +295,219 @@ Nodes (3): {
 		])
 	}, messageInput, messages_list
 
-### Community 64 - "Community 64"
+### Community 28 - "endpoint_bkp.svelte"
+Cohesion: 0.20
+Nodes (8): url_paths, class_search, columns, data_backup, dataBackups, {
+		idendpoint = $bindable(),
+
+		onselect = (d) => {}
+	}, selectionType, uF
+
+### Community 29 - "utils.js"
+Cohesion: 0.22
+Nodes (4): defaultValuesEndpointRow(), ensureDataTestShape(), isNewApp(), mergeSourceOverwrite()
+
+### Community 30 - "hiveDriver.svelte"
+Cohesion: 0.20
+Nodes (9): cnx_appvar, cnx_custom, cnx_sample, { endpoint = $bindable({}), onchange = () => {} }, fnOnChange(), getData(), query_code, sample_bind_post (+1 more)
+
+### Community 31 - "sql.svelte"
+Cohesion: 0.20
+Nodes (9): cnx_appvar, cnx_custom, { endpoint = $bindable({ endpoint: '', method: '', environment: '' }), onchange = () => {} }, fnOnChange(), getData(), query_code, sample_bind_post, sample_replace_post (+1 more)
+
+### Community 32 - "sqlHana.svelte"
+Cohesion: 0.20
+Nodes (9): cnx_appvar, cnx_custom, cnx_sample, { endpoint = $bindable({}), onchange = () => {} }, fnOnChange(), getData(), query_code, sample_bind_post (+1 more)
+
+### Community 33 - "@rdsslab/uFetch"
+Cohesion: 0.20
+Nodes (6): @rdsslab/uFetch, messages, { url = $bindable(''), init_prompts = $bindable([]) }, appDataTable, columns, uf
+
+### Community 34 - "mongodb.svelte"
+Cohesion: 0.22
+Nodes (8): cnx_appvar, cnx_custom, cnx_param_sample, { endpoint = $bindable({ endpoint: '', method: '', environment: '' }), onchange = () => {} }, fnOnChange(), getData(), js_code, tabList
+
+### Community 35 - "sqlBulkInsert.svelte"
+Cohesion: 0.22
+Nodes (8): cnx_appvar, cnx_custom, data_example, { endpoint = $bindable({ endpoint: '', method: '', environment: '' }), onchange = () => {} }, fnOnChange(), getData(), table_name, tabList
+
+### Community 36 - "@rdsslab/svelte-components"
+Cohesion: 0.22
+Nodes (5): @rdsslab/svelte-components, {
+		left = $bindable([]),
+		onsavedeploy = () => {},
+		oncancel = () => {},
+		deploying = $bindable({ show: false, error: false, message: '' })
+	}, ListTypes, { value = $bindable(), row = $bindable() }, { mcp = $bindable({}) }
+
+### Community 37 - "cellTaskStatus.svelte"
+Cohesion: 0.22
+Nodes (8): lastResultStatus, nextIn, recordedStatus, response, status, suspension, title, { value = $bindable(), row = $bindable(), currentState = false }
+
+### Community 38 - "set_version.js"
+Cohesion: 0.25
+Nodes (4): packageData, packagePath, parts, versionFilePath
+
+### Community 39 - "audit_detail.svelte"
+Cohesion: 0.25
+Nodes (5): hasAfter, hasBefore, hasSnapshots, { show = $bindable(false), detail = $bindable(null), loading = $bindable(false) }, statusText
+
+### Community 40 - "buildQuery"
+Cohesion: 0.29
+Nodes (8): buildQuery(), decorateRow(), isNumeric(), isValidRange(), loadAudit(), loadMore(), normalizedLimit(), scheduleReload()
+
+### Community 41 - "cellHandler.svelte"
+Cohesion: 0.29
+Nodes (6): css_class, css_icon, error_function, label, searchFunction(), { value = $bindable(), row = $bindable() }
+
+### Community 42 - "authorizations.svelte"
+Cohesion: 0.32
+Nodes (7): buildTableUsers(), columns, data_users, defaultValue(), table_users, unsubscribe, { users = $bindable({}) }
+
+### Community 43 - "asyncWrapper.svelte"
+Cohesion: 0.32
+Nodes (6): applyBaseEndpoint(), createEndpointUrl(), { endpoint = $bindable({}), onchange = () => {}, app = $bindable({}) }, endpointOptions, getFullRoute(), update()
+
+### Community 44 - "jwtUtils.js"
+Cohesion: 0.43
+Nodes (5): RFC-7515, decodeJwtPayload(), getJwtExpiresInMinutes(), isJwtExpiringSoon(), logJwtExpiration()
+
+### Community 45 - "manifest.json"
+Cohesion: 0.29
+Nodes (6): category, description, handler, icon, label, name
+
+### Community 46 - "bot_logs.svelte"
+Cohesion: 0.29
+Nodes (5): columns, dataLogs, { idbot = $bindable(), hours = 24 }, inputHours, uF
+
+### Community 47 - "customFunction.svelte"
+Cohesion: 0.33
+Nodes (5): { endpoint = $bindable({}), onchange = () => {} }, fnOnChange(), functions, getData(), tabList
+
+### Community 48 - "soap.svelte"
+Cohesion: 0.29
+Nodes (5): code_desc, code_sample_options, { endpoint = $bindable(), onchange = () => {} }, jsonParams, tabList
+
+### Community 49 - "telegramBot.svelte"
+Cohesion: 0.33
+Nodes (5): { endpoint = $bindable({}), onchange = () => {} }, fnOnChange(), getData(), internal_code, tabList
+
+### Community 50 - "history.svelte"
+Cohesion: 0.29
+Nodes (5): columns, dataRuns, loading, { task = $bindable({}) }, uF
+
+### Community 51 - "loadLogs"
+Cohesion: 0.29
+Nodes (7): buildQuery(), decorateRow(), isValidRange(), loadLogs(), refreshAll(), scheduleRealtimeRefresh(), scheduleReload()
+
+### Community 52 - "dependencies"
+Cohesion: 0.33
+Nodes (6): dependencies, bulma, @fortawesome/fontawesome-free, luxon, @rdsslab/svelte-components, @rdsslab/uFetch
+
+### Community 53 - "js.svelte"
+Cohesion: 0.40
+Nodes (5): { endpoint = $bindable({}), onchange = () => {} }, fnOnChange(), getData(), internal_code, tabList
+
+### Community 54 - "js_predefined_vars.svelte"
+Cohesion: 0.33
+Nodes (3): activeItems, copiedStates, vars_js
+
+### Community 55 - "cellStatusCode.svelte"
+Cohesion: 0.33
+Nodes (5): isAttack, messageObj, statusClass, titleText, { value = $bindable(), row = $bindable() }
+
+### Community 56 - "OpenFusionAPI/index.svelte"
+Cohesion: 0.40
+Nodes (5): failedLogins, page, sessionExpired, startJwtWatcher(), stopJwtWatcher()
+
+### Community 57 - "eslint.config.js"
+Cohesion: 0.40
+Nodes (4): eslint-config-prettier, @eslint/js, eslint-plugin-svelte, globals
+
+### Community 58 - "application_variables/index.svelte"
+Cohesion: 0.40
+Nodes (4): canEdit, currentUser, { idapp = $bindable(0) }, permEnv
+
+### Community 59 - "cellBotStatus.svelte"
+Cohesion: 0.40
+Nodes (4): retryIn, status, title, { value = $bindable(), row = $bindable() }
+
+### Community 60 - "cellMethod.svelte"
+Cohesion: 0.40
+Nodes (3): css_class_method, css_icon, { value = $bindable(''), row = $bindable() }
+
+### Community 61 - "app_vars_selector.svelte"
+Cohesion: 0.40
+Nodes (3): {
+		freeTyping = $bindable(false),
+		placeholder = $bindable('$_VAR_NAME'),
+		classIcon = $bindable(''),
+		label = $bindable('Application Variable'),
+		value = $bindable(''),
+		environment = $bindable(''),
+		onselect = () => {}
+	}, options_app_vars, value_selected
+
+### Community 62 - "endpoint_label.svelte"
+Cohesion: 0.40
+Nodes (4): copied, env_selected, {
+		environment = $bindable('?'),
+		endpoint = $bindable('?'),
+		method = $bindable('?'),
+		handler = $bindable('?')
+	}, handler_params
+
+### Community 63 - "fetch.svelte"
+Cohesion: 0.50
+Nodes (4): { endpoint = $bindable({}), onchange = () => {} }, fnOnChange(), getData(), tabList
+
+### Community 65 - "cellTaskSchedule.svelte"
+Cohesion: 0.40
+Nodes (4): isCron, label, title, { value = $bindable(), row = $bindable() }
+
+### Community 67 - "app.d.ts"
 Cohesion: 0.50
 Nodes (3): bulma, @fortawesome/fontawesome-free, App
 
-### Community 66 - "Community 66"
+### Community 70 - "cellAction.svelte"
 Cohesion: 0.50
 Nodes (3): ACTION_CLASS, badgeClass, { value = $bindable(), row = $bindable() }
 
-### Community 67 - "Community 67"
+### Community 71 - "cellEntity.svelte"
 Cohesion: 0.50
 Nodes (3): badgeClass, ENTITY_CLASS, { value = $bindable(), row = $bindable() }
 
-### Community 69 - "Community 69"
+### Community 72 - "cellPath.svelte"
+Cohesion: 0.50
+Nodes (3): env_params, isRunning, { value = $bindable(), row = $bindable() }
+
+### Community 74 - "repository"
 Cohesion: 0.67
 Nodes (3): repository, type, url
 
-### Community 71 - "Community 71"
-Cohesion: 0.67
-Nodes (3): getServerAPIVersion, getServerAPIVer(), loadServerVersion()
-
-### Community 72 - "Community 72"
-Cohesion: 0.67
-Nodes (3): LoginRequest(), handleSubmit(), startRateLimit()
-
-### Community 73 - "Community 73"
+### Community 76 - "refreshAll"
 Cohesion: 0.67
 Nodes (3): confirmPrune(), loadStats(), refreshAll()
 
 ## Knowledge Gaps
-- **15 isolated node(s):** `./.svelte-kit/tsconfig.json`, `@sveltejs/package`, `@sveltejs/vite-plugin-svelte`, `@types/eslint`, `eslint` (+10 more)
-  These have ≤1 connection - possible missing edges. (Counts symbols only; 693 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **13 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **12 isolated node(s):** `eslint`, `prettier`, `prettier-plugin-svelte`, `publint`, `svelte-check` (+7 more)
+  These have ≤1 connection - possible missing edges. (Counts symbols only; 774 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **16 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `@rdsslab/svelte-components` connect `Community 27` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 12`, `Community 13`, `Community 15`, `Community 16`, `Community 17`, `Community 19`, `Community 20`, `Community 21`, `Community 22`, `Community 23`, `Community 24`, `Community 25`, `Community 28`, `Community 29`, `Community 30`, `Community 31`, `Community 32`, `Community 33`, `Community 34`, `Community 35`, `Community 36`, `Community 38`, `Community 41`, `Community 42`, `Community 44`, `Community 45`, `Community 46`, `Community 48`, `Community 50`, `Community 51`, `Community 55`, `Community 58`, `Community 61`?**
-  _High betweenness centrality (0.226) - this node is a cross-community bridge._
-- **What connects `./.svelte-kit/tsconfig.json`, `@sveltejs/package`, `@sveltejs/vite-plugin-svelte` to the rest of the system?**
-  _15 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.05319148936170213 - nodes in this community are weakly interconnected._
-- **Why does `svelte` connect `Community 24` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 6`, `Community 7`, `Community 10`, `Community 12`, `Community 13`, `Community 15`, `Community 16`, `Community 17`, `Community 19`, `Community 21`, `Community 22`, `Community 23`, `Community 25`, `Community 27`, `Community 28`, `Community 31`, `Community 38`, `Community 40`, `Community 42`, `Community 43`, `Community 44`, `Community 45`, `Community 49`, `Community 50`, `Community 54`, `Community 61`, `Community 62`, `Community 63`, `Community 68`?**
-  _High betweenness centrality (0.100) - this node is a cross-community bridge._
-- **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.04698581560283688 - nodes in this community are weakly interconnected._
-- **Why does `devDependencies` connect `Community 18` to `Community 12`?**
-  _High betweenness centrality (0.043) - this node is a cross-community bridge._
-- **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.04878048780487805 - nodes in this community are weakly interconnected._
+- **Why does `@rdsslab/svelte-components` connect `@rdsslab/svelte-components` to `dashboard.svelte`, `interval_tasks/index.svelte`, `logs/index.svelte`, `audit_logs/index.svelte`, `login/index.svelte`, `bots/index.svelte`, `endpoints/index.svelte`, `apikeys/index.svelte`, `system_users/index.svelte`, `variables.svelte`, `package.json`, `Application/index.svelte`, `editor.svelte`, `widgets/users/index.svelte`, `trace_view.svelte`, `logs.svelte`, `basic.svelte`, `endpoint.svelte`, `ref_lib`, `columns/index.svelte`, `text.svelte`, `endpoint_bkp.svelte`, `hiveDriver.svelte`, `sql.svelte`, `sqlHana.svelte`, `@rdsslab/uFetch`, `mongodb.svelte`, `sqlBulkInsert.svelte`, `audit_detail.svelte`, `authorizations.svelte`, `asyncWrapper.svelte`, `bot_logs.svelte`, `customFunction.svelte`, `soap.svelte`, `telegramBot.svelte`, `history.svelte`, `js.svelte`, `js_predefined_vars.svelte`, `OpenFusionAPI/index.svelte`, `app_vars_selector.svelte`, `endpoint_label.svelte`, `fetch.svelte`, `params_json_selector.svelte`, `cellTraceId.svelte`?**
+  _High betweenness centrality (0.316) - this node is a cross-community bridge._
+- **What connects `eslint`, `prettier`, `prettier-plugin-svelte` to the rest of the system?**
+  _12 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `request.js` be split into smaller, more focused modules?**
+  _Cohesion score 0.06594071385359952 - nodes in this community are weakly interconnected._
+- **Why does `svelte` connect `svelte` to `dashboard.svelte`, `interval_tasks/index.svelte`, `logs/index.svelte`, `login/index.svelte`, `bots/index.svelte`, `endpoints/index.svelte`, `apikeys/index.svelte`, `variables.svelte`, `package.json`, `Application/index.svelte`, `editor.svelte`, `stores.js`, `logs.svelte`, `endpoint.svelte`, `ref_lib`, `columns/index.svelte`, `endpoint_bkp.svelte`, `utils.js`, `@rdsslab/uFetch`, `@rdsslab/svelte-components`, `cellHandler.svelte`, `authorizations.svelte`, `bot_logs.svelte`, `customFunction.svelte`, `history.svelte`, `js_predefined_vars.svelte`, `OpenFusionAPI/index.svelte`, `cellMethod.svelte`, `cellPath.svelte`, `loglevel_select.svelte`?**
+  _High betweenness centrality (0.138) - this node is a cross-community bridge._
+- **Should `dashboard.svelte` be split into smaller, more focused modules?**
+  _Cohesion score 0.05272108843537415 - nodes in this community are weakly interconnected._
+- **Why does `devDependencies` connect `devDependencies` to `package.json`?**
+  _High betweenness centrality (0.042) - this node is a cross-community bridge._
+- **Should `interval_tasks/index.svelte` be split into smaller, more focused modules?**
+  _Cohesion score 0.05179704016913319 - nodes in this community are weakly interconnected._
