@@ -79,7 +79,11 @@
 
 	function parseCode() {
 		payload = endpoint.code ?? '';
-		custom_data = { ...(endpoint.custom_data ?? {}), mimeType: (endpoint.custom_data?.mimeType ?? 'text/plain'), fileName: (endpoint.custom_data?.fileName ?? '') };
+		custom_data = {
+			...(endpoint.custom_data ?? {}),
+			mimeType: endpoint.custom_data?.mimeType ?? 'text/plain',
+			fileName: endpoint.custom_data?.fileName ?? ''
+		};
 	}
 
 	function getData() {

@@ -34,10 +34,7 @@
 		currentUserHasPermission,
 		getDefaultEnvironment
 	} from '#lib/OpenFusionAPI/Application/utils/permissions.js';
-	import {
-		GetEndpointsByIdapp,
-		GetAPIKeys
-	} from '#lib/OpenFusionAPI/Application/utils/request.js';
+	import { GetEndpointsByIdapp, GetAPIKeys } from '#lib/OpenFusionAPI/Application/utils/request.js';
 
 	let { idapp = $bindable() } = $props();
 
@@ -236,7 +233,7 @@
 			decorator: {
 				component: ColumnTypes.TextLimit,
 				props: {
-					suffix: (row) => row?.disabled_by === 'system' ? ' ⚠ Suspended by errors' : ''
+					suffix: (row) => (row?.disabled_by === 'system' ? ' ⚠ Suspended by errors' : '')
 				}
 			}
 		},
@@ -945,9 +942,9 @@
 					step={1}
 					bind:value={selectedRow.max_failed_attempts}
 				></Input>
-			{#if Number(selectedRow.max_failed_attempts ?? 0) === 0}
-				<p class="is-size-7 has-text-info mt-1">Task will not be disabled due to errors.</p>
-			{/if}
+				{#if Number(selectedRow.max_failed_attempts ?? 0) === 0}
+					<p class="is-size-7 has-text-info mt-1">Task will not be disabled due to errors.</p>
+				{/if}
 			</div>
 			<div class="column is-one-third">
 				<Input

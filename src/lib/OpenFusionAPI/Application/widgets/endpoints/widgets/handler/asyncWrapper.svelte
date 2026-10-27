@@ -17,13 +17,14 @@
 				return true;
 			})
 			.map((e) => ({
-				name: (() => {
-					const method = e.method || '';
-					const appName = app?.app || e.app || '';
-					const resource = e.resource || e.endpoint || '';
-					const env = e.environment || '';
-					return `[${method}] ${method == 'WS' ? '/ws/' : '/api/'}${appName}${resource}/${env}`.trim();
-				})() || `[${e.method || ''}] ${e.idendpoint}`,
+				name:
+					(() => {
+						const method = e.method || '';
+						const appName = app?.app || e.app || '';
+						const resource = e.resource || e.endpoint || '';
+						const env = e.environment || '';
+						return `[${method}] ${method == 'WS' ? '/ws/' : '/api/'}${appName}${resource}/${env}`.trim();
+					})() || `[${e.method || ''}] ${e.idendpoint}`,
 				value: e.idendpoint
 			}));
 	});
@@ -126,7 +127,15 @@
 	});
 
 	function update() {
-		onchange({ code: endpoint.code, custom_data: endpoint.custom_data, data_test: endpoint.data_test, resource: endpoint.resource, method: endpoint.method, environment: endpoint.environment, endpoint: endpoint.endpoint });
+		onchange({
+			code: endpoint.code,
+			custom_data: endpoint.custom_data,
+			data_test: endpoint.data_test,
+			resource: endpoint.resource,
+			method: endpoint.method,
+			environment: endpoint.environment,
+			endpoint: endpoint.endpoint
+		});
 	}
 </script>
 
@@ -194,9 +203,13 @@
 				onchange={update}
 			/>
 		</div>
-			<div class="column" style="display: flex; align-items: flex-end; padding-bottom: 0.75rem;">
+		<div class="column" style="display: flex; align-items: flex-end; padding-bottom: 0.75rem;">
 			<label class="checkbox">
-				<input type="checkbox" bind:checked={endpoint.custom_data.async.notify_ws} onchange={update} />
+				<input
+					type="checkbox"
+					bind:checked={endpoint.custom_data.async.notify_ws}
+					onchange={update}
+				/>
 				<span>Notify via WebSocket</span>
 			</label>
 		</div>

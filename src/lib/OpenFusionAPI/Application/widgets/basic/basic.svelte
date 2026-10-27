@@ -6,11 +6,7 @@
 	import TextAreaWidget from '../common/textArea.svelte';
 	import { url_paths } from '../../utils/paths.js';
 	import { userStore } from '../../utils/stores.js';
-	import {
-		GetApp as GetAppRequest,
-		GetAppBackup,
-		RestoreAppBackup
-	} from '../../utils/request.js';
+	import { GetApp as GetAppRequest, GetAppBackup, RestoreAppBackup } from '../../utils/request.js';
 	import { Notifications } from '@rdsslab/svelte-components';
 
 	let notify = new Notifications();
@@ -93,7 +89,6 @@
 				// No se obtuvieron datos
 				clearDataVars();
 			}
-
 		} catch (error) {
 			console.error(error);
 		}

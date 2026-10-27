@@ -352,7 +352,6 @@
 					console.error(error);
 					notify.push({ message: error.message, color: 'danger' });
 				});
-
 			}
 		} catch (error) {
 			console.error(error);

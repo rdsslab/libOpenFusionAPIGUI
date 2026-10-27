@@ -809,7 +809,7 @@
 <SlideFullScreen bind:show={showEditor}>
 	<SaveDeploy
 		bind:deploying
-		bind:dirty={dirty}
+		bind:dirty
 		left={[endpoint_path]}
 		onsavedeploy={async () => {
 			dirty = false;

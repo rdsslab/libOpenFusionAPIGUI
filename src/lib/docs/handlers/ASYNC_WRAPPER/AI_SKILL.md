@@ -1,6 +1,7 @@
 # ASYNC_WRAPPER
 
 ## Quick rules
+
 - The wrapper endpoint's `code` must contain ONLY the UUID (`idendpoint`) of the base endpoint.
 - Async configuration goes ONLY in `custom_data.async` of the wrapper endpoint: `ttl_ms`, `max_consumes`, `notify_ws` (default false).
 - Base endpoint must be enabled and valid; ASYNC_WRAPPER/MCP/TELEGRAM_BOT are not allowed as base.
