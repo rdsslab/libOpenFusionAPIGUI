@@ -7,15 +7,15 @@
 		Input,
 		Notifications
 	} from '@rdsslab/svelte-components';
-	import SelectEnvironment from '$lib/OpenFusionAPI/Application/widgets/common/Select.svelte';
-	import MethodSelect from '$lib/OpenFusionAPI/Application/widgets/common/methods_select.svelte';
-	import { listHandlerStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';
-	import { validateURL, createEndpoint } from '$lib/OpenFusionAPI/Application/utils/utils.js';
+	import SelectEnvironment from '../../common/Select.svelte';
+	import MethodSelect from '../../common/methods_select.svelte';
+	import { listHandlerStore } from '../../../utils/stores.js';
+	import { validateURL, createEndpoint } from '../../../utils/utils.js';
 	import {
 		listAccessMethod,
 		Environment
-	} from '$lib/OpenFusionAPI/Application/utils/static_values.js';
-	import { EndpointSave } from '$lib/OpenFusionAPI/Application/utils/request.js';
+	} from '../../../utils/static_values.js';
+	import { EndpointSave } from '../../../utils/request.js';
 
 	let {
 		endpoint = $bindable({ method: 'X', access: 0, handler: '?', environment: '?' }),

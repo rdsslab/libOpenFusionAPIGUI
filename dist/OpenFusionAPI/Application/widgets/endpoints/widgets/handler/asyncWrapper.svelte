@@ -1,6 +1,6 @@
 <script>
 	import { Input, PredictiveInput } from '@rdsslab/svelte-components';
-	import { createEndpoint } from '$lib/OpenFusionAPI/Application/utils/utils.js';
+	import { createEndpoint } from '../../../../utils/utils.js';
 	/**
 	 * @type {{endpoint: any, onchange: Function, app: any}}
 	 */

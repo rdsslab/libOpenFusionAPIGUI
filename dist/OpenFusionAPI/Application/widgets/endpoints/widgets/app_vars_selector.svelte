@@ -1,6 +1,6 @@
 <script>
 	import { PredictiveInput, JSONView } from '@rdsslab/svelte-components';
-	import { listAppVars } from '$lib/OpenFusionAPI/Application/utils/stores.js';
+	import { listAppVars } from '../../../utils/stores.js';
 
 	let {
 		freeTyping = $bindable(false),

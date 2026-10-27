@@ -13,7 +13,7 @@ declare const ParamsJsonSelector: import("svelte").Component<{
     environment?: any;
     langEditor?: any;
     onselect?: Function;
-}, {}, "environment" | "label" | "placeholder" | "freeTyping" | "classIcon" | "custom" | "appvar" | "langEditor">;
+}, {}, "label" | "placeholder" | "environment" | "freeTyping" | "classIcon" | "custom" | "appvar" | "langEditor">;
 type $$ComponentProps = {
     freeTyping?: any;
     placeholder?: any;

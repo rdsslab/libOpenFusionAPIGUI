@@ -12,7 +12,7 @@
 		GetAuditLogDetail,
 		GetAuditLogStats,
 		PruneAuditLogs
-	} from '$lib/OpenFusionAPI/Application/utils/request.js';
+	} from '../../utils/request.js';
 	import CellAction from './cellAction.svelte';
 	import CellEntity from './cellEntity.svelte';
 	import AuditDetail from './audit_detail.svelte';

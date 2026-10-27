@@ -19,25 +19,25 @@
 		getIntervalTaskSuspensionStatus,
 		isIntervalTaskSuspended,
 		INTERVAL_TASK_RUNTIME_FIELDS
-	} from '$lib/OpenFusionAPI/Application/utils/static_values.js';
-	import { url_paths } from '$lib/OpenFusionAPI/Application/utils/paths.js';
+	} from '../../utils/static_values.js';
+	import { url_paths } from '../../utils/paths.js';
 	import uFetch from '@rdsslab/uFetch';
-	import CellMethod from '$lib/OpenFusionAPI/Application/widgets/endpoints/columns/cellMethod.svelte';
-	import CellTaskStatus from '$lib/OpenFusionAPI/Application/widgets/interval_tasks/cellTaskStatus.svelte';
-	import CellTaskSchedule from '$lib/OpenFusionAPI/Application/widgets/interval_tasks/cellTaskSchedule.svelte';
-	import TaskHistory from '$lib/OpenFusionAPI/Application/widgets/interval_tasks/history.svelte';
+	import CellMethod from '../endpoints/columns/cellMethod.svelte';
+	import CellTaskStatus from './cellTaskStatus.svelte';
+	import CellTaskSchedule from './cellTaskSchedule.svelte';
+	import TaskHistory from './history.svelte';
 	import {
 		userStore,
 		storeIntervalTaskEvent
-	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
+	} from '../../utils/stores.js';
 	import {
 		currentUserHasPermission,
 		getDefaultEnvironment
-	} from '$lib/OpenFusionAPI/Application/utils/permissions.js';
+	} from '../../utils/permissions.js';
 	import {
 		GetEndpointsByIdapp,
 		GetAPIKeys
-	} from '$lib/OpenFusionAPI/Application/utils/request.js';
+	} from '../../utils/request.js';
 
 	let { idapp = $bindable() } = $props();
 

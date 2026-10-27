@@ -1,8 +1,8 @@
 <script>
 	import { onDestroy, onMount } from 'svelte';
 	//	import { env_params } from '../utils.js';
-	import { storeEndpointOnStart } from '$lib/OpenFusionAPI/Application/utils/stores.js';
-	import { Environment } from '$lib/OpenFusionAPI/Application/utils/static_values.js';
+	import { storeEndpointOnStart } from '../../../utils/stores.js';
+	import { Environment } from '../../../utils/static_values.js';
 
 	let { value = $bindable(), row = $bindable() } = $props();
 	let isRunning = $state(false);

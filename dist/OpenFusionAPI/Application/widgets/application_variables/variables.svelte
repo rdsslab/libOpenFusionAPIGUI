@@ -1,14 +1,14 @@
 <script>
-	import { GetAppVars, migrateAppVars } from '$lib/OpenFusionAPI/Application/utils/request.js';
+	import { GetAppVars, migrateAppVars } from '../../utils/request.js';
 	import {
 		userStore,
 		storeServerModelChanged
-	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
+	} from '../../utils/stores.js';
 	import VarEnv from './variable.svelte';
-	import { isNewApp } from '$lib/OpenFusionAPI/Application/utils/utils.js';
+	import { isNewApp } from '../../utils/utils.js';
 	import { DialogModal, Notifications } from '@rdsslab/svelte-components';
-	import SelectEnvironment from '$lib/OpenFusionAPI/Application/widgets/common/Select.svelte';
-	import { Environment as environment_list } from '$lib/OpenFusionAPI/Application/utils/static_values.js';
+	import SelectEnvironment from '../common/Select.svelte';
+	import { Environment as environment_list } from '../../utils/static_values.js';
 	import { onDestroy, onMount } from 'svelte';
 
 	let noty = new Notifications();

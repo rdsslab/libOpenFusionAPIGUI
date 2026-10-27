@@ -1,7 +1,7 @@
 <script>
 	import { Tab, EditorCode, JSONView } from '@rdsslab/svelte-components';
-	import AppVarsSelector from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/params_json_selector.svelte';
-	import { TimeOutChangeValue } from '$lib/OpenFusionAPI/Application/utils/utils.js';
+	import AppVarsSelector from '../params_json_selector.svelte';
+	import { TimeOutChangeValue } from '../../../../utils/utils.js';
 
 	let { endpoint = $bindable({}), onchange = () => {} } = $props();
 

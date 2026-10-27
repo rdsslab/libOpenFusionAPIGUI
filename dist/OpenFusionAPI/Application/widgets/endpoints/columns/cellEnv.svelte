@@ -1,6 +1,6 @@
 <script>
 	//	import { env_params } from '../utils.js';
-	import { Environment } from '$lib/OpenFusionAPI/Application/utils/static_values.js';
+	import { Environment } from '../../../utils/static_values.js';
 
 	let { value = $bindable(), row = $bindable() } = $props();
 	let env_params = $derived.by(() => {

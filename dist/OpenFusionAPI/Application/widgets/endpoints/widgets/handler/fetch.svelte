@@ -1,6 +1,6 @@
 <script>
 	import { Tab } from '@rdsslab/svelte-components';
-	import AppVarsSelector from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/app_vars_selector.svelte';
+	import AppVarsSelector from '../app_vars_selector.svelte';
 
 	let { endpoint = $bindable({}), onchange = () => {} } = $props();
 

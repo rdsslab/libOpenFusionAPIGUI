@@ -1,12 +1,12 @@
 <script>
 	import { Modal, Notifications, copyTextToClipboard } from '@rdsslab/svelte-components';
 	import { DateTime } from 'luxon';
-	import { httpStatusText } from '$lib/OpenFusionAPI/Application/utils/httpStatus.js';
+	import { httpStatusText } from '../../utils/httpStatus.js';
 	import {
 		getTraceSummary,
 		getTraceErrorsOnly,
 		getTraceSlowestHops
-	} from '$lib/OpenFusionAPI/Application/utils/request.js';
+	} from '../../utils/request.js';
 
 	let { show = $bindable(false), trace_id = $bindable('') } = $props();
 

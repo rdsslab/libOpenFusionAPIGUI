@@ -1,8 +1,8 @@
 <script>
 	import { AppBase, DialogModal, Input } from '@rdsslab/svelte-components';
 	import { onDestroy, onMount } from 'svelte';
-	import Logo from '$lib/OpenFusionAPI/img/favicon.png';
-	import { url_paths } from '$lib/OpenFusionAPI/Application/utils/paths.js';
+	import Logo from '../img/favicon.png';
+	import { url_paths } from './utils/paths.js';
 
 	import {
 		userStore,
@@ -17,7 +17,7 @@
 		storeBotChanged,
 		statusSystemEndpointsStore,
 		syncCurrentUserCtrl
-	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
+	} from './utils/stores.js';
 
 	import {
 		PredictiveInput,
@@ -25,17 +25,17 @@
 		Notifications
 	} from '@rdsslab/svelte-components';
 
-	import AppScreen from '$lib/OpenFusionAPI/Application/widgets/basic/basic.svelte';
-	import DashBoardScreen from '$lib/OpenFusionAPI/Application/widgets/dashboard/dashboard.svelte';
-	import AppVars from '$lib/OpenFusionAPI/Application/widgets/application_variables/index.svelte';
-	import Endpoints from '$lib/OpenFusionAPI/Application/widgets/endpoints/index.svelte';
-	import IntervalTasks from '$lib/OpenFusionAPI/Application/widgets/interval_tasks/index.svelte';
-	import Bots from '$lib/OpenFusionAPI/Application/widgets/bots/index.svelte';
-	import Logs from '$lib/OpenFusionAPI/Application/widgets/logs/index.svelte';
-	import ApiKeys from '$lib/OpenFusionAPI/Application/widgets/apikeys/index.svelte';
-	import Users from '$lib/OpenFusionAPI/Application/widgets/users/index.svelte';
-	import SystemUsers from '$lib/OpenFusionAPI/Application/widgets/system_users/index.svelte';
-	import AuditLogs from '$lib/OpenFusionAPI/Application/widgets/audit_logs/index.svelte';
+	import AppScreen from './widgets/basic/basic.svelte';
+	import DashBoardScreen from './widgets/dashboard/dashboard.svelte';
+	import AppVars from './widgets/application_variables/index.svelte';
+	import Endpoints from './widgets/endpoints/index.svelte';
+	import IntervalTasks from './widgets/interval_tasks/index.svelte';
+	import Bots from './widgets/bots/index.svelte';
+	import Logs from './widgets/logs/index.svelte';
+	import ApiKeys from './widgets/apikeys/index.svelte';
+	import Users from './widgets/users/index.svelte';
+	import SystemUsers from './widgets/system_users/index.svelte';
+	import AuditLogs from './widgets/audit_logs/index.svelte';
 	import {
 		getListApps,
 		changeUserPassword,
@@ -43,11 +43,11 @@
 		GetAllAppsBackup,
 		RestoreAllAppsBackup,
 		GetSystemUsersList
-	} from '$lib/OpenFusionAPI/Application/utils/request.js';
+	} from './utils/request.js';
 	import {
 		currentUserHasPermission,
 		getDefaultEnvironment
-	} from '$lib/OpenFusionAPI/Application/utils/permissions.js';
+	} from './utils/permissions.js';
 
 	let notify = new Notifications();
 	let { onexit = () => {} } = $props();
