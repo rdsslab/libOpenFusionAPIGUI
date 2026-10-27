@@ -8,8 +8,8 @@
 		DialogModal,
 		Notifications
 	} from '@rdsslab/svelte-components';
-	import { userStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';
-	import { syncCurrentUserCtrl } from '$lib/OpenFusionAPI/Application/utils/stores.js';
+	import { userStore } from '#lib/OpenFusionAPI/Application/utils/stores.js';
+	import { syncCurrentUserCtrl } from '#lib/OpenFusionAPI/Application/utils/stores.js';
 	import {
 		GetSystemUsersList,
 		CreateSystemUser,
@@ -17,11 +17,11 @@
 		DeleteSystemUser,
 		ChangeSystemUserPassword,
 		ResetSystemUserPassword
-	} from '$lib/OpenFusionAPI/Application/utils/request.js';
+	} from '#lib/OpenFusionAPI/Application/utils/request.js';
 	import {
 		currentUserHasPermission,
 		getDefaultEnvironment
-	} from '$lib/OpenFusionAPI/Application/utils/permissions.js';
+	} from '#lib/OpenFusionAPI/Application/utils/permissions.js';
 	import PermissionEditor from './PermissionEditor.svelte';
 
 	let notify = new Notifications();

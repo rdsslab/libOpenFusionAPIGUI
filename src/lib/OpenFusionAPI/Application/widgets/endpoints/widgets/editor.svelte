@@ -9,33 +9,33 @@
 		RESTTester,
 		Notifications
 	} from '@rdsslab/svelte-components';
-	import FetchCode from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/fetch.svelte';
-	import JsCode from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/js.svelte';
-	import SoapCode from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/soap.svelte';
-	import SqlCode from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/sql.svelte';
-	import SqlBulkInsert from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/sqlBulkInsert.svelte';
-	import SqlHana from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/sqlHana.svelte';
-	import HiveDriver from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/hiveDriver.svelte';
-	import AsyncWrapper from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/asyncWrapper.svelte';
-	import TextCode from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/text.svelte';
-	import MongoDB from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/mongodb.svelte';
-	import CustomFn from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/customFunction.svelte';
-	import Endpoint from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/endpoint.svelte';
-	import Authorizations from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/authorizations.svelte';
-	import Logs from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/logs.svelte';
-	import Backups from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/endpoint_bkp.svelte';
-	import TelegramBot from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/telegramBot.svelte';
-	import MCP from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/mcp.svelte';
-	import EndpointLabel from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/endpoint_label.svelte';
-	import { userStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';
-	import AppVars from '$lib/OpenFusionAPI/Application/widgets/application_variables/variables.svelte';
-	import { defaultEndpoint } from '$lib/OpenFusionAPI/Application/utils/static_values.js';
+	import FetchCode from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/fetch.svelte';
+	import JsCode from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/js.svelte';
+	import SoapCode from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/soap.svelte';
+	import SqlCode from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/sql.svelte';
+	import SqlBulkInsert from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/sqlBulkInsert.svelte';
+	import SqlHana from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/sqlHana.svelte';
+	import HiveDriver from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/hiveDriver.svelte';
+	import AsyncWrapper from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/asyncWrapper.svelte';
+	import TextCode from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/text.svelte';
+	import MongoDB from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/mongodb.svelte';
+	import CustomFn from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/customFunction.svelte';
+	import Endpoint from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/endpoint.svelte';
+	import Authorizations from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/authorizations.svelte';
+	import Logs from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/logs.svelte';
+	import Backups from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/endpoint_bkp.svelte';
+	import TelegramBot from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/telegramBot.svelte';
+	import MCP from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/mcp.svelte';
+	import EndpointLabel from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/endpoint_label.svelte';
+	import { userStore } from '#lib/OpenFusionAPI/Application/utils/stores.js';
+	import AppVars from '#lib/OpenFusionAPI/Application/widgets/application_variables/variables.svelte';
+	import { defaultEndpoint } from '#lib/OpenFusionAPI/Application/utils/static_values.js';
 	import {
 		mergeSourceOverwrite,
 		ensureDataTestShape
-	} from '$lib/OpenFusionAPI/Application/utils/utils.js';
-	import { getHandlerDocs, EndpointSave } from '$lib/OpenFusionAPI/Application/utils/request.js';
-	import SaveDeploy from '$lib/OpenFusionAPI/Application/widgets/common/saveDeploy.svelte';
+	} from '#lib/OpenFusionAPI/Application/utils/utils.js';
+	import { getHandlerDocs, EndpointSave } from '#lib/OpenFusionAPI/Application/utils/request.js';
+	import SaveDeploy from '#lib/OpenFusionAPI/Application/widgets/common/saveDeploy.svelte';
 
 	let { showEditor = $bindable(false), onsave = (d) => {}, oncopy = () => {} } = $props();
 

@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import { listHandlerStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';
+import { listHandlerStore } from '#lib/OpenFusionAPI/Application/utils/stores.js';
 
 /**
  * Normaliza un `data_test` a la forma canónica que espera el `RESTTester` y que

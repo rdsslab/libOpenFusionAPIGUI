@@ -9,17 +9,17 @@
 		DialogModal,
 		Notifications
 	} from '@rdsslab/svelte-components';
-	import { userStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';
+	import { userStore } from '#lib/OpenFusionAPI/Application/utils/stores.js';
 	import {
 		currentUserHasPermission,
 		getDefaultEnvironment
-	} from '$lib/OpenFusionAPI/Application/utils/permissions.js';
+	} from '#lib/OpenFusionAPI/Application/utils/permissions.js';
 	import {
 		GetAPIClientsList,
 		CreateAPIClient,
 		UpdateAPIClient,
 		ChangeAPIClientPassword
-	} from '$lib/OpenFusionAPI/Application/utils/request.js';
+	} from '#lib/OpenFusionAPI/Application/utils/request.js';
 
 	let notify = new Notifications();
 	const permEnv = getDefaultEnvironment();

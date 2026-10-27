@@ -1,7 +1,7 @@
 <script>
 	import uFetch from '@rdsslab/uFetch';
 	import { Table } from '@rdsslab/svelte-components';
-	import CellAttrs from '$lib/OpenFusionAPI/Application/widgets/endpoints/columns/cellMethodsAttrs.svelte';
+	import CellAttrs from '#lib/OpenFusionAPI/Application/widgets/endpoints/columns/cellMethodsAttrs.svelte';
 	import { onMount } from 'svelte';
 
 	let uf = new uFetch();

@@ -4,10 +4,10 @@
 		listFunctionStoreDev,
 		listFunctionStoreQA,
 		listFunctionStorePRD
-	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
-	import SelectFns from '$lib/OpenFusionAPI/Application/widgets/common/Select.svelte';
+	} from '#lib/OpenFusionAPI/Application/utils/stores.js';
+	import SelectFns from '#lib/OpenFusionAPI/Application/widgets/common/Select.svelte';
 	import { Tab } from '@rdsslab/svelte-components';
-	import { ensureDataTestShape } from '$lib/OpenFusionAPI/Application/utils/utils.js';
+	import { ensureDataTestShape } from '#lib/OpenFusionAPI/Application/utils/utils.js';
 
 	let { endpoint = $bindable({}), onchange = () => {} } = $props();
 	let functions = $derived.by(() => {

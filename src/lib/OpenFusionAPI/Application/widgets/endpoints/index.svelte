@@ -1,17 +1,17 @@
 <script>
 	import { onMount, onDestroy, untrack } from 'svelte';
 	import { Table, Notifications, Modal } from '@rdsslab/svelte-components';
-	import { isNewApp } from '$lib/OpenFusionAPI/Application/utils/utils.js';
+	import { isNewApp } from '#lib/OpenFusionAPI/Application/utils/utils.js';
 	import {
 		userStore,
 		storeCountResponseStatusCode,
 		storeServerModelChanged
-	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
+	} from '#lib/OpenFusionAPI/Application/utils/stores.js';
 	import {
 		currentUserHasPermission,
 		getDefaultEnvironment
-	} from '$lib/OpenFusionAPI/Application/utils/permissions.js';
-	import { endpointColumns } from '$lib/OpenFusionAPI/Application/widgets/endpoints/columns/index.svelte';
+	} from '#lib/OpenFusionAPI/Application/utils/permissions.js';
+	import { endpointColumns } from '#lib/OpenFusionAPI/Application/widgets/endpoints/columns/index.svelte';
 	import {
 		GetEndpointsByIdapp,
 		getListFunction,
@@ -23,7 +23,7 @@
 		getServerAPILastVersion,
 		migrateEndpoints,
 		DeleteEndpoint
-	} from '$lib/OpenFusionAPI/Application/utils/request.js';
+	} from '#lib/OpenFusionAPI/Application/utils/request.js';
 	import EndPointEditor from './widgets/editor.svelte';
 
 	let { idapp = $bindable(0), onsavedeploy = () => {} } = $props();

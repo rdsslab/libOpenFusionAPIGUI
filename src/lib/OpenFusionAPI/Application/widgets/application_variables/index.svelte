@@ -1,10 +1,10 @@
 <script>
-	import AppVars from '$lib/OpenFusionAPI/Application/widgets/application_variables/variables.svelte';
-	import { userStore } from '$lib/OpenFusionAPI/Application/utils/stores.js';
+	import AppVars from '#lib/OpenFusionAPI/Application/widgets/application_variables/variables.svelte';
+	import { userStore } from '#lib/OpenFusionAPI/Application/utils/stores.js';
 	import {
 		currentUserHasPermission,
 		getDefaultEnvironment
-	} from '$lib/OpenFusionAPI/Application/utils/permissions.js';
+	} from '#lib/OpenFusionAPI/Application/utils/permissions.js';
 
 	let vars_widget;
 	let { idapp = $bindable(0) } = $props();

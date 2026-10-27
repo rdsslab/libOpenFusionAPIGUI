@@ -1,6 +1,6 @@
-import { url_paths } from '$lib/OpenFusionAPI/Application/utils/paths.js';
+import { url_paths } from '#lib/OpenFusionAPI/Application/utils/paths.js';
 import uFetch from '@rdsslab/uFetch';
-import { createEndpoint } from '$lib/OpenFusionAPI/Application/utils/utils.js';
+import { createEndpoint } from '#lib/OpenFusionAPI/Application/utils/utils.js';
 import {
 	listHandlerStore,
 	listMethodStore,
@@ -9,7 +9,7 @@ import {
 	listFunctionStoreQA,
 	listAppVars,
 	authEventStore
-} from '$lib/OpenFusionAPI/Application/utils/stores.js';
+} from '#lib/OpenFusionAPI/Application/utils/stores.js';
 
 /**
  * Verifica el status HTTP de una respuesta.

@@ -18,8 +18,8 @@
 		BotRuntimeStatus,
 		BotRuntimeStatusFallback,
 		BOT_RUNTIME_FIELDS
-	} from '$lib/OpenFusionAPI/Application/utils/static_values.js';
-	import { url_paths } from '$lib/OpenFusionAPI/Application/utils/paths.js';
+	} from '#lib/OpenFusionAPI/Application/utils/static_values.js';
+	import { url_paths } from '#lib/OpenFusionAPI/Application/utils/paths.js';
 	import uFetch from '@rdsslab/uFetch';
 	import CellBotStatus from './cellBotStatus.svelte';
 	import Backups from './bot_bkp.svelte';
@@ -28,12 +28,12 @@
 		userStore,
 		storeBotStatusChanged,
 		storeBotChanged
-	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
+	} from '#lib/OpenFusionAPI/Application/utils/stores.js';
 	import {
 		currentUserHasPermission,
 		getDefaultEnvironment
-	} from '$lib/OpenFusionAPI/Application/utils/permissions.js';
-	import AppVarsSelector from '$lib/OpenFusionAPI/Application/widgets/endpoints/widgets/params_json_selector.svelte';
+	} from '#lib/OpenFusionAPI/Application/utils/permissions.js';
+	import AppVarsSelector from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/params_json_selector.svelte';
 
 	let { idapp = $bindable() } = $props();
 

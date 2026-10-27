@@ -1,6 +1,6 @@
 <script>
 	import { onDestroy, onMount } from 'svelte';
-	import { storeCacheSize } from '$lib/OpenFusionAPI/Application/utils/stores.js';
+	import { storeCacheSize } from '#lib/OpenFusionAPI/Application/utils/stores.js';
 	let { value = $bindable(), row = $bindable() } = $props();
 
 	let value_cache = $state({});

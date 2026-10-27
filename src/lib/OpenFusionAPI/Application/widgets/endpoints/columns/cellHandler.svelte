@@ -1,12 +1,12 @@
 <script>
-	import BLabel from '$lib/OpenFusionAPI/Application/widgets/common/icon_label.svelte';
+	import BLabel from '#lib/OpenFusionAPI/Application/widgets/common/icon_label.svelte';
 	import {
 		listFunctionStorePRD,
 		listFunctionStoreDev,
 		listFunctionStoreQA
-	} from '$lib/OpenFusionAPI/Application/utils/stores.js';
+	} from '#lib/OpenFusionAPI/Application/utils/stores.js';
 	import { onMount } from 'svelte';
-	import { getHandlerParams } from '$lib/OpenFusionAPI/Application/utils/utils.js';
+	import { getHandlerParams } from '#lib/OpenFusionAPI/Application/utils/utils.js';
 
 	let { value = $bindable(), row = $bindable() } = $props();
 

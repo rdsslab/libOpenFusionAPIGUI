@@ -7,7 +7,7 @@ declare const TextArea: import("svelte").Component<{
     label?: string;
     value?: string;
     placeholder?: string;
-}, {}, "label" | "value" | "placeholder">;
+}, {}, "value" | "label" | "placeholder">;
 type $$ComponentProps = {
     label?: string;
     value?: string;

@@ -1,7 +1,7 @@
 <script>
 	import { onMount, untrack } from 'svelte';
 	import { Table } from '@rdsslab/svelte-components';
-	import { url_paths } from '$lib/OpenFusionAPI/Application/utils/paths.js';
+	import { url_paths } from '#lib/OpenFusionAPI/Application/utils/paths.js';
 	import uFetch from '@rdsslab/uFetch';
 
 	let { idbot = $bindable(), hours = 24 } = $props();
