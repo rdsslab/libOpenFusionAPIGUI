@@ -1,9 +1,10 @@
 <script>
 	let {
+		/** @type {(option: string) => void} */
 		onchange = () => {},
 		option = $bindable('NA'),
 		css_class = $bindable(' is-small '),
-		options = $bindable([{ id: 'TEST', value: `TEST`, enabled: true }])
+		options = $bindable(/** @type {Array<{id: string, value: string, enabled?: boolean}>} */ ([{ id: 'TEST', value: `TEST`, enabled: true }]))
 	} = $props();
 
 	function handleClick() {

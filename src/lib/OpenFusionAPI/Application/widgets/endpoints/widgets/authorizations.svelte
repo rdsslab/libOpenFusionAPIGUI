@@ -6,7 +6,9 @@
 
 	let { users = $bindable({}) } = $props();
 
+	/** @type {Array<Record<string, unknown>>} */
 	let table_users = $state([]);
+	/** @type {Array<Record<string, unknown>>} */
 	let data_users = [];
 
 	let columns = $state({
@@ -38,6 +40,7 @@
 		email: { label: 'email' }
 	});
 
+	/** @type {ReturnType<typeof setTimeout>|undefined} */
 	let timeoutChageAuth;
 	/*
 	$effect(() => {

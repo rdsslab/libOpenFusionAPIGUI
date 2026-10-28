@@ -11,13 +11,14 @@
 	let cnx_appvar = $state('');
 
 	let tabList = $state([
-		{ label: 'Code', isActive: true, classIcon: ' fa-brands fa-node-js ', component: tab_code },
+		{ label: 'Code', classIcon: ' fa-brands fa-node-js ', component: tab_code },
 		{ label: 'Modules and functions', component: tab_pred_vars },
 		{ label: 'Connection Parameters', component: tab_cnx_params }
 	]);
 
 	let js_code = $state('// JS Code');
 
+		/** @type {ReturnType<typeof setTimeout>|undefined} */
 	let timeoutChange;
 
 	let cnx_param_sample = {
@@ -94,7 +95,7 @@
 		lang="js"
 		showFormat={true}
 		bind:code={js_code}
-		onchange={(c) => {
+		onchange={(/** @type {{code: string}} */ c) => {
 			fnOnChange();
 		}}
 	></EditorCode>
@@ -119,7 +120,7 @@
 				bind:custom={cnx_custom}
 				bind:appvar={cnx_appvar}
 				bind:environment={endpoint.environment}
-				onselect={(selected) => {
+				onselect={(/** @type {string} */ selected) => {
 					console.log('SQL AppVarsSelector Editor', selected, cnx_custom, cnx_appvar);
 					fnOnChange();
 				}}

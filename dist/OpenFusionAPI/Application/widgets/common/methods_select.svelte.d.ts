@@ -5,11 +5,15 @@ type MethodsSelect = {
 };
 declare const MethodsSelect: import("svelte").Component<{
     disabled?: boolean;
-    option?: Record<string, any>;
-    onselect: any;
+    option?: string | number | undefined;
+    onselect?: (e: {
+        value: any;
+    }) => void;
 }, {}, "option" | "disabled">;
 type $$ComponentProps = {
     disabled?: boolean;
-    option?: Record<string, any>;
-    onselect: any;
+    option?: string | number | undefined;
+    onselect?: (e: {
+        value: any;
+    }) => void;
 };

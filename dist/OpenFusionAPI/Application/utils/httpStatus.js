@@ -1,4 +1,5 @@
 // Descripciones cortas (reason phrases) de los status codes HTTP estándar.
+/** @type {Record<string, string>} */
 const HTTP_STATUS_TEXT = {
 	100: 'Continue',
 	101: 'Switching Protocols',
@@ -68,7 +69,11 @@ const HTTP_STATUS_TEXT = {
 	511: 'Network Authentication Required'
 };
 
-/** Devuelve la descripción corta en inglés de un status code HTTP. */
+/**
+ * Devuelve la descripción corta en inglés de un status code HTTP.
+ * @param {number|string} code
+ * @returns {string}
+ */
 export function httpStatusText(code) {
 	return HTTP_STATUS_TEXT[String(code)] ?? 'Unknown Status';
 }

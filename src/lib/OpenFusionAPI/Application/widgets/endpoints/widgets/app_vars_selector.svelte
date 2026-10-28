@@ -9,6 +9,7 @@
 		label = $bindable('Application Variable'),
 		value = $bindable(''),
 		environment = $bindable(''),
+		/** @type {(value: string) => void} */
 		onselect = () => {}
 	} = $props();
 
@@ -32,6 +33,9 @@
 	// --------------------------------------------
 	let value_selected = $derived(options_app_vars.find((item) => item.name === value));
 
+	/**
+	 * @param {string} val
+	 */
 	function onselectInternal(val) {
 		value = val;
 		onselect(val);
@@ -45,7 +49,7 @@
 	{label}
 	options={options_app_vars}
 	bind:selectedValue={value}
-	onselect={(selected) => {
+	onselect={(/** @type {{value: string}} */ selected) => {
 		onselectInternal(selected.value);
 	}}
 ></PredictiveInput>

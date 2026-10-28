@@ -4,7 +4,7 @@
 
 	let { endpoint = $bindable({}), onchange = () => {} } = $props();
 
-	let tabList = $state([{ label: 'Url', isActive: true, component: tab_url }]);
+	let tabList = $state([{ label: 'Url', component: tab_url }]);
 
 	let lastCode = $state('');
 
@@ -44,7 +44,7 @@
 			label={'Url'}
 			environment={endpoint.environment}
 			bind:value={endpoint.code}
-			onselect={(selected) => {
+			onselect={(/** @type {string} */ selected) => {
 				fnOnChange();
 			}}
 		></AppVarsSelector>

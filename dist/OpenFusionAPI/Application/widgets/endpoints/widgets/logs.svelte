@@ -19,7 +19,9 @@
 		})
 	} = $props();
 
+	/** @type {Array<Record<string, unknown>>} */
 	let dataLogs = $state([]);
+	/** @type {Array<Record<string, unknown>>} */
 	let datatraceLogs = $state([]);
 	let trace_id = $state('');
 
@@ -69,28 +71,25 @@
 		idendpoint: endpoint.idendpoint || 'ffffffff-ffff-ffff-ffff-ffffffffffff',
 		//	level: null,
 		limit: 1000,
-		timezone: DateTime.local().z
+		timezone: DateTime.local().zoneName
 	});
 	let tabs = $state([
 		{
 			label: 'Parametrization',
 			classIcon: 'fa-solid fa-rectangle-list',
 			slot: 'parameterization',
-			isActive: true,
 			component: tab_param
 		},
 		{
 			label: 'Registered logs',
 			classIcon: 'fa-solid fa-file-lines',
 			slot: 'logs',
-			isActive: false,
 			component: tab_logs
 		},
 		{
 			label: 'Trace Logs',
 			classIcon: 'fa-solid fa-file-lines',
 			slot: 'logs',
-			isActive: false,
 			component: tab_trace_logs
 		}
 	]);
@@ -357,94 +356,87 @@
 {/snippet}
 
 {#snippet tab_logs()}
+	{#snippet rt1()}
+		<div class="field has-addons has-addons-centered">
+			<span class="control">
+				<input
+					class="input is-small"
+					type="datetime-local"
+					placeholder="Start"
+					bind:value={params.start_date}
+				/>
+			</span>
+			<span class="control">
+				<!-- svelte-ignore a11y_missing_attribute -->
+				<a class="button is-static is-small"> Start </a>
+			</span>
+		</div>
+	{/snippet}
+	{#snippet rt2()}
+		<div class="field has-addons has-addons-centered">
+			<span class="control">
+				<input
+					class="input is-small"
+					type="datetime-local"
+					placeholder="Start"
+					bind:value={params.end_date}
+				/>
+			</span>
+			<span class="control">
+				<!-- svelte-ignore a11y_missing_attribute -->
+				<a class="button is-static is-small"> End </a>
+			</span>
+		</div>
+	{/snippet}
+	{#snippet rt3()}
+		<div class="field has-addons has-addons-centered">
+			<span class="control">
+				<input class="input is-small" type="number" placeholder="Limit" bind:value={params.limit} />
+			</span>
+			<span class="control">
+				<!-- svelte-ignore a11y_missing_attribute -->
+				<a class="button is-static is-small"> Limit </a>
+			</span>
+		</div>
+	{/snippet}
 	<Table
 		bind:columns={columns_logs}
 		bind:RawDataTable={dataLogs}
 		right_items={[rt1, rt2, rt3]}
 		onsearch={fetchLogs}
-	>
-		{#snippet rt1()}
-			<div class="field has-addons has-addons-centered">
-				<span class="control">
-					<input
-						class="input is-small"
-						type="datetime-local"
-						placeholder="Start"
-						bind:value={params.start_date}
-					/>
-				</span>
-				<span class="control">
-					<!-- svelte-ignore a11y_missing_attribute -->
-					<a class="button is-static is-small"> Start </a>
-				</span>
-			</div>
-		{/snippet}
-		{#snippet rt2()}
-			<div class="field has-addons has-addons-centered">
-				<span class="control">
-					<input
-						class="input is-small"
-						type="datetime-local"
-						placeholder="Start"
-						bind:value={params.end_date}
-					/>
-				</span>
-				<span class="control">
-					<!-- svelte-ignore a11y_missing_attribute -->
-					<a class="button is-static is-small"> End </a>
-				</span>
-			</div>
-		{/snippet}
-		{#snippet rt3()}
-			<div class="field has-addons has-addons-centered">
-				<span class="control">
-					<input
-						class="input is-small"
-						type="number"
-						placeholder="Limit"
-						bind:value={params.limit}
-					/>
-				</span>
-				<span class="control">
-					<!-- svelte-ignore a11y_missing_attribute -->
-					<a class="button is-static is-small"> Limit </a>
-				</span>
-			</div>
-		{/snippet}
-	</Table>
+	></Table>
 {/snippet}
 
 {#snippet tab_trace_logs()}
+	{#snippet rt1()}
+		<div class="field has-addons has-addons-centered">
+			<span class="control">
+				<!-- svelte-ignore a11y_missing_attribute -->
+				<a class="button is-static is-small"> Trace ID </a>
+			</span>
+			<span class="control">
+				<input class="input is-small" type="text" placeholder="Trace ID" bind:value={trace_id} />
+			</span>
+			<span class="control">
+				<button
+					class="button is-small"
+					onclick={fetchTraceLogs}
+					aria-label="Search trace logs"
+					title="Search trace logs"
+				>
+					<span class="icon is-small">
+						<i class="fa-solid fa-magnifying-glass"></i>
+					</span>
+				</button>
+			</span>
+		</div>
+	{/snippet}
 	<Table
 		columns={columns_trace}
 		bind:RawDataTable={datatraceLogs}
 		left_items={[rt1]}
 		onsearch={fetchTraceLogs}
-	>
-		{#snippet rt1()}
-			<div class="field has-addons has-addons-centered">
-				<span class="control">
-					<!-- svelte-ignore a11y_missing_attribute -->
-					<a class="button is-static is-small"> Trace ID </a>
-				</span>
-				<span class="control">
-					<input class="input is-small" type="text" placeholder="Trace ID" bind:value={trace_id} />
-				</span>
-				<span class="control">
-					<button
-						class="button is-small"
-						onclick={fetchTraceLogs}
-						aria-label="Search trace logs"
-						title="Search trace logs"
-					>
-						<span class="icon is-small">
-							<i class="fa-solid fa-magnifying-glass"></i>
-						</span>
-					</button>
-				</span>
-			</div>
-		{/snippet}
-	</Table>
+	></Table>
 {/snippet}
 
 <Tab bind:tabs bind:active={active_tab}></Tab>

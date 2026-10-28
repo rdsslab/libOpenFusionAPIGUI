@@ -32,7 +32,7 @@
 	}
 
 	let tabList = $state([
-		{ label: 'Code', isActive: true, classIcon: ' fa-brands fa-node-js ', component: tab_code },
+		{ label: 'Code', classIcon: ' fa-brands fa-node-js ', component: tab_code },
 		{ label: 'Modules and functions', component: tab_pred_vars }
 	]);
 </script>
@@ -42,7 +42,7 @@
 		lang="js"
 		showFormat={true}
 		bind:code={internal_code}
-		onchange={(c) => {
+		onchange={(/** @type {{code: string}} */ c) => {
 			fnOnChange();
 		}}
 	></EditorCode>

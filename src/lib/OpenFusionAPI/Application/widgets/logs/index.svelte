@@ -15,6 +15,9 @@
 	import RequestDetail from './request_detail.svelte';
 	import TraceView from './trace_view.svelte';
 
+	/**
+	 * @typedef {import('#lib/OpenFusionAPI/types/models.js').RequestLogRow} RequestLogRow
+	 */
 	let { idapp = $bindable() } = $props();
 
 	// === Filtros ===
@@ -24,6 +27,7 @@
 	let presetHours = $state(24);
 	let startDate = $state('');
 	let endDate = $state('');
+	/** @type {Array<string>} */
 	let statusClasses = $state([]);
 	let exactCodes = $state('');
 	let method = $state('');
@@ -36,14 +40,19 @@
 	let realtime = $state(false);
 
 	// === Datos ===
+	/** @type {Array<RequestLogRow>} */
 	let logsRaw = $state([]);
+	/** @type {Array<RequestLogRow>} */
 	let logs = $state([]);
 	let loading = $state(false);
+	/** @type {Array<{id: string|number, value: string}>} */
 	let endpointsOptions = $state([]);
+	/** @type {Record<string, string>} */
 	let appNameById = $state({});
 
 	// === Modales ===
 	let showDetail = $state(false);
+	/** @type {RequestLogRow|null} */
 	let selectedRow = $state(null);
 	let selectedAppName = $state('');
 	let showTrace = $state(false);
@@ -87,6 +96,7 @@
 	}
 
 	function buildQuery() {
+		/** @type {Record<string, unknown>} */
 		const q = {
 			order: 'timestamp',
 			orderDirection: 'DESC',
@@ -121,18 +131,28 @@
 		return q;
 	}
 
+	/**
+	 * @param {string} code
+	 * @param {Array<string>} parts
+	 * @returns {boolean}
+	 */
 	function statusMatchesFilter(code, parts) {
 		return parts.some((p) => {
 			if (/^[1-5]xx$/i.test(p)) {
 				const first = Number(p[0]);
-				return code >= first * 100 && code < (first + 1) * 100;
+				const cn = Number(code);
+				return cn >= first * 100 && cn < (first + 1) * 100;
 			}
-			return code === Number(p);
+			return Number(code) === Number(p);
 		});
 	}
 
 	// Normaliza la fila para que el Table siempre tenga todos los campos (con light weight
 	// algunos faltan y el Auto los renderizaría como 'undefined'/'null').
+	/**
+	 * @param {RequestLogRow} log
+	 * @returns {RequestLogRow}
+	 */
 	function decorateRow(log) {
 		return {
 			...log,
@@ -141,9 +161,9 @@
 			method: log.method ?? '',
 			status_code: log.status_code ?? '',
 			log_level: log.log_level ?? '',
-			response_time: log.response_time ?? '',
+			response_time: /** @type {number} */ (log.response_time ?? 0),
 			client: log.client ?? '',
-			app_name: appNameById[log.idapp] ?? log.idapp ?? ''
+			app_name: appNameById[/** @type {string} */ (log.idapp ?? '')] ?? log.idapp ?? ''
 		};
 	}
 
@@ -169,7 +189,8 @@
 		}
 	}
 
-	let reloadTimer = null;
+	/** @type {ReturnType<typeof setTimeout>|undefined} */
+	let reloadTimer;
 
 	function scheduleReload() {
 		clearTimeout(reloadTimer);
@@ -211,7 +232,7 @@
 						(e) =>
 							e?.idendpoint && (!environment || !e.environment || e.environment === environment)
 					)
-					.map((e) => ({ id: e.idendpoint, value: e.endpoint }));
+					.map((e) => ({ id: /** @type {string|number} */ (e.idendpoint ?? ''), value: /** @type {string} */ (e.endpoint ?? '') }));
 			}
 		} catch (e) {
 			console.error(e);
@@ -240,33 +261,39 @@
 	});
 
 	// === Tiempo real (websocket) ===
+	/**
+	 * @param {Record<string, unknown>} evt
+	 * @returns {boolean}
+	 */
 	function eventMatchesFilters(evt) {
 		if (!includeAllApps && idapp && evt?.idapp && evt.idapp !== idapp) return false;
 		if (environment && evt?.environment && evt.environment !== environment) return false;
 		if (idendpoint && evt?.idendpoint && evt.idendpoint !== idendpoint) return false;
 		if (method && evt?.method && evt.method !== method) return false;
 		if (activeStatusFilter.length > 0 && evt?.statusCode != null) {
-			if (!statusMatchesFilter(Number(evt.statusCode), activeStatusFilter)) return false;
+			if (!statusMatchesFilter(/** @type {string} */ (String(evt.statusCode ?? '')), activeStatusFilter)) return false;
 		}
 		return true;
 	}
 
-	let realtimeTimer = null;
+	/** @type {ReturnType<typeof setTimeout>|undefined} */
+	let realtimeTimer;
 
 	function scheduleRealtimeRefresh() {
 		if (!realtimeTimer) {
 			realtimeTimer = setTimeout(() => {
-				realtimeTimer = null;
+				realtimeTimer = undefined;
 				loadLogs();
 			}, 2500);
 		}
 	}
 
+	/** @type {(() => void)|undefined} */
 	let unsubscribe_com;
 
 	onMount(() => {
 		loadApps();
-		unsubscribe_com = storeEndpointOnComplete.subscribe((event) => {
+		unsubscribe_com = storeEndpointOnComplete.subscribe((/** @type {Record<string, unknown>} */ event) => {
 			if (!realtime) return;
 			if (eventMatchesFilters(event)) scheduleRealtimeRefresh();
 		});
@@ -280,11 +307,12 @@
 
 	async function loadApps() {
 		try {
-			const apps = await getListApps($userStore.token);
+			const apps = await getListApps();
+			/** @type {Record<string, string>} */
 			const map = {};
 			if (Array.isArray(apps)) {
 				for (const a of apps) {
-					if (a?.idapp) map[a.idapp] = a.app ?? a.idapp;
+					if (a?.idapp) map[/** @type {string} */ (String(a.idapp))] = a.app ?? a.idapp;
 				}
 			}
 			appNameById = map;
@@ -297,29 +325,38 @@
 		await loadLogs();
 	}
 
+	/**
+	 * @param {{row: RequestLogRow}} param
+	 */
 	function onRowClick({ row }) {
 		selectedRow = row;
-		selectedAppName = appNameById[row?.idapp] ?? row?.idapp ?? '';
+		selectedAppName = appNameById[/** @type {string} */ (String(row?.idapp ?? ''))] ?? row?.idapp ?? '';
 		showDetail = true;
 	}
 
+	/**
+	 * @param {{row: RequestLogRow}} param
+	 */
 	function openTrace({ row }) {
 		traceToInspect = row?.trace_id || '';
 		if (traceToInspect) showTrace = true;
 	}
 
-	function handleHoursChange(e) {
-		const value = Math.floor(Number(e.target.value));
+	function handleHoursChange(/** @type {Event} */ e) {
+		const input = /** @type {HTMLInputElement} */ (e.target);
+		const value = Math.floor(Number(input.value));
 		presetHours = Number.isFinite(value) && value > 0 ? value : 24;
 	}
 
-	function handleLimitChange(e) {
-		const value = Math.floor(Number(e.target.value));
+	function handleLimitChange(/** @type {Event} */ e) {
+		const input = /** @type {HTMLInputElement} */ (e.target);
+		const value = Math.floor(Number(input.value));
 		limit = Number.isFinite(value) && value > 0 && value <= 999999 ? value : 1000;
 	}
 
-	function handleExactCodesInput(e) {
-		exactCodes = e.currentTarget.value;
+	function handleExactCodesInput(/** @type {Event} */ e) {
+		const input = /** @type {HTMLInputElement} */ (e.currentTarget);
+		exactCodes = input.value;
 	}
 
 	let columns = $state({
@@ -446,8 +483,9 @@
 				<input
 					type="checkbox"
 					checked={statusClasses.includes(cls)}
-					onchange={(e) => {
-						statusClasses = e.target.checked
+					onchange={(/** @type {Event} */ e) => {
+						const input = /** @type {HTMLInputElement} */ (e.target);
+						statusClasses = input.checked
 							? [...statusClasses, cls]
 							: statusClasses.filter((c) => c !== cls);
 					}}

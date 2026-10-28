@@ -24,11 +24,10 @@
 	let tabList = $state([
 		{
 			label: 'Parameters',
-			isActive: true,
 			classIcon: ' fa-solid fa-soap ',
 			component: tab_parameters
 		},
-		{ label: 'Information', isActive: false, component: tab_infor }
+		{ label: 'Information', component: tab_infor }
 	]);
 
 	let jsonParams = $state({
@@ -65,7 +64,7 @@
 			bind:custom={endpoint.custom_data}
 			bind:appvar={endpoint.code}
 			environment={endpoint.environment}
-			onselect={(selected) => {
+			onselect={(/** @type {string} */ selected) => {
 				//console.log('AppVarsSelector Editor', selected);
 				//internal_code = selected;
 				fnOnChange();

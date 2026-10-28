@@ -23,7 +23,7 @@
 				? Environment.find((item) => {
 						return item.id == environment;
 					})
-				: [];
+				: undefined;
 		return data;
 	});
 

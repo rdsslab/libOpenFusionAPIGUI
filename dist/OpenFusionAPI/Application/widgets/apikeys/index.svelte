@@ -1,4 +1,5 @@
 <script>
+	import { getErrorMessage } from '../../utils/errors.js';
 	import { onMount } from 'svelte';
 	import {
 		Table,
@@ -22,6 +23,12 @@
 	import { GetAPIKeys, GetAPIClients } from '../../utils/request.js';
 	import CellToken from './cellToken.svelte';
 
+	/**
+	 * @typedef {import('../../../types/models.js').ApiKeyRow} ApiKeyRow
+	 * @typedef {import('../../../types/models.js').IntervalTaskRow} IntervalTaskRow
+	 */
+
+	/** @type {{idapp?: number}} */
 	let { idapp = $bindable() } = $props();
 
 	const uF = new uFetch();
@@ -35,6 +42,7 @@
 		currentUserHasPermission(currentUser, permEnv, 'apiclients', 'delete')
 	);
 	let showEditor = $state(false);
+	/** @type {ApiKeyRow} */
 	let selectedRow = $state({
 		idkey: '',
 		idclient: '',
@@ -45,6 +53,7 @@
 		token: '',
 		idapp: idapp
 	});
+	/** @type {ApiKeyRow} */
 	let originalForm = $state({
 		idkey: '',
 		idclient: '',
@@ -69,6 +78,7 @@
 			selectedRow?.idclient ||
 			''
 	);
+	/** @type {Array<ApiKeyRow>} */
 	let DataTableAPIs = $state([]);
 	let columns = $state({
 		idkey: { hidden: true },
@@ -121,14 +131,14 @@
 		app_enabled: { hidden: true }
 	});
 
-	$effect(async () => {
+	$effect(() => {
 		idapp;
-		await loadAPIKeys();
+		loadAPIKeys();
 	});
 
 	async function loadAPIKeys() {
 		if (idapp) {
-			let jresp = await GetAPIKeys(idapp, $userStore.token);
+			let jresp = await GetAPIKeys(idapp);
 
 			if (Array.isArray(jresp)) {
 				//console.log(jresp);
@@ -138,7 +148,7 @@
 				DataTableAPIs = [];
 			}
 
-			let clients = await GetAPIClients();
+			let clients = await GetAPIClients({});
 			if (Array.isArray(clients)) {
 				//console.log(jresp);
 				optionsClients = clients.map((c) => {
@@ -207,7 +217,7 @@
 			} catch (error) {
 				console.error('saveAPIKey error >>>>>>>>>>>>>', error);
 				notify.push({
-					message: error.message || 'Failed to save API key',
+					message: getErrorMessage(error) || 'Failed to save API key',
 					color: 'danger'
 				});
 				return false;
@@ -277,6 +287,9 @@
 		}
 	}
 
+	/**
+	 * @param {Array<IntervalTaskRow>} tasks
+	 */
 	async function deleteTasks(tasks) {
 		let idtasks = tasks.map((t) => {
 			return t.idtask;
@@ -308,6 +321,54 @@
 	});
 </script>
 
+	{#snippet r01()}
+		<div class="field has-addons">
+			{#if isEditing}
+				<p class="control">
+					<button
+						class="button is-small is-warning is-light"
+						title="Re-sign the token with the current application JWT key"
+						onclick={regenerateToken}
+					>
+						<span class="icon is-small">
+							<i class="fa-solid fa-rotate"></i>
+						</span>
+						<span>Regenerate JWT</span>
+					</button>
+				</p>
+				<p class="control">
+					<button class="button is-small is-link" onclick={onSaveClick}>
+						<span class="icon is-small">
+							<i class="fa-solid fa-save"></i>
+						</span>
+						<span>Save</span>
+					</button>
+				</p>
+			{:else}
+				<p class="control">
+					<button class="button is-small is-link" onclick={onSaveClick}>
+						<span class="icon is-small">
+							<i class="fa-solid fa-rocket"></i>
+						</span>
+						<span>Save & Deploy</span>
+					</button>
+				</p>
+			{/if}
+			<p class="control">
+				<button class="button is-small" onclick={closeEditor}>
+					<span class="icon is-small">
+						<i class="fa-solid fa-xmark"></i>
+					</span>
+					<span>{isEditing ? 'Close' : 'Cancel'}</span>
+				</button>
+			</p>
+		</div>
+	{/snippet}
+
+
+{#snippet lt01()}
+	<div class="buttons are-small"></div>
+{/snippet}
 <Table
 	bind:RawDataTable={DataTableAPIs}
 	bind:columns
@@ -316,7 +377,7 @@
 	showNewButton={canCreate}
 	showDeleteButton={canDelete}
 	showEditButton={canEdit}
-	oneditrow={(r) => {
+	oneditrow={(/** @type {ApiKeyRow} */ r) => {
 		selectedRow.idkey = r.idkey || '';
 		selectedRow.enabled = Boolean(r.enabled);
 		selectedRow.startAt = r.startAt || '';
@@ -335,64 +396,16 @@
 		jwtCopied = false;
 		showEditor = true;
 	}}
-	ondeleterow={async (r) => {
+	ondeleterow={async (/** @type {{rows: Array<IntervalTaskRow>}} */ r) => {
 		if (r.rows.length > 0 && confirm('Are you sure you want to delete this task?')) {
 			await deleteTasks(r.rows);
 		}
 	}}
->
-	{#snippet lt01()}
-		<div class="buttons are-small"></div>
-	{/snippet}
-</Table>
+></Table>
 
 {#if idapp && selectedRow}
 	<SlideFullScreen bind:show={showEditor}>
-		<Level left={[]} right={[r01]}>
-			{#snippet r01()}
-				<div class="field has-addons">
-					{#if isEditing}
-						<p class="control">
-							<button
-								class="button is-small is-warning is-light"
-								title="Re-sign the token with the current application JWT key"
-								onclick={regenerateToken}
-							>
-								<span class="icon is-small">
-									<i class="fa-solid fa-rotate"></i>
-								</span>
-								<span>Regenerate JWT</span>
-							</button>
-						</p>
-						<p class="control">
-							<button class="button is-small is-link" onclick={onSaveClick}>
-								<span class="icon is-small">
-									<i class="fa-solid fa-save"></i>
-								</span>
-								<span>Save</span>
-							</button>
-						</p>
-					{:else}
-						<p class="control">
-							<button class="button is-small is-link" onclick={onSaveClick}>
-								<span class="icon is-small">
-									<i class="fa-solid fa-rocket"></i>
-								</span>
-								<span>Save & Deploy</span>
-							</button>
-						</p>
-					{/if}
-					<p class="control">
-						<button class="button is-small" onclick={closeEditor}>
-							<span class="icon is-small">
-								<i class="fa-solid fa-xmark"></i>
-							</span>
-							<span>{isEditing ? 'Close' : 'Cancel'}</span>
-						</button>
-					</p>
-				</div>
-			{/snippet}
-		</Level>
+		<Level left={[]} right={[r01]}></Level>
 
 		<div>
 			{#if isEditing}
@@ -409,9 +422,9 @@
 					label="API Client"
 					classLabel="is-small"
 					classInput="is-small"
-					bind:options={optionsClients}
+					options={optionsClients}
 					bind:selectedValue={selectedRow.idclient}
-					onselect={(e) => {
+					onselect={(/** @type {{value?: unknown}} */ e) => {
 						console.log(e, selectedRow);
 					}}
 				/>

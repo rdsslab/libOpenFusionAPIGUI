@@ -24,6 +24,7 @@
 	import CellBotStatus from './cellBotStatus.svelte';
 	import Backups from './bot_bkp.svelte';
 	import BotLogs from './bot_logs.svelte';
+	import { getErrorMessage } from '../../utils/errors.js';
 	import {
 		userStore,
 		storeBotStatusChanged,
@@ -45,10 +46,14 @@
 	const canEdit = $derived(currentUserHasPermission(currentUser, permEnv, 'bots', 'edit'));
 	const canDelete = $derived(currentUserHasPermission(currentUser, permEnv, 'bots', 'delete'));
 	let showEditor = $state(false);
+	/** @type {BotRow} */
 	let selectedRow = $state(defaultValuesBot({}));
+	let /** @type {string} */ paramsJson = $state(JSON.stringify(selectedRow.params ?? {}));
+	/** @type {Array<BotRow>} */
 	let DataTableBots = $state([]);
 	let customToken = $state('');
 
+	/** @type {Array<{name: string, value: string|number}>} */
 	let optionsEnvironment = $state(
 		Environment.map((e) => {
 			return { name: e.value, value: e.id };
@@ -56,11 +61,15 @@
 	);
 
 	/** Salud del bot abierto en el editor, tal como la reportó el servidor al cargarlo. */
-	let health = $state(null);
+	let health = $state(/** @type {BotRow|null} */ (null));
 
 	/**
 	 * Pestañas del editor. `component` apunta a los snippets declarados en el marcado, y el
 	 * índice de Backups se deshabilita mientras el bot no exista todavía en la base.
+	 */
+	/**
+	 * @typedef {import('../../../types/models.js').BotRow} BotRow
+	 * @typedef {import('../../../types/models.js').BotStatusChangedEvent} BotStatusChangedEvent
 	 */
 	let activeTab = $state(0);
 	const TAB_BACKUPS = 3;
@@ -97,7 +106,10 @@
 		tabList[TAB_LOGS].disabled = !selectedRow.idbot;
 	}
 
-	/** `params` llega como objeto desde la API, pero se normaliza por si viniera serializado. */
+	/** `params` llega como objeto desde la API, pero se normaliza por si viniera serializado.
+	 * @param {BotRow} row
+	 * @returns {BotRow}
+	 */
 	function normalizeParams(row) {
 		if (typeof row.params === 'string') {
 			try {
@@ -112,10 +124,13 @@
 	}
 
 	let healthStatus = $derived(
-		health ? BotRuntimeStatus[health.runtime_status] || BotRuntimeStatusFallback : null
+		health ? BotRuntimeStatus[health.runtime_status ?? ''] || BotRuntimeStatusFallback : null
 	);
 
 	/** Formatea una fecha del servidor; devuelve '—' si no hay valor. */
+	/**
+	 * @param {string|number|null|undefined} value
+	 */
 	function formatMoment(value) {
 		if (!value) return '—';
 		const date = new Date(value);
@@ -178,9 +193,9 @@
 		disabled_reason: { hidden: true }
 	});
 
-	$effect(async () => {
+	$effect(() => {
 		idapp;
-		await loadBots();
+		loadBots();
 	});
 
 	async function loadBots() {
@@ -200,7 +215,7 @@
 				}
 			} catch (error) {
 				console.error('loadBots error >>>>>>>>>>>>>', error);
-				notify.push({ message: error.message || 'Failed to load bots', color: 'danger' });
+				notify.push({ message: getErrorMessage(error) || 'Failed to load bots', color: 'danger' });
 				DataTableBots = [];
 			}
 		} else {
@@ -208,6 +223,10 @@
 		}
 	}
 
+	/**
+	 * @param {number|string} idbot
+	 * @returns {Promise<BotRow|null>}
+	 */
 	async function getBot(idbot) {
 		try {
 			let resp = await uF.get({
@@ -229,7 +248,7 @@
 			return null;
 		} catch (error) {
 			console.error('getBot error >>>>>>>>>>>>>', error);
-			notify.push({ message: error.message || 'Failed to load bot details', color: 'danger' });
+			notify.push({ message: getErrorMessage(error) || 'Failed to load bot details', color: 'danger' });
 			return null;
 		}
 	}
@@ -246,7 +265,8 @@
 		// El estado del runtime lo escribe el servidor. Reenviar la copia que se leyó al
 		// abrir el editor lo sobrescribiría con datos ya viejos: un bot que entretanto se
 		// recuperó volvería a figurar como QUARANTINED.
-		for (const field of BOT_RUNTIME_FIELDS) delete row[field];
+		const rowRec = /** @type {Record<string, unknown>} */ (row);
+		for (const field of BOT_RUNTIME_FIELDS) delete rowRec[field];
 
 		try {
 			// console.log('saveBot >>>>>>>>>>>>>', row);
@@ -264,13 +284,16 @@
 			}
 		} catch (error) {
 			console.error('saveBot error >>>>>>>>>>>>>', error);
-			if (error.message !== 'Failed to save bot' && !error.message.startsWith('URL:')) {
-				notify.push({ message: error.message || 'Failed to save bot', color: 'danger' });
+			if (getErrorMessage(error) !== 'Failed to save bot' && !getErrorMessage(error).startsWith('URL:')) {
+				notify.push({ message: getErrorMessage(error) || 'Failed to save bot', color: 'danger' });
 			}
 			throw error;
 		}
 	}
 
+	/**
+	 * @param {Array<BotRow>} bots
+	 */
 	async function deleteBots(bots) {
 		try {
 			for (let bot of bots) {
@@ -285,7 +308,7 @@
 			await loadBots();
 		} catch (error) {
 			console.error('deleteBots error >>>>>>>>>>>>>', error);
-			notify.push({ message: error.message || 'Failed to delete bot(s)', color: 'danger' });
+			notify.push({ message: getErrorMessage(error) || 'Failed to delete bot(s)', color: 'danger' });
 		}
 	}
 
@@ -296,21 +319,24 @@
 	 * arrive every ~10 s per bot. Patch the table row in-place; if the editor is open
 	 * for that bot, also refresh the health panel so the operator sees changes immediately.
 	 */
-	const unsubBotStatus = storeBotStatusChanged.subscribe((evt) => {
+	const unsubBotStatus = storeBotStatusChanged.subscribe((/** @type {BotStatusChangedEvent|null} */ evt) => {
 		if (!evt || !evt.idbot) return;
 		const idx = DataTableBots.findIndex((r) => r.idbot === evt.idbot);
 		if (idx !== -1) {
 			// Shallow merge: only overwrite fields present in the patch.
+			/** @type {BotRow} */
 			const row = { ...DataTableBots[idx] };
+			const rowRec = /** @type {Record<string, unknown>} */ (row);
+			const evtRec = /** @type {Record<string, unknown>} */ (evt);
 			for (const key of Object.keys(evt)) {
 				if (key === 'ts' || key === 'idbot' || key === 'idapp') continue;
-				row[key] = evt[key];
+				rowRec[key] = evtRec[key];
 			}
 			DataTableBots[idx] = row;
 		}
 		// If the editor is open for this bot, update health snapshot too.
 		if (showEditor && selectedRow.idbot === evt.idbot) {
-			health = { ...health, ...evt };
+			health = /** @type {BotRow|null} */ ({ ...(health ?? {}), ...evt });
 		}
 	});
 
@@ -333,10 +359,56 @@
 
 	onMount(() => {
 		selectedRow = normalizeParams(defaultValuesBot({}));
+		paramsJson = JSON.stringify(selectedRow.params ?? {});
 		health = null;
 		resetTabs();
 	});
+	// Mantener selectedRow.params sincronizado con el JSON del editor.
+	$effect(() => {
+		selectedRow.params = JSON.parse(paramsJson || '{}');
+	});
 </script>
+
+	{#snippet r01()}
+		<div class="field has-addons">
+			<p class="control">
+				<button
+					class="button is-small is-link"
+					onclick={async () => {
+						if (!confirm('Are you sure you want to save and deploy this bot?')) {
+							return;
+						}
+						// saveBot() ya notifica el resultado; el editor permanece abierto
+						// tanto si el guardado tuvo éxito como si falló.
+						try {
+							await saveBot();
+						} catch {
+							// Error already notified; keep editor open for correction
+						}
+					}}
+				>
+					<span class="icon is-small">
+						<i class="fa-solid fa-rocket"></i>
+					</span>
+					<span>Save & Deploy</span>
+				</button>
+			</p>
+			<p class="control">
+				<button
+					class="button is-small"
+					onclick={() => {
+						showEditor = false;
+					}}
+				>
+					<span class="icon is-small">
+						<i class="fa-solid fa-xmark"></i>
+					</span>
+					<span>Cancel</span>
+				</button>
+			</p>
+		</div>
+	{/snippet}
+
 
 <Table
 	bind:RawDataTable={DataTableBots}
@@ -345,10 +417,11 @@
 	showNewButton={canCreate}
 	showDeleteButton={canDelete}
 	showEditButton={canEdit}
-	oneditrow={async (r) => {
+	oneditrow={async (/** @type {BotRow} */ r) => {
 		// console.log('TABLE > EDIT ', r);
-		let fullBot = await getBot(r.idbot);
+		let fullBot = await getBot(/** @type {number|string} */ (r.idbot ?? 0));
 		selectedRow = normalizeParams(defaultValuesBot(fullBot || r));
+		paramsJson = JSON.stringify(selectedRow.params ?? {});
 		health = fullBot || r;
 		resetTabs();
 
@@ -365,11 +438,12 @@
 	onnewrow={() => {
 		// console.log('TABLE > NEW ', idapp);
 		selectedRow = normalizeParams(defaultValuesBot({ idapp }));
+		paramsJson = JSON.stringify(selectedRow.params ?? {});
 		health = null;
 		resetTabs();
 		showEditor = true;
 	}}
-	ondeleterow={async (r) => {
+	ondeleterow={async (/** @type {{rows: Array<BotRow>}} */ r) => {
 		// console.log('TABLE > DELETE ', r);
 		if (r.rows.length > 0 && confirm('Are you sure you want to delete the selected bot(s)?')) {
 			await deleteBots(r.rows);
@@ -379,47 +453,7 @@
 
 {#if idapp}
 	<SlideFullScreen bind:show={showEditor}>
-		<Level left={[]} right={[r01]}>
-			{#snippet r01()}
-				<div class="field has-addons">
-					<p class="control">
-						<button
-							class="button is-small is-link"
-							onclick={async () => {
-								if (!confirm('Are you sure you want to save and deploy this bot?')) {
-									return;
-								}
-								// saveBot() ya notifica el resultado; el editor permanece abierto
-								// tanto si el guardado tuvo éxito como si falló.
-								try {
-									await saveBot();
-								} catch {
-									// Error already notified; keep editor open for correction
-								}
-							}}
-						>
-							<span class="icon is-small">
-								<i class="fa-solid fa-rocket"></i>
-							</span>
-							<span>Save & Deploy</span>
-						</button>
-					</p>
-					<p class="control">
-						<button
-							class="button is-small"
-							onclick={() => {
-								showEditor = false;
-							}}
-						>
-							<span class="icon is-small">
-								<i class="fa-solid fa-xmark"></i>
-							</span>
-							<span>Cancel</span>
-						</button>
-					</p>
-				</div>
-			{/snippet}
-		</Level>
+		<Level left={[]} right={[r01]}></Level>
 
 		<div>
 			{#if health && healthStatus}
@@ -451,12 +485,12 @@
 
 					<p class="help mb-3">{healthStatus.description}</p>
 
-					{#if health.disabled_by === 'system'}
+					{#if health?.disabled_by === 'system'}
 						<div class="notification is-warning is-light py-2 px-3 mb-3">
 							<span class="icon-text">
 								<span class="icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
 								<span>
-									The system disabled this bot{health.disabled_reason
+									The system disabled this bot{health?.disabled_reason
 										? ` (${health.disabled_reason})`
 										: ''}. Fix the token or the code and save: it has already been switched back to
 									<strong>Enabled</strong> for you.
@@ -472,42 +506,42 @@
 					<div class="columns is-multiline is-mobile mb-0">
 						<div class="column is-one-quarter">
 							<p class="heading">Consecutive failures</p>
-							<p>{health.failure_count ?? 0}</p>
+							<p>{health?.failure_count ?? 0}</p>
 						</div>
 						<div class="column is-one-quarter">
 							<p class="heading">Last error type</p>
-							<p>{health.last_error_type || '—'}</p>
+							<p>{health?.last_error_type || '—'}</p>
 						</div>
 						<div class="column is-one-quarter">
 							<p class="heading">Last failure</p>
-							<p>{formatMoment(health.last_failure_at)}</p>
+							<p>{formatMoment(health?.last_failure_at)}</p>
 						</div>
 						<div class="column is-one-quarter">
 							<p class="heading">Next retry</p>
-							<p>{formatMoment(health.next_retry_at)}</p>
+							<p>{formatMoment(health?.next_retry_at)}</p>
 						</div>
 						<div class="column is-one-quarter">
 							<p class="heading">Last started</p>
-							<p>{formatMoment(health.last_started_at)}</p>
+							<p>{formatMoment(health?.last_started_at)}</p>
 						</div>
 						<div class="column is-one-quarter">
 							<p class="heading">Last healthy</p>
-							<p>{formatMoment(health.last_healthy_at)}</p>
+							<p>{formatMoment(health?.last_healthy_at)}</p>
 						</div>
 						<div class="column is-one-quarter">
 							<p class="heading">Disabled by</p>
-							<p>{health.disabled_by || '—'}</p>
+							<p>{health?.disabled_by || '—'}</p>
 						</div>
 						<div class="column is-one-quarter">
 							<p class="heading">Provider</p>
-							<p>{health.provider || '—'}</p>
+							<p>{health?.provider || '—'}</p>
 						</div>
 					</div>
 
-					{#if health.last_error_message}
+					{#if health?.last_error_message}
 						<div>
 							<p class="heading">Last error message</p>
-							<pre class="is-size-7">{health.last_error_message}</pre>
+							<pre class="is-size-7">{health?.last_error_message}</pre>
 						</div>
 					{/if}
 				</div>
@@ -531,7 +565,7 @@
 				label="Environment"
 				classLabel="is-small"
 				classInput="is-small"
-				bind:options={optionsEnvironment}
+				options={optionsEnvironment}
 				bind:selectedValue={selectedRow.environment}
 			></PredictiveInput>
 		</div>
@@ -546,7 +580,7 @@
 				bind:environment={selectedRow.environment}
 				bind:custom={customToken}
 				bind:appvar={selectedRow.token}
-				onselect={(selected) => {
+				onselect={(/** @type {{appvar?: string, custom?: string}} */ selected) => {
 					if (selected.appvar) {
 						selectedRow.token = selected.appvar;
 					} else {
@@ -566,7 +600,7 @@
 
 {#snippet tab_params()}
 	<p class="help">Parameters passed to the bot at runtime.</p>
-	<EditorCode lang="json" showFormat={true} bind:code={selectedRow.params}></EditorCode>
+	<EditorCode lang="json" showFormat={true} bind:code={paramsJson}></EditorCode>
 {/snippet}
 
 {#snippet tab_code()}
@@ -584,11 +618,12 @@
 		</p>
 		<Backups
 			bind:idbot={selectedRow.idbot}
-			onselect={(backup) => {
+			onselect={(/** @type {BotRow} */ backup) => {
 				if (backup && backup.idbot == selectedRow.idbot) {
 					// El snapshot es solo configuración: `health` es estado observado del
 					// runtime y se deja como está.
 					selectedRow = normalizeParams(defaultValuesBot($state.snapshot(backup)));
+					paramsJson = JSON.stringify(selectedRow.params ?? {});
 					notify.push({
 						message: `Bot ${selectedRow.name} loaded from backup. Save to persist.`,
 						color: 'success'

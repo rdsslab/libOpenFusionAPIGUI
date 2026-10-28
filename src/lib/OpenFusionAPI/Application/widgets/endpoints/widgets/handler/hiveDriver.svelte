@@ -27,12 +27,13 @@
 	});
 
 	let tabList = $state([
-		{ label: 'Query', isActive: true, classIcon: ' fa-solid fa-database ', component: tab_query },
+		{ label: 'Query', classIcon: ' fa-solid fa-database ', component: tab_query },
 		{ label: 'Pass Parameters', component: tab_pass_params },
 		{ label: 'Connection Parameters', component: tab_cnx_params }
 	]);
 
 	let query_code = $state('');
+		/** @type {ReturnType<typeof setTimeout>|undefined} */
 	let timeoutChange;
 
 	let cnx_custom = $state({});
@@ -93,7 +94,7 @@
 			lang="sql"
 			showFormat={true}
 			bind:code={query_code}
-			onchange={(c) => {
+			onchange={(/** @type {{code: string}} */ c) => {
 				fnOnChange();
 			}}
 		></EditorCode>
@@ -210,7 +211,7 @@
 			bind:custom={cnx_custom}
 			bind:appvar={cnx_appvar}
 			bind:environment={endpoint.environment}
-			onselect={(selected) => {
+			onselect={(/** @type {string} */ selected) => {
 				fnOnChange();
 			}}
 		></AppVarsSelector>

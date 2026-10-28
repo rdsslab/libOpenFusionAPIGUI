@@ -12,7 +12,6 @@
 	let tabList = $state([
 		{
 			label: 'Parameters',
-			isActive: true,
 			classIcon: ' fa-solid fa-database ',
 			component: tab_tablename
 		},
@@ -31,6 +30,7 @@
 	});
 
 	let table_name = $state('');
+		/** @type {ReturnType<typeof setTimeout>|undefined} */
 	let timeoutChange;
 
 	$effect(() => {
@@ -136,7 +136,7 @@
 		bind:custom={cnx_custom}
 		bind:appvar={cnx_appvar}
 		bind:environment={endpoint.environment}
-		onselect={(selected) => {
+		onselect={(/** @type {string} */ selected) => {
 			fnOnChange();
 		}}
 	></AppVarsSelector>

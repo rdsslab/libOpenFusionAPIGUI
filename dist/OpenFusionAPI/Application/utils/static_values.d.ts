@@ -2,60 +2,48 @@
  * `status` conserva el resultado de la última corrida cuando esta termina. Para mostrar
  * el estado operativo actual, toda tarea que no esté ejecutándose vuelve a Waiting.
  */
-export function getIntervalTaskRuntimeStatus(value: any): {
-    label: string;
-    background: string;
-    icon: string;
-    description: string;
-};
+/**
+ * @param {number|string|null|undefined} value
+ * @returns {StatusMeta}
+ */
+export function getIntervalTaskRuntimeStatus(value: number | string | null | undefined): StatusMeta;
 /**
  * Resultado de la última ejecución, separado del estado operativo actual. El payload
  * permite corregir corridas antiguas que se guardaron como OK pese a `success: false`.
  */
-export function getIntervalTaskLastResultStatus(value: any, response: any): any;
+/**
+ * @param {number|string|null|undefined} value
+ * @param {unknown} response
+ * @returns {StatusMeta|null}
+ */
+export function getIntervalTaskLastResultStatus(value: number | string | null | undefined, response: unknown): StatusMeta | null;
 /** Devuelve el estado de suspensión, o `null` si el planificador no la suspendió. */
-export function getIntervalTaskSuspensionStatus(task: any): {
-    label: string;
-    background: string;
-    icon: string;
-    description: string;
-} | null;
+/**
+ * @param {Partial<IntervalTaskRow>|null|undefined} task
+ * @returns {StatusMeta|null}
+ */
+export function getIntervalTaskSuspensionStatus(task: Partial<IntervalTaskRow> | null | undefined): StatusMeta | null;
 /** `true` cuando la tarea está suspendida por el planificador (no por el usuario). */
-export function isIntervalTaskSuspended(task: any): boolean;
-export const listAccessMethod: {
+/**
+ * @param {Partial<IntervalTaskRow>|null|undefined} task
+ * @returns {boolean}
+ */
+export function isIntervalTaskSuspended(task: Partial<IntervalTaskRow> | null | undefined): boolean;
+/**
+ * @typedef {import('../../types/models.js').IntervalTaskRow} IntervalTaskRow
+ * @typedef {import('../../types/models.js').BotRow} BotRow
+ * @typedef {{label: string, background: string, icon: string, description: string}} StatusMeta
+ */
+/** @type {Array<{value: string, id: number}>} */
+export const listAccessMethod: Array<{
     value: string;
     id: number;
-}[];
-export namespace listHTTPMethods {
-    namespace GET {
-        let color: string;
-        let icon: string;
-    }
-    namespace POST {
-        let color_1: string;
-        export { color_1 as color };
-        let icon_1: string;
-        export { icon_1 as icon };
-    }
-    namespace DELETE {
-        let color_2: string;
-        export { color_2 as color };
-        let icon_2: string;
-        export { icon_2 as icon };
-    }
-    namespace PUT {
-        let color_3: string;
-        export { color_3 as color };
-        let icon_3: string;
-        export { icon_3 as icon };
-    }
-    namespace WS {
-        let color_4: string;
-        export { color_4 as color };
-        let icon_4: string;
-        export { icon_4 as icon };
-    }
-}
+}>;
+/** @type {Record<string, {color: string, icon: string}>} */
+export const listHTTPMethods: Record<string, {
+    color: string;
+    icon: string;
+}>;
 export const Environment: {
     id: string;
     value: string;
@@ -93,11 +81,11 @@ export namespace defaultEndpoint {
     }
     export let resource: string;
     export let code: string;
-    let idapp_1: number;
+    let idapp_1: string;
     export { idapp_1 as idapp };
     let description_1: string;
     export { description_1 as description };
-    export let idendpoint: number;
+    export let idendpoint: string;
     export let cors: {};
     export let headers_test: {};
     export namespace data_test {
@@ -141,192 +129,71 @@ export namespace defaultEndpoint {
             }
             export { schema_1 as schema };
         }
+        export let custom_data: {};
+        export let docs: string;
+        export let title: string;
+        export let keywords: string;
+        export let timeout: number;
+        export let price_by_request: number;
+        export let price_kb_request: number;
+        export let price_kb_response: number;
     }
 }
-export function defaultValuesIntervalTask(task: any): {
-    idtask: null;
-    idendpoint: string;
-    iduser: null;
-    idapp: string;
-    enabled: boolean;
-    interval: number;
-    datestart: string;
-    dateend: string;
-    next_run: string;
-    last_run: string;
-    exec_time_limit: number;
-    failed_attempts: number;
-    status: number;
-    params: {};
-    allow_concurrent: boolean;
-    idkey: null;
-    schedule_mode: string;
-    cron: string;
-    timezone: string;
-    window_start: string;
-    window_end: string;
-    window_days: string;
-    max_failed_attempts: number;
-    history_limit: number;
-    disabled_by: null;
-    disabled_reason: null;
-    note: string;
-};
+export function defaultValuesIntervalTask(task: Partial<IntervalTaskRow> | null | undefined): IntervalTaskRow;
 /**
  * Estados que el planificador escribe en `status`. La tabla y el editor muestran la
  * etiqueta, nunca el número: un "3" no le dice nada a quien administra las tareas.
  */
-export const IntervalTaskStatus: {
-    0: {
-        label: string;
-        background: string;
-        icon: string;
-        description: string;
-    };
-    1: {
-        label: string;
-        background: string;
-        icon: string;
-        description: string;
-    };
-    2: {
-        label: string;
-        background: string;
-        icon: string;
-        description: string;
-    };
-    3: {
-        label: string;
-        background: string;
-        icon: string;
-        description: string;
-    };
-    4: {
-        label: string;
-        background: string;
-        icon: string;
-        description: string;
-    };
-    5: {
-        label: string;
-        background: string;
-        icon: string;
-        description: string;
-    };
-};
-export namespace IntervalTaskStatusFallback {
-    export let label: string;
-    export let background: string;
-    let icon_5: string;
-    export { icon_5 as icon };
-    let description_2: string;
-    export { description_2 as description };
-}
-export namespace IntervalTaskSuspendedStatus {
-    let label_1: string;
-    export { label_1 as label };
-    let background_1: string;
-    export { background_1 as background };
-    let icon_6: string;
-    export { icon_6 as icon };
-    let description_3: string;
-    export { description_3 as description };
-}
+/** @type {Record<number, StatusMeta>} */
+export const IntervalTaskStatus: Record<number, StatusMeta>;
+/** @type {StatusMeta} */
+export const IntervalTaskStatusFallback: StatusMeta;
+/**
+ * Suspensión del planificador. Cuando una tarea agota `max_failed_attempts` el servidor
+ * deja de programarla SIN apagar `enabled`: esa bandera es la intención del usuario y se
+ * conserva. Lo que cambia es `disabled_by`, que pasa a `'system'`. Por eso es un estado
+ * distinto de "Unabled" y merece su propia etiqueta: el usuario quiere que corra, pero
+ * no correrá hasta que se corrija la causa y se reinicien los intentos.
+ */
+/** @type {StatusMeta} */
+export const IntervalTaskSuspendedStatus: StatusMeta;
 /**
  * Campos de `ofapi_intervaltask` que escribe el planificador, no el usuario. El editor
  * los muestra como solo lectura y no los reenvía al guardar.
  */
 export const INTERVAL_TASK_RUNTIME_FIELDS: string[];
-export function defaultValuesBot(bot: any): any;
-export namespace BotRuntimeStatus {
-    namespace STOPPED {
-        let label_2: string;
-        export { label_2 as label };
-        let color_5: string;
-        export { color_5 as color };
-        let background_2: string;
-        export { background_2 as background };
-        let icon_7: string;
-        export { icon_7 as icon };
-        export let needsAction: boolean;
-        let description_4: string;
-        export { description_4 as description };
-    }
-    namespace STARTING {
-        let label_3: string;
-        export { label_3 as label };
-        let color_6: string;
-        export { color_6 as color };
-        let background_3: string;
-        export { background_3 as background };
-        let icon_8: string;
-        export { icon_8 as icon };
-        let needsAction_1: boolean;
-        export { needsAction_1 as needsAction };
-        let description_5: string;
-        export { description_5 as description };
-    }
-    namespace RUNNING {
-        let label_4: string;
-        export { label_4 as label };
-        let color_7: string;
-        export { color_7 as color };
-        let background_4: string;
-        export { background_4 as background };
-        let icon_9: string;
-        export { icon_9 as icon };
-        let needsAction_2: boolean;
-        export { needsAction_2 as needsAction };
-        let description_6: string;
-        export { description_6 as description };
-    }
-    namespace BACKOFF {
-        let label_5: string;
-        export { label_5 as label };
-        let color_8: string;
-        export { color_8 as color };
-        let background_5: string;
-        export { background_5 as background };
-        let icon_10: string;
-        export { icon_10 as icon };
-        let needsAction_3: boolean;
-        export { needsAction_3 as needsAction };
-        let description_7: string;
-        export { description_7 as description };
-    }
-    namespace QUARANTINED {
-        let label_6: string;
-        export { label_6 as label };
-        let color_9: string;
-        export { color_9 as color };
-        let background_6: string;
-        export { background_6 as background };
-        let icon_11: string;
-        export { icon_11 as icon };
-        let needsAction_4: boolean;
-        export { needsAction_4 as needsAction };
-        let description_8: string;
-        export { description_8 as description };
-    }
-    namespace DISABLED_ERROR {
-        let label_7: string;
-        export { label_7 as label };
-        let color_10: string;
-        export { color_10 as color };
-        let background_7: string;
-        export { background_7 as background };
-        let icon_12: string;
-        export { icon_12 as icon };
-        let needsAction_5: boolean;
-        export { needsAction_5 as needsAction };
-        let description_9: string;
-        export { description_9 as description };
-    }
-}
-export namespace BotRuntimeStatusFallback { }
+export function defaultValuesBot(bot: Partial<BotRow> | null | undefined): BotRow;
+/**
+ * Estado observado del runtime de un bot (columna `runtime_status` de `ofapi_bot`).
+ *
+ * Es distinto de `enabled`: `enabled` es la INTENCIÓN del usuario ("este bot debe correr")
+ * y `runtime_status` es lo que realmente está pasando. El servidor nunca apaga un bot por
+ * un fallo recuperable —red, DNS, 429 o 5xx del proveedor—: lo reintenta con backoff y
+ * luego lo pone en cuarentena sondeando indefinidamente, así que un bot en BACKOFF o
+ * QUARANTINED se recupera solo y NO requiere que nadie lo toque. Por eso cada estado
+ * declara `needsAction`: es lo que decide si la interfaz debe alarmar o tranquilizar.
+ */
+/** @type {Record<string, StatusMeta & {color: string, needsAction: boolean}>} */
+export const BotRuntimeStatus: Record<string, StatusMeta & {
+    color: string;
+    needsAction: boolean;
+}>;
+/** Estado a mostrar cuando el servidor todavía no reportó ninguno. */
+export const BotRuntimeStatusFallback: StatusMeta & {
+    color: string;
+    needsAction: boolean;
+};
 /**
  * Campos de `ofapi_bot` que escribe el runtime, no el usuario. La interfaz los muestra
  * pero nunca los reenvía al guardar: hacerlo sobrescribiría el estado observado con una
  * copia vieja tomada al abrir el editor.
  */
 export const BOT_RUNTIME_FIELDS: string[];
+export type IntervalTaskRow = import("../../types/models.js").IntervalTaskRow;
+export type BotRow = import("../../types/models.js").BotRow;
+export type StatusMeta = {
+    label: string;
+    background: string;
+    icon: string;
+    description: string;
+};

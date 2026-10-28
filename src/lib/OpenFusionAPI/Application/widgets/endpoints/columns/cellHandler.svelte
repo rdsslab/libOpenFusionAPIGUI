@@ -16,6 +16,7 @@
 	let css_icon = $state('fas fa-home');
 
 	let error_function = $derived.by(() => {
+		/** @type {{valid: boolean, message?: string}} */
 		let r = { valid: true };
 
 		if (row.handler == 'FUNCTION') {
@@ -34,6 +35,11 @@
 		return r;
 	});
 
+	/**
+	 * @param {string} name_function
+	 * @param {unknown} store_data
+	 * @returns {boolean}
+	 */
 	function searchFunction(name_function, store_data) {
 		let r = false;
 		if (store_data && Array.isArray(store_data)) {
@@ -53,8 +59,8 @@
 		//console.log('css_selected >>>> ', css_selected);
 
 		if (css_selected) {
-			css_class = css_selected.css_class;
-			css_icon = css_selected.css_icon;
+			css_class = css_selected.css_class ?? '';
+			css_icon = css_selected.css_icon ?? '';
 		} else {
 			css_class = '';
 			css_icon = '';

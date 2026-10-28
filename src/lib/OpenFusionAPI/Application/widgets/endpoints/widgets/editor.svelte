@@ -27,6 +27,7 @@
 	import TelegramBot from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/handler/telegramBot.svelte';
 	import MCP from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/mcp.svelte';
 	import EndpointLabel from '#lib/OpenFusionAPI/Application/widgets/endpoints/widgets/endpoint_label.svelte';
+	import { getErrorMessage } from '#lib/OpenFusionAPI/Application/utils/errors.js';
 	import { userStore } from '#lib/OpenFusionAPI/Application/utils/stores.js';
 	import AppVars from '#lib/OpenFusionAPI/Application/widgets/application_variables/variables.svelte';
 	import { defaultEndpoint } from '#lib/OpenFusionAPI/Application/utils/static_values.js';
@@ -37,12 +38,32 @@
 	import { getHandlerDocs, EndpointSave } from '#lib/OpenFusionAPI/Application/utils/request.js';
 	import SaveDeploy from '#lib/OpenFusionAPI/Application/widgets/common/saveDeploy.svelte';
 
+	/**
+	 * @typedef {import('#lib/OpenFusionAPI/types/models.js').EndpointRow} EndpointRow
+	 * @typedef {import('#lib/OpenFusionAPI/types/models.js').AppRow} AppRow
+	 * @typedef {import('#lib/OpenFusionAPI/types/models.js').HandlerChangePayload} HandlerChangePayload
+	 * @typedef {import('#lib/OpenFusionAPI/types/models.js').DataTest} DataTest
+	 */
+
+	/**
+	 * @type {{showEditor?: boolean, onsave?: (d: HandlerChangePayload) => void, oncopy?: (ep: EndpointRow) => void}}
+	 */
 	let { showEditor = $bindable(false), onsave = (d) => {}, oncopy = () => {} } = $props();
 
 	let noty = new Notifications();
+	/** @type {EndpointRow} */
 	let endpoint = $state(structuredClone(defaultEndpoint));
+	/** @type {AppRow} */
 	let app = $state({});
+	/** @type {number|string|undefined} */
 	let idendpoint = $state();
+
+	/** @type {number} */
+	let idappNumber = $derived(Number(endpoint.idapp || 0));
+	/** @type {string} */
+	let customDataJson = $derived(JSON.stringify(endpoint.custom_data || {}));
+	/** @type {string} */
+	let corsJson = $derived(JSON.stringify(endpoint.cors || {}));
 
 	let markdown_docs = $state('');
 
@@ -67,6 +88,9 @@
 		});
 	});
 
+	/**
+	 * @param {any} data
+	 */
 	export function setData(data) {
 		app = data.app || {};
 		idendpoint = data.idendpoint || undefined;
@@ -84,7 +108,7 @@
 	 * propios, para que la config vuelva a sus pestañas y quede corregida al
 	 * guardar.
 	 */
-	function unwrapNestedDataTest(data_test) {
+	function unwrapNestedDataTest(/** @type {any} */ data_test) {
 		if (!data_test || typeof data_test !== 'object' || Array.isArray(data_test)) return data_test;
 
 		const TESTER_KEYS = ['query', 'headers', 'body', 'auth', 'last_response'];
@@ -102,7 +126,7 @@
 		if (!Object.keys(code).every((k) => TESTER_KEYS.includes(k))) return data_test;
 
 		// El `code` interno debe traer señales de config del Tester.
-		const esObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
+		const esObj = (/** @type {any} */ v) => v && typeof v === 'object' && !Array.isArray(v);
 		const senal =
 			Array.isArray(code.query) ||
 			Array.isArray(code.headers) ||
@@ -111,7 +135,7 @@
 		if (!senal) return data_test;
 
 		// No pisar datos reales que ya vengan en el contenedor.
-		const filaConDatos = (rows) =>
+		const filaConDatos = (/** @type {any} */ rows) =>
 			Array.isArray(rows) &&
 			rows.some(
 				(r) =>
@@ -130,51 +154,57 @@
 		return code;
 	}
 
-	function normalizeEndpoint(ep) {
+	/**
+	 * @param {EndpointRow} ep
+	 * @returns {EndpointRow}
+	 */
+	function normalizeEndpoint(/** @type {EndpointRow} */ ep) {
 		if (!ep) return ep;
 
 		const jsonFields = ['json_schema', 'mcp', 'ctrl', 'data_test', 'cors', 'headers_test'];
+		const epRec = /** @type {Record<string, unknown>} */ (ep);
 		for (const field of jsonFields) {
-			if (typeof ep[field] === 'string') {
-				const val = ep[field].trim();
+			if (typeof epRec[field] === 'string') {
+				const val = /** @type {string} */ (epRec[field]).trim();
 				if (val === '' || val === 'null' || val === 'undefined') {
-					ep[field] = {};
+					epRec[field] = {};
 				} else {
 					try {
-						ep[field] = JSON.parse(val);
-					} catch (e) {
+						epRec[field] = JSON.parse(val);
+					} catch (/** @type {any} */ e) {
 						console.error(`Error parsing ${field}:`, e);
 						try {
 							noty.push({
-								message: `Field '${field}' has invalid JSON format in database: ${e.message}`,
+								message: `Field '${field}' has invalid JSON format in database: ${/** @type {any} */ (e).message}`,
 								color: 'warning'
 							});
 						} catch (err) {
 							console.error('Failed to show notification:', err);
 						}
-						ep[field] = {};
+						epRec[field] = {};
 					}
 				}
 			}
 		}
 
 		// Ensure structures exist
-		ep.json_schema ??= {};
-		ep.json_schema.in ??= {};
-		ep.json_schema.in.enabled ??= false;
-		ep.json_schema.in.schema ??= {};
-		ep.json_schema.out ??= {};
-		ep.json_schema.out.enabled ??= false;
-		ep.json_schema.out.schema ??= {};
+		const js = /** @type {any} */ (epRec.json_schema);
+		js.in ??= {};
+		js.in.enabled ??= false;
+		js.in.schema ??= {};
+		js.out ??= {};
+		js.out.enabled ??= false;
+		js.out.schema ??= {};
 
-		ep.custom_data ??= {};
-		ep.mcp ??= {};
-		ep.ctrl ??= {};
-		ep.ctrl.users ??= [];
-		ep.ctrl.log ??= {};
-		ep.data_test = ensureDataTestShape(unwrapNestedDataTest(ep.data_test));
+		/** @type {any} */ (epRec.custom_data) ??= {};
+		/** @type {any} */ (epRec.mcp) ??= {};
+		let ctrl = /** @type {any} */ (epRec.ctrl);
+		ctrl ??= {};
+		ctrl.users ??= [];
+		ctrl.log ??= {};
+		epRec.data_test = ensureDataTestShape(unwrapNestedDataTest(epRec.data_test));
 
-		return ep;
+		return /** @type {EndpointRow} */ (epRec);
 	}
 
 	async function setValuesEndpoint() {
@@ -188,7 +218,7 @@
 				endpoint = normalizeEndpoint(merged);
 
 				// Get Handler Docs (actualizar cache para evitar re-fetch del $effect)
-				lastHandlerDocs = endpoint.handler;
+				lastHandlerDocs = /** @type {string} */ (endpoint.handler || '');
 				await getHandlerDocsRequest();
 			} else {
 				//Notification.error('Endpoint not found');
@@ -207,8 +237,8 @@
 		try {
 			// $state.snapshot() ya produce un objeto plano con todas las propiedades;
 			// no se requieren asignaciones adicionales.
-			let endpoint_out = $state.snapshot(endpoint);
-			let resp = await EndpointSave(endpoint_out, $userStore.token);
+			let endpoint_out = /** @type {EndpointRow} */ ($state.snapshot(endpoint));
+			let resp = await EndpointSave(endpoint_out);
 			let response = resp.result;
 
 			if (response && response.idapp == app.idapp) {
@@ -217,7 +247,7 @@
 					message: 'Endpoint saved and deployed successfully.',
 					color: 'success'
 				});
-				onsave();
+				/** @type {any} */ (onsave)();
 			} else {
 				deploying.error = true;
 				deploying.message = `Error: ${resp.message}`;
@@ -225,7 +255,7 @@
 		} catch (error) {
 			console.error(error);
 			deploying.error = true;
-			deploying.message = `Error: ${error.message}`;
+			deploying.message = `Error: ${getErrorMessage(error)}`;
 		}
 	}
 
@@ -236,7 +266,6 @@
 		{
 			name: 'endpoint',
 			label: 'Endpoint',
-			isActive: true,
 			component: tab_endpoint,
 			classIcon: ' fa-solid fa-network-wired '
 		},
@@ -284,6 +313,7 @@
 	]);
 
 	/** Mapa de handler → tabs permitidas. Sin entrada = todas las tabs. */
+	/** @type {Record<string, Set<string>>} */
 	const HANDLER_TABS = {
 		MCP: new Set(['endpoint', 'docs', 'tester', 'backups', 'logs']),
 		NOAPPLY: new Set(['endpoint']),
@@ -401,18 +431,21 @@
 
 	let derivedtabList = $derived.by(() => {
 		if (!app.app) return [];
-		const allowed = HANDLER_TABS[endpoint?.handler];
+		const allowed = HANDLER_TABS[endpoint?.handler ?? ''];
 		if (!allowed) return tabList;
 		return tabList.filter((tab) => allowed.has(tab.name));
 	});
 
 	function clearValues() {
 		let ep = structuredClone(defaultEndpoint);
-		ep.idapp = app.idapp;
-		endpoint = normalizeEndpoint(ep);
+		ep.idapp = /** @type {string} */ (app.idapp || '');
+		endpoint = normalizeEndpoint(/** @type {EndpointRow} */ (ep));
 	}
 
-	function onChangeValueHandler(v) {
+	/**
+	 * @param {HandlerChangePayload} [v]
+	 */
+	function onChangeValueHandler(v = undefined) {
 		console.trace('onChangeValueHandler', v);
 		if (v) {
 			dirty = true;
@@ -506,8 +539,8 @@
 			bind:app
 			bind:validateResource
 			bind:availableURL
-			oncopy={(ep) => {
-				oncopy(ep);
+			oncopy={(/** @type {unknown} */ ep) => {
+				oncopy(/** @type {EndpointRow} */ (ep));
 			}}
 		></Endpoint>
 	{/if}
@@ -515,7 +548,7 @@
 
 {#snippet tab_app_vars()}
 	{#if endpoint && endpoint.idapp}
-		<AppVars bind:idapp={endpoint.idapp} environment={endpoint.environment} isReadOnly={true}
+		<AppVars bind:idapp={idappNumber} environment={endpoint.environment} isReadOnly={true}
 		></AppVars>
 	{/if}
 {/snippet}
@@ -525,15 +558,15 @@
 		<Input
 			label="Enabled"
 			type="checkbox"
-			bind:value={endpoint.json_schema.in.enabled}
+			bind:value={(/** @type {any} */ (endpoint.json_schema)).in.enabled}
 			placeholder="Enabled"
 		/>
 
 		<EditorCode
 			lang="json"
 			showFormat={true}
-			bind:code={endpoint.json_schema.in.schema}
-			onchange={(datajs) => {
+			bind:code={/** @type {any} */ ((/** @type {any} */ (endpoint.json_schema)).in.schema)}
+			onchange={(/** @type {any} */ datajs) => {
 				//	json_schema_in = datajs.code;
 			}}
 		></EditorCode>
@@ -543,15 +576,15 @@
 		<Input
 			label="Enabled"
 			type="checkbox"
-			bind:value={endpoint.json_schema.out.enabled}
+			bind:value={(/** @type {any} */ (endpoint.json_schema)).out.enabled}
 			placeholder="Enabled"
 		/>
 
 		<EditorCode
 			lang="json"
 			showFormat={true}
-			bind:code={endpoint.json_schema.out.schema}
-			onchange={(datajs) => {
+			bind:code={/** @type {any} */ ((/** @type {any} */ (endpoint.json_schema)).out.schema)}
+			onchange={(/** @type {any} */ datajs) => {
 				//	json_schema_out = datajs.code;
 			}}
 		></EditorCode>
@@ -561,7 +594,6 @@
 		tabs={[
 			{
 				label: 'In',
-				isActive: true,
 				component: json_schema_in,
 				classIcon: ' fa-solid fa-arrow-right-to-bracket '
 			},
@@ -598,8 +630,8 @@
 		<EditorCode
 			lang="json"
 			showFormat={true}
-			bind:code={endpoint.custom_data}
-			onchange={(datajs) => {
+			bind:code={customDataJson}
+			onchange={(/** @type {any} */ datajs) => {
 				//	json_schema_in = datajs.code;
 			}}
 		></EditorCode>
@@ -683,7 +715,7 @@
 
 {#snippet tab_mcp()}
 	{#if endpoint?.mcp}
-		<MCP bind:mcp={endpoint.mcp} bind:endpoint></MCP>
+		<MCP bind:mcp={endpoint.mcp}></MCP>
 	{/if}
 {/snippet}
 
@@ -720,7 +752,7 @@
 			<EditorCode
 				lang="json"
 				showFormat={true}
-				bind:code={endpoint.cors}
+				bind:code={corsJson}
 				onchange={() => {
 					onChangeValueHandler();
 				}}
@@ -762,7 +794,7 @@
 	{#if endpoint && endpoint.idendpoint}
 		<Backups
 			bind:idendpoint={endpoint.idendpoint}
-			onselect={(backup) => {
+			onselect={(/** @type {any} */ backup) => {
 				//console.log('Selected backup', backup);
 				if (backup && backup.idendpoint == endpoint.idendpoint) {
 					let snap = $state.snapshot(backup);
@@ -784,7 +816,7 @@
 			method={endpoint.method}
 			url={endpoint.endpoint}
 			methodDisabled={true}
-			onchange={(d) => {
+			onchange={(/** @type {any} */ d) => {
 				endpoint.data_test = ensureDataTestShape(d.data);
 
 				// Limita el tamaño de la respuesta (guard para evitar TypeError si last_response es null)

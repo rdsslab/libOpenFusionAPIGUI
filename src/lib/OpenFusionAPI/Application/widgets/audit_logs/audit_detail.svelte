@@ -3,6 +3,10 @@
 
 	let { show = $bindable(false), detail = $bindable(null), loading = $bindable(false) } = $props();
 
+	/**
+	 * @param {string|null|undefined} iso
+	 * @returns {string}
+	 */
 	function fmtISO(iso) {
 		if (!iso) return '—';
 		// SQLite devuelve "2026-09-21 01:37:15.959 +00:00" (separador espacio, sin T).
@@ -13,12 +17,17 @@
 			.replace(/\s*([+-]\d{2}:\d{2}|Z)\s*$/, 'Z');
 		const d = new Date(s);
 		if (!isNaN(d.getTime())) {
+			/** @param {number} n */
 			const p = (n) => String(n).padStart(2, '0');
 			return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 		}
 		return String(iso);
 	}
 
+	/**
+	 * @param {unknown} value
+	 * @returns {boolean}
+	 */
 	function hasContent(value) {
 		if (value === null || value === undefined) return false;
 		if (typeof value === 'string') return value.trim() !== '';
@@ -33,24 +42,25 @@
 	let statusText = $derived(detail?.status ? 'Success' : detail?.status === false ? 'Failed' : '');
 </script>
 
+{#snippet r01()}
+	<div class="field has-addons">
+		<p class="control">
+			<button
+				class="button is-small"
+				onclick={() => {
+					show = false;
+				}}
+			>
+				<span class="icon is-small"><i class="fa-solid fa-xmark"></i></span>
+				<span>Close</span>
+			</button>
+		</p>
+	</div>
+{/snippet}
+
+
 <SlideFullScreen bind:show>
-	<Level left={[]} right={[r01]}>
-		{#snippet r01()}
-			<div class="field has-addons">
-				<p class="control">
-					<button
-						class="button is-small"
-						onclick={() => {
-							show = false;
-						}}
-					>
-						<span class="icon is-small"><i class="fa-solid fa-xmark"></i></span>
-						<span>Close</span>
-					</button>
-				</p>
-			</div>
-		{/snippet}
-	</Level>
+	<Level left={[]} right={[r01]}></Level>
 
 	{#if loading}
 		<div class="has-text-centered py-6">

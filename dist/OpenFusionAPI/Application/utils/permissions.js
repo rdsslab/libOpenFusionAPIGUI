@@ -4,8 +4,12 @@
  */
 
 /**
+ * @typedef {import('../../types/models.js').UserCtrl} UserCtrl
+ */
+
+/**
  * Core permission check.
- * @param {object|null} userCtrl - User.ctrl value
+ * @param {UserCtrl|null|undefined} userCtrl - User.ctrl value
  * @param {string} environment - dev|qa|prd
  * @param {string} resource - resource name (users, apiclients, endpoints, etc.)
  * @param {string} action - read|create|edit|delete
@@ -29,7 +33,7 @@ export function hasPermission(userCtrl, environment, resource, action) {
 
 /**
  * Checks permission using the current user from the store.
- * @param {object} user - userStore.user (contains ctrl)
+ * @param {{ctrl?: UserCtrl}|null|undefined} user - userStore.user (contains ctrl)
  * @param {string} environment
  * @param {string} resource
  * @param {string} action

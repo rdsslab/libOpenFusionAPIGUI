@@ -8,7 +8,7 @@
 			? Environment.find((item) => {
 					return row.environment == item.id;
 				})
-			: [];
+			: undefined;
 	});
 </script>
 

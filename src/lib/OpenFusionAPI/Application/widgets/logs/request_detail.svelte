@@ -169,6 +169,6 @@
 	</div>
 </Modal>
 
-{#snippet jsonBlock(data, label)}
+{#snippet jsonBlock(/** @type {unknown} */ data, /** @type {string} */ label)}
 	<JSONView jsonObject={data} {label} maxHeight={340} showBox={false} />
 {/snippet}

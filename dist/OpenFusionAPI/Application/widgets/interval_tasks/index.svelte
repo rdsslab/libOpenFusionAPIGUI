@@ -34,10 +34,8 @@
 		currentUserHasPermission,
 		getDefaultEnvironment
 	} from '../../utils/permissions.js';
-	import {
-		GetEndpointsByIdapp,
-		GetAPIKeys
-	} from '../../utils/request.js';
+	import { getErrorMessage } from '../../utils/errors.js';
+	import { GetEndpointsByIdapp, GetAPIKeys } from '../../utils/request.js';
 
 	let { idapp = $bindable() } = $props();
 
@@ -54,21 +52,33 @@
 	const canDelete = $derived(
 		currentUserHasPermission(currentUser, permEnv, 'interval_tasks', 'delete')
 	);
+	/**
+	 * @typedef {import('../../../types/models.js').IntervalTaskRow} IntervalTaskRow
+	 * @typedef {import('../../../types/models.js').EndpointRow} EndpointRow
+	 * @typedef {import('../../../types/models.js').IntervalTaskEvent} IntervalTaskEvent
+	 */
 	let showEditor = $state(false);
 	let runNowPending = $state(false);
 	let stopNowPending = $state(false);
+	/** @type {IntervalTaskRow} */
 	let historyTask = $state({});
 	// Debe arrancar con la forma completa: los `bind:option` de BasicSelect fallan si el
 	// campo llega `undefined` en el primer render (SlideFullScreen monta su contenido
 	// aunque esté cerrado).
+	/** @type {IntervalTaskRow} */
 	let selectedRow = $state(defaultValuesIntervalTask({}));
+	let /** @type {string} */ paramsJson = $state(JSON.stringify(selectedRow.params ?? {}));
+	/** @type {Array<{name: string, value: string|number}>} */
 	let optionsEndpoints = $state([]);
+	/** @type {Array<EndpointRow>} */
 	let endpoints = $state([]);
+	/** @type {Array<{id: string|number, value: string}>} */
 	let optionsApiKeys = $state([]);
 
 	let activeTab = $state(0);
 	const TAB_HISTORY = 2;
 	const TAB_RESPONSE = 3;
+	/** @type {Array<{name: string, label: string, component: import('svelte').Snippet, classIcon: string, disabled?: boolean}>} */
 	let tabList = $state([
 		{
 			name: 'config',
@@ -123,10 +133,12 @@
 	// Selección simple: las acciones por fila (Run now, Reset attempts) operan sobre una.
 	let selectionType = $state(1);
 
+	/** @type {Array<IntervalTaskRow>} */
 	let DataTableTasks = $state([]);
 	// Un GET iniciado antes de un evento websocket puede terminar después y pisar
 	// `Running` con su snapshot viejo. Se conserva el último evento por tarea para
 	// reaplicarlo únicamente sobre respuestas que ya nacieron desactualizadas.
+	/** @type {Map<string, Record<string, unknown> & {generation: number}>} */
 	const latestRuntimeEvents = new Map();
 	let runtimeEventGeneration = 0;
 	const runtimeEventFields = [
@@ -141,17 +153,25 @@
 		'task_enabled'
 	];
 
+	/**
+	 * @param {IntervalTaskRow} task
+	 * @param {IntervalTaskEvent & Record<string, unknown>} ev
+	 * @returns {IntervalTaskRow}
+	 */
 	function applyRuntimeEvent(task, ev) {
+		/** @type {Record<string, unknown>} */
+		const evRec = ev;
+		/** @type {Record<string, unknown>} */
 		const updated = { ...task };
 		for (const field of runtimeEventFields) {
-			if (ev[field] !== undefined) updated[field] = ev[field];
+			if (evRec[field] !== undefined) updated[field] = evRec[field];
 		}
-		if (ev.enabled !== undefined) updated.task_enabled = ev.enabled;
-		if (ev.started_at && ev.last_run === undefined) updated.last_run = ev.started_at;
-		if (ev.duration_ms !== undefined && ev.duration_ms !== null) {
-			updated.last_exec_time = Math.round(ev.duration_ms);
+		if (evRec.enabled !== undefined) updated.task_enabled = /** @type {boolean} */ (evRec.enabled);
+		if (evRec.started_at && evRec.last_run === undefined) updated.last_run = /** @type {string|null} */ (evRec.started_at);
+		if (evRec.duration_ms !== undefined && evRec.duration_ms !== null) {
+			updated.last_exec_time = Math.round(/** @type {number} */ (evRec.duration_ms));
 		}
-		return updated;
+		return /** @type {IntervalTaskRow} */ (updated);
 	}
 	// Toda clave que devuelva la API y no esté declarada aquí se renderiza cruda, así que
 	// los campos nuevos deben aparecer todos, aunque sea para ocultarlos.
@@ -236,7 +256,7 @@
 			decorator: {
 				component: ColumnTypes.TextLimit,
 				props: {
-					suffix: (row) => row?.disabled_by === 'system' ? ' ⚠ Suspended by errors' : ''
+					suffix: (/** @type {IntervalTaskRow} */ row) => (row?.disabled_by === 'system' ? ' ⚠ Suspended by errors' : '')
 				}
 			}
 		},
@@ -309,6 +329,9 @@
 	});
 
 	/** Formatea una fecha del servidor; devuelve '—' si no hay valor. */
+	/**
+	 * @param {string|number|null|undefined} value
+	 */
 	function formatMoment(value) {
 		if (!value) return '—';
 
@@ -316,21 +339,23 @@
 		return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
 	}
 
-	$effect(async () => {
-		idapp;
-		await loadTasks();
-		let app = await GetEndpointsByIdapp(idapp, $userStore.token);
-		if (app.endpoints) {
-			endpoints = app.endpoints;
-			//console.log(ep);
-			if (endpoints && endpoints.length > 0) {
-				optionsEndpoints = endpoints.map((e) => {
-					return { name: `[${e.method}] ${e.endpoint}`, value: e.idendpoint };
-				});
-			}
-		}
+	$effect(() => {
+		selectedRow.params = JSON.parse(paramsJson || '{}');
 
-		await loadApiKeys();
+		idapp;
+		void (async () => {
+			await loadTasks();
+			const app = await GetEndpointsByIdapp(/** @type {string|number} */ (idapp ?? ''));
+			if (app && app.endpoints) {
+				endpoints = app.endpoints;
+				if (endpoints && endpoints.length > 0) {
+					optionsEndpoints = endpoints.map((e) => {
+						return { name: `[${e.method}] ${e.endpoint}`, value: e.idendpoint ?? '' };
+					});
+				}
+			}
+			await loadApiKeys();
+		})();
 	});
 
 	// El planificador publica el inicio y el final de cada ejecución: se refleja en la
@@ -341,10 +366,11 @@
 		if (!ev?.idtask) return;
 
 		untrack(() => {
-			latestRuntimeEvents.set(String(ev.idtask), {
-				...ev,
-				generation: ++runtimeEventGeneration
+			const rec = /** @type {Record<string, unknown> & {generation: number}} */ ({
+				generation: ++runtimeEventGeneration,
+				...ev
 			});
+			latestRuntimeEvents.set(String(ev.idtask), rec);
 
 			DataTableTasks = DataTableTasks.map((t) => {
 				if (String(t.idtask) !== String(ev.idtask)) return t;
@@ -375,7 +401,7 @@
 		try {
 			const keys = await GetAPIKeys(idapp);
 			optionsApiKeys = [
-				{ id: null, value: '— Sin API Key —' },
+				{ id: undefined, value: '— Sin API Key —' },
 				...(Array.isArray(keys) ? keys : []).map((k) => ({
 					id: k.idkey,
 					value: `#${k.idkey} ${k.description || ''} ${k.enabled ? '' : '(disabled)'}`.trim()
@@ -383,7 +409,7 @@
 			];
 		} catch (error) {
 			console.error('Error loading api keys:', error);
-			optionsApiKeys = [{ id: null, value: '— Sin API Key —' }];
+			optionsApiKeys = [{ id: '__none', value: '— Sin API Key —' }];
 		}
 	}
 
@@ -418,7 +444,10 @@
 		}
 	}
 
-	/** `params` llega como objeto desde la API, pero se normaliza por si viniera serializado. */
+	/** `params` llega como objeto desde la API, pero se normaliza por si viniera serializado.
+	 * @param {IntervalTaskRow} row
+	 * @returns {IntervalTaskRow}
+	 */
 	function normalizeParams(row) {
 		if (typeof row.params === 'string') {
 			try {
@@ -434,19 +463,20 @@
 
 	async function saveInterval() {
 		if (idapp) {
+			/** @type {IntervalTaskRow} */
 			let row = $state.snapshot(selectedRow);
 			row.params = row.params ?? {};
 
 			// El estado y las marcas de tiempo los escribe el planificador: reenviarlos
 			// sobrescribiría el estado real con la copia tomada al abrir el editor.
-			for (const field of INTERVAL_TASK_RUNTIME_FIELDS) delete row[field];
+			const rowRecord = /** @type {Record<string, unknown>} */ (row);
+			for (const field of INTERVAL_TASK_RUNTIME_FIELDS) delete rowRecord[field];
 
 			if (row.schedule_mode === 'cron') {
 				delete row.interval;
 			} else {
-				row.cron = null;
+				row.cron = undefined;
 			}
-			if (row.idkey === '' || row.idkey === undefined) row.idkey = null;
 
 			let resp = await uF.post({ url: url_paths.upsertIntervalTasksByIdTask, data: row });
 			let jresp = await resp.json();
@@ -467,6 +497,9 @@
 		return false;
 	}
 
+	/**
+	 * @param {Array<IntervalTaskRow>} tasks
+	 */
 	async function deleteTasks(tasks) {
 		let idtasks = tasks.map((t) => {
 			return t.idtask;
@@ -477,6 +510,14 @@
 		await loadTasks();
 	}
 
+	/**
+	 * @param {IntervalTaskRow} task
+	 * @returns {Promise<boolean>}
+	 */
+	/**
+	 * @param {IntervalTaskRow|null} task
+	 * @returns {Promise<boolean>}
+	 */
 	async function runNow(task) {
 		if (!task?.idtask || runNowPending) return false;
 
@@ -496,13 +537,16 @@
 			await loadTasks();
 			return true;
 		} catch (error) {
-			alert(error?.message || 'No se pudo programar la ejecución.');
+			alert(getErrorMessage(error) || 'No se pudo programar la ejecución.');
 			return false;
 		} finally {
 			runNowPending = false;
 		}
 	}
 
+	/**
+	 * @param {IntervalTaskRow} task
+	 */
 	async function resetAttempts(task) {
 		if (!task?.idtask) return;
 
@@ -521,6 +565,14 @@
 	 * ABORTED (status 5) tanto en la tarea como en su historial, sin tocar
 	 * `failed_attempts` ni aplicar backoff: la programación no cambia, así que la
 	 * siguiente corrida sigue occurriendo igual.
+	 */
+	/**
+	 * @param {IntervalTaskRow} task
+	 * @returns {Promise<boolean>}
+	 */
+	/**
+	 * @param {IntervalTaskRow|null} task
+	 * @returns {Promise<boolean>}
 	 */
 	async function stopNow(task) {
 		if (!task?.idtask || stopNowPending) return false;
@@ -563,7 +615,7 @@
 			return jresp?.stopped === true;
 		} catch (error) {
 			notify.push({
-				message: `No se pudo detener la tarea: ${error?.message || 'error desconocido'}`,
+				message: `No se pudo detener la tarea: ${getErrorMessage(error) || 'error desconocido'}`,
 				color: 'danger'
 			});
 			return false;
@@ -573,6 +625,123 @@
 	}
 </script>
 
+	{#snippet r01()}
+		<div class="field has-addons">
+			{#if selectedRow.idtask}
+				<p class="control">
+					<button
+						class="button is-small is-warning"
+						class:is-loading={runNowPending}
+						disabled={runNowPending ||
+							!runtime?.task_enabled ||
+							Boolean(suspensionStatus) ||
+							(Number(runtime?.status) === 1 && !runtime?.allow_concurrent)}
+						title={!runtime?.task_enabled
+							? 'Enable and save the task before running it'
+							: suspensionStatus
+								? 'The scheduler suspended this task: fix the cause and use Reset attempts'
+								: Number(runtime?.status) === 1 && !runtime?.allow_concurrent
+									? 'The task is already running and does not allow concurrency'
+									: 'Runs the last saved configuration immediately'}
+						onclick={() => runNow(runtime)}
+					>
+						<span class="icon is-small"><i class="fa-solid fa-bolt"></i></span>
+						<span>Run now</span>
+					</button>
+				</p>
+				<p class="control">
+					<button
+						class="button is-small is-danger"
+						class:is-loading={stopNowPending}
+						disabled={stopNowPending || Number(runtime?.status) !== 1}
+						title={Number(runtime?.status) === 1
+							? 'Aborts the execution in flight; the task is not disabled and keeps its schedule'
+							: 'There is no execution in flight to stop'}
+						onclick={() => stopNow(runtime)}
+					>
+						<span class="icon is-small"><i class="fa-solid fa-stop"></i></span>
+						<span>Stop now</span>
+					</button>
+				</p>
+			{/if}
+			<p class="control">
+				<button
+					class="button is-small is-link"
+					onclick={async () => {
+						if (!confirm('Are you sure you want to save and deploy this task?')) return;
+						// saveInterval() notifica el resultado; el editor permanece abierto
+						// tanto si el guardado tuvo éxito como si falló.
+						await saveInterval();
+					}}
+				>
+					<span class="icon is-small">
+						<i class="fa-solid fa-rocket"></i>
+					</span>
+					<span>Save & Deploy</span>
+				</button>
+			</p>
+			<p class="control">
+				<button
+					class="button is-small"
+					onclick={() => {
+						showEditor = false;
+					}}
+				>
+					<span class="icon is-small">
+						<i class="fa-solid fa-xmark"></i>
+					</span>
+					<span>Cancel</span>
+				</button>
+			</p>
+		</div>
+	{/snippet}
+
+
+{#snippet taskActions()}
+	<div class="field has-addons">
+		<p class="control">
+			<button
+				class="button is-small"
+				disabled={!historyTask?.idtask || historyTaskSuspended}
+				title={!historyTask?.idtask
+					? 'Select a single task to act on it'
+					: historyTaskSuspended
+						? 'The scheduler suspended this task: fix the cause and use Reset attempts'
+						: 'Despierta el planificador y ejecuta la tarea inmediatamente'}
+				onclick={() => runNow(historyTask)}
+			>
+				<span class="icon is-small"><i class="fa-solid fa-bolt"></i></span>
+				<span>Run now</span>
+			</button>
+		</p>
+		<p class="control">
+			<button
+				class="button is-small is-danger"
+				disabled={!historyTask?.idtask || Number(historyTaskRuntime?.status) !== 1}
+				title={!historyTask?.idtask
+					? 'Select a single task to act on it'
+					: Number(historyTaskRuntime?.status) === 1
+						? 'Aborta la ejecución en vuelo; la tarea no se deshabilita y conserva su programación'
+						: 'No hay ninguna ejecución en vuelo que detener'}
+				onclick={() => stopNow(historyTask)}
+			>
+				<span class="icon is-small"><i class="fa-solid fa-stop"></i></span>
+				<span>Stop now</span>
+			</button>
+		</p>
+		<p class="control">
+			<button
+				class="button is-small"
+				disabled={!historyTask?.idtask}
+				title="Reinicia el contador de fallos y levanta la suspensión si el planificador la detuvo. No reactiva una tarea apagada por el usuario"
+				onclick={() => resetAttempts(historyTask)}
+			>
+				<span class="icon is-small"><i class="fa-solid fa-rotate-left"></i></span>
+				<span>Reset attempts</span>
+			</button>
+		</p>
+	</div>
+{/snippet}
 <Table
 	bind:RawDataTable={DataTableTasks}
 	bind:columns
@@ -582,8 +751,9 @@
 	showDeleteButton={canDelete}
 	showEditButton={canEdit}
 	right_items={[taskActions]}
-	oneditrow={(r) => {
+	oneditrow={(/** @type {IntervalTaskRow} */ r) => {
 		selectedRow = normalizeParams(defaultValuesIntervalTask(r));
+		paramsJson = JSON.stringify(selectedRow.params ?? {});
 		// La lista devuelve el flag como `task_enabled` y como TINYINT(1): sin `!!` el
 		// botón booleano mostraría "1" en lugar de "true".
 		selectedRow.enabled = !!r.task_enabled;
@@ -592,139 +762,23 @@
 	}}
 	onnewrow={() => {
 		selectedRow = normalizeParams(defaultValuesIntervalTask({}));
+		paramsJson = JSON.stringify(selectedRow.params ?? {});
 		resetTabs();
 		showEditor = true;
 	}}
-	onselectrows={(selected) => {
+	onselectrows={(/** @type {{rows: Array<IntervalTaskRow>}} */ selected) => {
 		historyTask = selected?.rows?.length === 1 ? selected.rows[0] : {};
 	}}
-	ondeleterow={async (r) => {
+	ondeleterow={async (/** @type {{rows: Array<IntervalTaskRow>}} */ r) => {
 		if (r.rows.length > 0 && confirm('Are you sure you want to delete this task?')) {
 			await deleteTasks(r.rows);
 		}
 	}}
->
-	{#snippet taskActions()}
-		<div class="field has-addons">
-			<p class="control">
-				<button
-					class="button is-small"
-					disabled={!historyTask?.idtask || historyTaskSuspended}
-					title={!historyTask?.idtask
-						? 'Select a single task to act on it'
-						: historyTaskSuspended
-							? 'The scheduler suspended this task: fix the cause and use Reset attempts'
-							: 'Despierta el planificador y ejecuta la tarea inmediatamente'}
-					onclick={() => runNow(historyTask)}
-				>
-					<span class="icon is-small"><i class="fa-solid fa-bolt"></i></span>
-					<span>Run now</span>
-				</button>
-			</p>
-			<p class="control">
-				<button
-					class="button is-small is-danger"
-					disabled={!historyTask?.idtask || Number(historyTaskRuntime?.status) !== 1}
-					title={!historyTask?.idtask
-						? 'Select a single task to act on it'
-						: Number(historyTaskRuntime?.status) === 1
-							? 'Aborta la ejecución en vuelo; la tarea no se deshabilita y conserva su programación'
-							: 'No hay ninguna ejecución en vuelo que detener'}
-					onclick={() => stopNow(historyTask)}
-				>
-					<span class="icon is-small"><i class="fa-solid fa-stop"></i></span>
-					<span>Stop now</span>
-				</button>
-			</p>
-			<p class="control">
-				<button
-					class="button is-small"
-					disabled={!historyTask?.idtask}
-					title="Reinicia el contador de fallos y levanta la suspensión si el planificador la detuvo. No reactiva una tarea apagada por el usuario"
-					onclick={() => resetAttempts(historyTask)}
-				>
-					<span class="icon is-small"><i class="fa-solid fa-rotate-left"></i></span>
-					<span>Reset attempts</span>
-				</button>
-			</p>
-		</div>
-	{/snippet}
-</Table>
+></Table>
 
 {#if idapp}
 	<SlideFullScreen bind:show={showEditor}>
-		<Level left={[]} right={[r01]}>
-			{#snippet r01()}
-				<div class="field has-addons">
-					{#if selectedRow.idtask}
-						<p class="control">
-							<button
-								class="button is-small is-warning"
-								class:is-loading={runNowPending}
-								disabled={runNowPending ||
-									!runtime?.task_enabled ||
-									Boolean(suspensionStatus) ||
-									(Number(runtime?.status) === 1 && !runtime?.allow_concurrent)}
-								title={!runtime?.task_enabled
-									? 'Enable and save the task before running it'
-									: suspensionStatus
-										? 'The scheduler suspended this task: fix the cause and use Reset attempts'
-										: Number(runtime?.status) === 1 && !runtime?.allow_concurrent
-											? 'The task is already running and does not allow concurrency'
-											: 'Runs the last saved configuration immediately'}
-								onclick={() => runNow(runtime)}
-							>
-								<span class="icon is-small"><i class="fa-solid fa-bolt"></i></span>
-								<span>Run now</span>
-							</button>
-						</p>
-						<p class="control">
-							<button
-								class="button is-small is-danger"
-								class:is-loading={stopNowPending}
-								disabled={stopNowPending || Number(runtime?.status) !== 1}
-								title={Number(runtime?.status) === 1
-									? 'Aborts the execution in flight; the task is not disabled and keeps its schedule'
-									: 'There is no execution in flight to stop'}
-								onclick={() => stopNow(runtime)}
-							>
-								<span class="icon is-small"><i class="fa-solid fa-stop"></i></span>
-								<span>Stop now</span>
-							</button>
-						</p>
-					{/if}
-					<p class="control">
-						<button
-							class="button is-small is-link"
-							onclick={async () => {
-								if (!confirm('Are you sure you want to save and deploy this task?')) return;
-								// saveInterval() notifica el resultado; el editor permanece abierto
-								// tanto si el guardado tuvo éxito como si falló.
-								await saveInterval();
-							}}
-						>
-							<span class="icon is-small">
-								<i class="fa-solid fa-rocket"></i>
-							</span>
-							<span>Save & Deploy</span>
-						</button>
-					</p>
-					<p class="control">
-						<button
-							class="button is-small"
-							onclick={() => {
-								showEditor = false;
-							}}
-						>
-							<span class="icon is-small">
-								<i class="fa-solid fa-xmark"></i>
-							</span>
-							<span>Cancel</span>
-						</button>
-					</p>
-				</div>
-			{/snippet}
-		</Level>
+		<Level left={[]} right={[r01]}></Level>
 
 		{#if runtime && runtimeStatus}
 			<!-- Solo lectura: lo escribe el planificador. Se actualiza solo porque
@@ -761,7 +815,7 @@
 						<div class="message-body">
 							{suspensionStatus.description}
 							{#if runtime.disabled_reason}
-								<br /><span class="is-size-7">{runtime.disabled_reason}</span>
+								<br /><span class="is-size-7">{runtime?.disabled_reason}</span>
 							{/if}
 						</div>
 					</article>
@@ -774,7 +828,7 @@
 					</div>
 					<div class="column is-one-quarter">
 						<p class="heading">Next run</p>
-						<p>{formatMoment(runtime.next_run)}{nextIn ? ` (in ${nextIn})` : ''}</p>
+						<p>{formatMoment(runtime?.next_run)}{nextIn ? ` (in ${nextIn})` : ''}</p>
 					</div>
 					<div class="column is-one-quarter">
 						<p class="heading">Last duration</p>
@@ -786,7 +840,7 @@
 							class:has-text-danger={Number(runtime.max_failed_attempts ?? 0) > 0 &&
 								Number(runtime.failed_attempts ?? 0) >= Number(runtime.max_failed_attempts)}
 						>
-							{runtime.failed_attempts ?? 0} / {runtime.max_failed_attempts ?? 0}
+							{runtime?.failed_attempts ?? 0} / {runtime?.max_failed_attempts ?? 0}
 						</p>
 					</div>
 				</div>
@@ -806,7 +860,7 @@
 			placeholder="Select the endpoint this task will call"
 			classLabel="is-small"
 			classInput="is-small"
-			bind:options={optionsEndpoints}
+			options={optionsEndpoints}
 			bind:selectedValue={selectedRow.idendpoint}
 		/>
 
@@ -945,9 +999,9 @@
 					step={1}
 					bind:value={selectedRow.max_failed_attempts}
 				></Input>
-			{#if Number(selectedRow.max_failed_attempts ?? 0) === 0}
-				<p class="is-size-7 has-text-info mt-1">Task will not be disabled due to errors.</p>
-			{/if}
+				{#if Number(selectedRow.max_failed_attempts ?? 0) === 0}
+					<p class="is-size-7 has-text-info mt-1">Task will not be disabled due to errors.</p>
+				{/if}
 			</div>
 			<div class="column is-one-third">
 				<Input
@@ -967,7 +1021,7 @@
 {#snippet tab_params()}
 	<!-- El planificador espera { data: {...}, headers: {...} }; con lang="json"
 	     EditorCode trabaja sobre el objeto y no propaga JSON inválido. -->
-	<EditorCode lang="json" showFormat={true} bind:code={selectedRow.params}></EditorCode>
+	<EditorCode lang="json" showFormat={true} bind:code={paramsJson}></EditorCode>
 {/snippet}
 
 {#snippet tab_history()}
@@ -986,7 +1040,7 @@
 	<p class="heading">Last response</p>
 	{#if lastResponse}
 		<p class="help mb-2">
-			Body returned by the last execution ({formatMoment(runtime.last_run)}).
+			Body returned by the last execution ({formatMoment(runtime?.last_run)}).
 		</p>
 		<pre class="is-size-7 last-response">{lastResponse}</pre>
 	{:else}

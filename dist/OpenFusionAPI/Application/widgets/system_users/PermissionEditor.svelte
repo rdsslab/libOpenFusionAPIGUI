@@ -1,6 +1,7 @@
 <script>
 	import { Tab } from '@rdsslab/svelte-components';
 
+	/** @type {{ctrl: import('../../../types/models.js').UserCtrl}} */
 	let { ctrl = $bindable({}) } = $props();
 
 	const environments = ['dev', 'qa', 'prd'];
@@ -21,36 +22,57 @@
 		{ key: 'settings', label: 'Settings', actions: ['read', 'edit'] }
 	];
 
-	let activeTab = $state('prd');
+	/**
+	 * `Tab` trabaja con el indice del tab activo, no con su id. El default es
+	 * `prd` (ultimo elemento de `environments`).
+	 */
+	let activeTab = $state(environments.indexOf('prd'));
+	const activeEnvironment = $derived(environments[activeTab] ?? 'prd');
 
-	function ensureCtrl() {
+	/**
+	 * Garantiza que `ctrl.env` exista y lo devuelve ya tipado.
+	 * @returns {Record<string, import('../../../types/models.js').EnvPermissions>}
+	 */
+	function ensureEnv() {
 		if (!ctrl || typeof ctrl !== 'object') ctrl = {};
 		if (!ctrl.env || typeof ctrl.env !== 'object') ctrl.env = {};
+		return ctrl.env;
 	}
 
 	function toggleAsAdmin() {
-		ensureCtrl();
+		ensureEnv();
 		ctrl.as_admin = ctrl.as_admin === true ? false : true;
 		ctrl = { ...ctrl };
 	}
 
+	/**
+	 * @param {string} environment
+	 * @param {string} resource
+	 * @param {string} action
+	 */
 	function togglePermission(environment, resource, action) {
-		ensureCtrl();
-		if (!ctrl.env[environment]) ctrl.env[environment] = {};
-		if (!ctrl.env[environment][resource]) ctrl.env[environment][resource] = {};
+		const env = ensureEnv();
+		if (!env[environment]) env[environment] = {};
+		if (!env[environment][resource]) env[environment][resource] = {};
 
-		const current = ctrl.env[environment][resource][action] === true;
-		ctrl.env[environment][resource][action] = !current;
+		const current = env[environment][resource][action] === true;
+		env[environment][resource][action] = !current;
 
-		if (Object.keys(ctrl.env[environment][resource]).length === 0) {
-			delete ctrl.env[environment][resource];
+		if (Object.keys(env[environment][resource]).length === 0) {
+			delete env[environment][resource];
 		}
-		if (Object.keys(ctrl.env[environment]).length === 0) {
-			delete ctrl.env[environment];
+		if (Object.keys(env[environment]).length === 0) {
+			delete env[environment];
 		}
 		ctrl = { ...ctrl };
 	}
 
+	/**
+	 * @param {string} environment
+	 * @param {string} resource
+	 * @param {string} action
+	 * @returns {boolean}
+	 */
 	function getPermission(environment, resource, action) {
 		return ctrl?.env?.[environment]?.[resource]?.[action] === true;
 	}
@@ -79,7 +101,7 @@
 	{#if ctrl.as_admin !== true}
 		<Tab
 			tabs={environments.map((e) => ({ id: e, label: e.toUpperCase() }))}
-			bind:selected={activeTab}
+			bind:active={activeTab}
 		/>
 
 		<div class="permission-grid mt-3">
@@ -102,8 +124,8 @@
 									{#if res.actions.includes(act)}
 										<input
 											type="checkbox"
-											checked={getPermission(activeTab, res.key, act)}
-											onchange={() => togglePermission(activeTab, res.key, act)}
+											checked={getPermission(activeEnvironment, res.key, act)}
+											onchange={() => togglePermission(activeEnvironment, res.key, act)}
 										/>
 									{:else}
 										<span class="has-text-grey-light">—</span>

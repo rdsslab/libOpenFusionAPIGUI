@@ -10,7 +10,20 @@
 
 	let notify = new Notifications();
 
-	let { endpoint = $bindable({}), onchange = () => {} } = $props();
+	/**
+	 * @typedef {import('../../../../../types/models.js').TextCustomData} TextCustomData
+	 * @typedef {import('../../../../../types/models.js').CustomData} CustomData
+	 * @typedef {import('../../../../../types/models.js').EndpointRow} EndpointRow
+	 * @typedef {import('../../../../../types/models.js').HandlerChangePayload} HandlerChangePayload
+	 */
+
+	/**
+	 * @type {{endpoint: EndpointRow, onchange: (data: HandlerChangePayload) => void}}
+	 */
+	let {
+		endpoint = $bindable(/** @type {EndpointRow} */ ({})),
+		onchange = () => {}
+	} = $props();
 
 	const mimeTypes = [
 		{ id: 'text/plain', value: 'text/plain', enabled: true, editor: 'text' },
@@ -62,11 +75,12 @@
 		{ id: 'text/x-component', value: 'text/x-component', enabled: true, editor: 'text' }
 	];
 
-	let tabList = $state([{ label: 'Payload', isActive: true, component: tab_payload }]);
+	let tabList = $state([{ label: 'Payload', component: tab_payload }]);
 
 	let payload = $state('');
+	/** @type {TextCustomData} */
 	let custom_data = $state({ mimeType: 'text/plain' });
-	let file_selected = $state(undefined);
+	let file_selected = $state(/** @type {File|undefined} */ (undefined));
 
 	// langEditor se calcula automáticamente según mimeType
 	let langEditor = $derived(mimeTypes.find((m) => m.id === custom_data.mimeType)?.editor ?? 'text');
@@ -79,7 +93,11 @@
 
 	function parseCode() {
 		payload = endpoint.code ?? '';
-		custom_data = { ...(endpoint.custom_data ?? {}), mimeType: (endpoint.custom_data?.mimeType ?? 'text/plain'), fileName: (endpoint.custom_data?.fileName ?? '') };
+		custom_data = {
+			...(endpoint.custom_data ?? {}),
+			mimeType: endpoint.custom_data?.mimeType ?? 'text/plain',
+			fileName: endpoint.custom_data?.fileName ?? ''
+		};
 	}
 
 	function getData() {
@@ -94,7 +112,8 @@
 	}
 
 	function fnOnChange() {
-		onchange(getData());
+		const data = getData();
+		onchange(/** @type {HandlerChangePayload} */ (data));
 	}
 </script>
 
@@ -110,7 +129,7 @@
 			lang={langEditor}
 			bind:code={payload}
 			showFormat={true}
-			onchange={(c) => {
+			onchange={(/** @type {{code: string}} */ c) => {
 				fnOnChange();
 			}}
 		></EditorCode>
@@ -163,8 +182,9 @@
 			type="file"
 			title="Select file"
 			placeholder="Select file"
-			onchange={(c) => {
-				const selectedFile = c.target.files[0];
+			onchange={(/** @type {Event & {currentTarget: HTMLInputElement}} */ c) => {
+				const input = c.currentTarget;
+				const selectedFile = input.files?.[0];
 				if (!selectedFile) {
 					custom_data.fileName = '';
 					file_selected = undefined;
@@ -176,7 +196,7 @@
 					notify.push({ message: 'The selected file exceeds the 1MB limit.', color: 'danger' });
 					file_selected = undefined;
 					custom_data.fileName = '';
-					c.target.value = ''; // Clears the file input in the UI
+					input.value = ''; // Clears the file input in the UI
 					return;
 				}
 
@@ -189,12 +209,17 @@
 
 				if (isText) {
 					const reader = new FileReader();
-					reader.onload = (e) => {
-						payload = e.target.result;
+					reader.onload = (event) => {
+						const content = event.target?.result;
+						if (typeof content !== 'string') {
+							notify.push({ message: 'The selected file could not be read.', color: 'danger' });
+							return;
+						}
+						payload = content;
 						custom_data.isBase64 = false;
 						custom_data.fileName = undefined;
 						file_selected = undefined;
-						c.target.value = ''; // Clear input so it can be re-selected if needed
+						input.value = ''; // Clear input so it can be re-selected if needed
 						custom_data.mimeType = mimeType;
 						fnOnChange();
 					};

@@ -3,6 +3,7 @@
 	import { storeCacheSize } from '../../../utils/stores.js';
 	let { value = $bindable(), row = $bindable() } = $props();
 
+	/** @type {{bytes?: number}} */
 	let value_cache = $state({});
 
 	const unsubscribe = storeCacheSize.subscribe((cache_data) => {

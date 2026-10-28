@@ -1,6 +1,7 @@
 import { url_paths } from './paths.js';
 import uFetch from '@rdsslab/uFetch';
 import { createEndpoint } from './utils.js';
+import { getErrorMessage } from './errors.js';
 import {
 	listHandlerStore,
 	listMethodStore,
@@ -10,6 +11,15 @@ import {
 	listAppVars,
 	authEventStore
 } from './stores.js';
+
+/**
+ * @typedef {import('../../types/models.js').EndpointRow} EndpointRow
+ */
+
+/**
+ * Cuerpo/consulta JSON que la GUI reenvía tal cual al backend.
+ * @typedef {Record<string, unknown>|Array<unknown>} JsonBody
+ */
 
 /**
  * Verifica el status HTTP de una respuesta.
@@ -25,6 +35,9 @@ function checkStatus(response) {
 	return response;
 }
 
+/**
+ * @param {string} [token]
+ */
 export const getEnvironmentList = async (token) => {
 	let uf = new uFetch();
 	let environment_list = [];
@@ -37,11 +50,15 @@ export const getEnvironmentList = async (token) => {
 			environment_list = [];
 		}
 	} catch (error) {
-		console.error(error.message);
+		console.error(getErrorMessage(error));
 	}
 	return environment_list;
 };
 
+/**
+ * @param {number|string} idapp
+ * @param {string} [token]
+ */
 export const GetApp = async (idapp, token) => {
 	if (idapp) {
 		let uf = new uFetch();
@@ -61,6 +78,10 @@ export const GetApp = async (idapp, token) => {
 	}
 };
 
+/**
+ * @param {string} username
+ * @param {string} password
+ */
 export const LoginRequest = async (username, password) => {
 	let uf = new uFetch();
 	uf.SetBasicAuthorization(username, password);
@@ -113,6 +134,10 @@ export const ConfirmResetPassword = async (data) => {
 	return await res.json();
 };
 
+/**
+ * @param {number|string} idapp
+ * @param {string} [token]
+ */
 export const GetAppBackup = async (idapp, token) => {
 	if (idapp) {
 		let uf = new uFetch();
@@ -132,6 +157,9 @@ export const GetAppBackup = async (idapp, token) => {
 	}
 };
 
+/**
+ * @param {unknown} app
+ */
 export const RestoreAppBackup = async (app) => {
 	if (app) {
 		let uf = new uFetch();
@@ -151,6 +179,9 @@ export const RestoreAppBackup = async (app) => {
 	}
 };
 
+/**
+ * @param {string} [token]
+ */
 export const GetAllAppsBackup = async (token) => {
 	let uf = new uFetch();
 
@@ -161,6 +192,9 @@ export const GetAllAppsBackup = async (token) => {
 	return response;
 };
 
+/**
+ * @param {unknown} backup
+ */
 export const RestoreAllAppsBackup = async (backup) => {
 	if (backup) {
 		let uf = new uFetch();
@@ -180,6 +214,10 @@ export const RestoreAllAppsBackup = async (backup) => {
 	}
 };
 
+/**
+ * @param {number|string} idapp
+ * @returns {Promise<import('../../types/models.js').AppDetail>}
+ */
 export const GetEndpointsByIdapp = async (idapp) => {
 	if (idapp) {
 		let app = await GetApp(idapp);
@@ -215,6 +253,9 @@ export const GetEndpointsByIdapp = async (idapp) => {
 	}
 };
 
+/**
+ * @param {number|string} idapp
+ */
 export const GetAPIKeys = async (idapp) => {
 	let apiKeys = [];
 	let uf = new uFetch(url_paths.APIKeys);
@@ -230,6 +271,9 @@ export const GetAPIKeys = async (idapp) => {
 	return apiKeys;
 };
 
+/**
+ * @param {JsonBody} data
+ */
 export const GetAPIClients = async (data) => {
 	let apiKeys = [];
 	let uf = new uFetch(url_paths.APIClients);
@@ -245,6 +289,9 @@ export const GetAPIClients = async (data) => {
 	return apiKeys;
 };
 
+/**
+ * @param {JsonBody} data
+ */
 export const saveAPIClient = async (data) => {
 	let uf = new uFetch(url_paths.APIClient);
 
@@ -259,6 +306,9 @@ export const saveAPIClient = async (data) => {
 	return apiKeys;
 };
 
+/**
+ * @param {Record<string, unknown>} [filters]
+ */
 export const GetAPIClientsList = async (filters = {}) => {
 	let uf = new uFetch(url_paths.APIClients);
 
@@ -273,6 +323,9 @@ export const GetAPIClientsList = async (filters = {}) => {
 	return clients;
 };
 
+/**
+ * @param {JsonBody} data
+ */
 export const CreateAPIClient = async (data) => {
 	let uf = new uFetch(url_paths.APIClient);
 
@@ -287,6 +340,9 @@ export const CreateAPIClient = async (data) => {
 	return result;
 };
 
+/**
+ * @param {JsonBody} data
+ */
 export const UpdateAPIClient = async (data) => {
 	let uf = new uFetch(url_paths.APIClientUpdate);
 
@@ -301,6 +357,9 @@ export const UpdateAPIClient = async (data) => {
 	return result;
 };
 
+/**
+ * @param {JsonBody} data
+ */
 export const ChangeAPIClientPassword = async (data) => {
 	let uf = new uFetch(url_paths.APIClientChangePassword);
 
@@ -356,6 +415,10 @@ export const getListMethods = async (/** @type {string} */ token) => {
 	}
 };
 
+/**
+ * @param {string} handler
+ * @param {string} [token]
+ */
 export const getHandlerDocs = async (handler, token) => {
 	if (handler) {
 		//	console.log(url_paths.apiDoc);
@@ -373,8 +436,11 @@ export const getHandlerDocs = async (handler, token) => {
 export const getListFunction = async (/** @type {string} */ appName) => {
 	// Los tres ambientes se cargan en paralelo; la tabla de endpoints no debe
 	// esperar por estas listas que solo usan los editores (handler JS).
+	/**
+	 * @param {string} environment
+	 * @param {import('svelte/store').Writable<Array<{id: string, value: string|number}>>} store
+	 */
 	const loadEnv = async (environment, store) => {
-		// @ts-ignore
 		let f = new uFetch();
 
 		try {
@@ -403,6 +469,10 @@ export const getListFunction = async (/** @type {string} */ appName) => {
 	]);
 };
 
+/**
+ * @param {string} token
+ * @param {Array<string>} urls_clear
+ */
 export const clearCache = async (/** @type {string} */ token, urls_clear) => {
 	let uf = new uFetch();
 
@@ -417,6 +487,11 @@ export const clearCache = async (/** @type {string} */ token, urls_clear) => {
 	return get_list_clear_result;
 };
 
+/**
+ * @param {string|undefined} token
+ * @param {number|string} idapp
+ * @param {Array<number|string>} idendpoints
+ */
 export const getAppDocumentation = async (token, idapp, idendpoints) => {
 	let uf = new uFetch();
 
@@ -431,6 +506,9 @@ export const getAppDocumentation = async (token, idapp, idendpoints) => {
 	return result;
 };
 
+/**
+ * @param {JsonBody} data
+ */
 export const migrateEndpoints = async (data) => {
 	let uf = new uFetch();
 
@@ -445,6 +523,9 @@ export const migrateEndpoints = async (data) => {
 	return response;
 };
 
+/**
+ * @param {JsonBody} data
+ */
 export const migrateAppVars = async (data) => {
 	let uf = new uFetch();
 
@@ -459,6 +540,9 @@ export const migrateAppVars = async (data) => {
 	return response;
 };
 
+/**
+ * @param {string} [token]
+ */
 export const getServerAPIVersion = async (token) => {
 	let uf = new uFetch();
 
@@ -482,9 +566,10 @@ export const getServerAPIVersion = async (token) => {
  * memoria durante MAX_CACHE_MS para no disparar una llamada por cada montaje
  * del widget de endpoints.
  *
- * @param {number=} maxCacheMs Duración de la caché en milisegundos.
+ * @param {number} [maxCacheMs] Duración de la caché en milisegundos.
  * @returns {Promise<object|null>} null si no se pudo obtener
  */
+/** @type {{ts: number, value: unknown}|null} */
 let serverAPILastVersionCache = null;
 
 export const getServerAPILastVersion = async (maxCacheMs = 600000) => {
@@ -501,11 +586,14 @@ export const getServerAPILastVersion = async (maxCacheMs = 600000) => {
 		serverAPILastVersionCache = { ts: now, value };
 		return value;
 	} catch (error) {
-		console.error(error.message);
+		console.error(getErrorMessage(error));
 		return null;
 	}
 };
 
+/**
+ * @param {number|string} [idendpoint]
+ */
 export const DeleteEndpoint = async (idendpoint) => {
 	if (!idendpoint) return {};
 	let uf = new uFetch();
@@ -519,6 +607,9 @@ export const DeleteEndpoint = async (idendpoint) => {
 	return response;
 };
 
+/**
+ * @param {EndpointRow} endpoint
+ */
 export const EndpointSave = async (endpoint) => {
 	// console.trace('EndpointSave >>>>>>>>>>>>>', endpoint);
 
@@ -530,13 +621,14 @@ export const EndpointSave = async (endpoint) => {
 		formData.append('file', endpoint.File);
 
 		// Agrega el resto de los parámetros de `endpoint`
-		for (const key in endpoint) {
+		const fields = /** @type {Record<string, unknown>} */ (endpoint);
+		for (const key in fields) {
 			if (key !== 'File') {
-				let value = endpoint[key];
+				let value = fields[key];
 				if (typeof value === 'object' && value !== null) {
 					formData.append(key, JSON.stringify(value));
 				} else {
-					formData.append(key, value);
+					formData.append(key, String(value));
 				}
 			}
 		}
@@ -552,6 +644,10 @@ export const EndpointSave = async (endpoint) => {
 	}
 };
 
+/**
+ * @param {Record<string, unknown>} options
+ * @param {string} [token]
+ */
 export const getLogsRecordsPerMinute = async (options, token) => {
 	let uf = new uFetch();
 
@@ -568,6 +664,10 @@ export const getLogsRecordsPerMinute = async (options, token) => {
 	}
 };
 
+/**
+ * @param {Record<string, unknown>} options
+ * @param {string} [token]
+ */
 export const getLogsStatusClassPerMinute = async (options, token) => {
 	let uf = new uFetch();
 
@@ -584,6 +684,10 @@ export const getLogsStatusClassPerMinute = async (options, token) => {
 	}
 };
 
+/**
+ * @param {Record<string, unknown>} options
+ * @param {string} [token]
+ */
 export const getResponseTimePerMinute = async (options, token) => {
 	let uf = new uFetch();
 
@@ -600,6 +704,10 @@ export const getResponseTimePerMinute = async (options, token) => {
 	}
 };
 
+/**
+ * @param {Record<string, unknown>} options
+ * @param {string} [token]
+ */
 export const getLogs = async (options, token) => {
 	let uf = new uFetch();
 
@@ -616,6 +724,9 @@ export const getLogs = async (options, token) => {
 	}
 };
 
+/**
+ * @param {Record<string, unknown>} options
+ */
 export const getTraceSummary = async (options) => {
 	if (options) {
 		let uf = new uFetch();
@@ -624,6 +735,9 @@ export const getTraceSummary = async (options) => {
 	}
 };
 
+/**
+ * @param {Record<string, unknown>} options
+ */
 export const getTraceErrorsOnly = async (options) => {
 	if (options) {
 		let uf = new uFetch();
@@ -632,6 +746,9 @@ export const getTraceErrorsOnly = async (options) => {
 	}
 };
 
+/**
+ * @param {Record<string, unknown>} options
+ */
 export const getTraceSlowestHops = async (options) => {
 	if (options) {
 		let uf = new uFetch();
@@ -640,6 +757,10 @@ export const getTraceSlowestHops = async (options) => {
 	}
 };
 
+/**
+ * @param {number|string} idapp
+ * @param {boolean} [setStoreListAppVars]
+ */
 export const GetAppVars = async (idapp, setStoreListAppVars = false) => {
 	let uf = new uFetch();
 
@@ -660,6 +781,10 @@ export const GetAppVars = async (idapp, setStoreListAppVars = false) => {
 	return resp;
 };
 
+/**
+ * @param {JsonBody} data
+ * @param {string} [token]
+ */
 export const UpsertAppVar = async (data, token) => {
 	if (data) {
 		let uf = new uFetch();
@@ -679,6 +804,10 @@ export const UpsertAppVar = async (data, token) => {
 	}
 };
 
+/**
+ * @param {number|string} [idvar]
+ * @param {string} [token]
+ */
 export const DeleteAppVar = async (idvar, token) => {
 	if (idvar) {
 		let uf = new uFetch();
@@ -706,6 +835,10 @@ export const getListApps = async () => {
 	return apps;
 };
 
+/**
+ * @param {JsonBody} data
+ * @param {string} [token]
+ */
 export const changeUserPassword = async (data, token) => {
 	let uf = new uFetch();
 
@@ -714,6 +847,10 @@ export const changeUserPassword = async (data, token) => {
 	return apps;
 };
 
+/**
+ * @param {boolean} restore
+ * @returns {Promise<import('../../types/models.js').SystemEndpointsStatus>}
+ */
 export const restoreSystemEndpoints = async (restore) => {
 	let uf = new uFetch();
 
@@ -727,6 +864,10 @@ export const restoreSystemEndpoints = async (restore) => {
 	return r;
 };
 
+/**
+ * @param {Record<string, unknown>} options
+ * @param {string} [token]
+ */
 export const getLogSummaryByAppStatusCode = async (options, token) => {
 	let uf = new uFetch();
 
@@ -740,6 +881,10 @@ export const getLogSummaryByAppStatusCode = async (options, token) => {
 	return r;
 };
 
+/**
+ * @param {Record<string, unknown>} options
+ * @param {string} [token]
+ */
 export const getAppEndpointUsageSummary = async (options, token) => {
 	let uf = new uFetch();
 
@@ -755,6 +900,10 @@ export const getAppEndpointUsageSummary = async (options, token) => {
 	}
 };
 
+/**
+ * @param {Record<string, unknown>} options
+ * @param {string} [token]
+ */
 export const getTopErrorEndpointsByTime = async (options, token) => {
 	let uf = new uFetch();
 
@@ -770,6 +919,10 @@ export const getTopErrorEndpointsByTime = async (options, token) => {
 	}
 };
 
+/**
+ * @param {Record<string, unknown>} options
+ * @param {string} [token]
+ */
 export const getTopErrorEndpoints = async (options, token) => {
 	let uf = new uFetch();
 
@@ -794,6 +947,9 @@ export const GetSystemUsersList = async () => {
 	return Array.isArray(users) ? users : [];
 };
 
+/**
+ * @param {JsonBody} data
+ */
 export const CreateSystemUser = async (data) => {
 	let uf = new uFetch();
 	let request = checkStatus(await uf.post({ url: url_paths.systemUserCreate, data: data }));
@@ -801,6 +957,9 @@ export const CreateSystemUser = async (data) => {
 	return result;
 };
 
+/**
+ * @param {JsonBody} data
+ */
 export const UpdateSystemUser = async (data) => {
 	let uf = new uFetch();
 	let request = checkStatus(await uf.post({ url: url_paths.systemUserUpdate, data: data }));
@@ -808,6 +967,9 @@ export const UpdateSystemUser = async (data) => {
 	return result;
 };
 
+/**
+ * @param {JsonBody} data
+ */
 export const DeleteSystemUser = async (data) => {
 	let uf = new uFetch();
 	let request = checkStatus(await uf.post({ url: url_paths.systemUserDelete, data: data }));
@@ -815,6 +977,10 @@ export const DeleteSystemUser = async (data) => {
 	return result;
 };
 
+/**
+ * @param {JsonBody} data
+ * @param {string} [token]
+ */
 export const ChangeSystemUserPassword = async (data, token) => {
 	let uf = new uFetch();
 	if (token) uf.setBearerAuthorization(token);
@@ -823,6 +989,9 @@ export const ChangeSystemUserPassword = async (data, token) => {
 	return result;
 };
 
+/**
+ * @param {JsonBody} data
+ */
 export const ResetSystemUserPassword = async (data) => {
 	let uf = new uFetch();
 	let request = checkStatus(await uf.post({ url: url_paths.systemUserResetPassword, data: data }));

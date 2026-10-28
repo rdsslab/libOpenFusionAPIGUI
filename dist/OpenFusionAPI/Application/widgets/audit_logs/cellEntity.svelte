@@ -1,6 +1,7 @@
 <script>
 	let { value = $bindable(), row = $bindable() } = $props();
 
+	/** @type {Record<string, string>} */
 	const ENTITY_CLASS = {
 		app: 'is-link',
 		appvar: 'is-info',

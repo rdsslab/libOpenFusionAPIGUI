@@ -1,4 +1,5 @@
 <script>
+	import { getErrorMessage } from '../../../utils/errors.js';
 	import { onMount, onDestroy } from 'svelte';
 	import {
 		BasicSelect,
@@ -17,9 +18,23 @@
 	} from '../../../utils/static_values.js';
 	import { EndpointSave } from '../../../utils/request.js';
 
+	/**
+	 * @typedef {import('../../../../types/models.js').EndpointRow} EndpointRow
+	 * @typedef {import('../../../../types/models.js').AppRow} AppRow
+	 */
+
+	/**
+	 * @type {{
+	 *   endpoint?: EndpointRow,
+	 *   app?: AppRow,
+	 *   validateResource?: boolean,
+	 *   availableURL?: boolean,
+	 *   oncopy?: (result: unknown) => void
+	 * }}
+	 */
 	let {
-		endpoint = $bindable({ method: 'X', access: 0, handler: '?', environment: '?' }),
-		app = $bindable({}),
+		endpoint = $bindable(/** @type {EndpointRow} */ ({ method: 'X', access: 0 })),
+		app = $bindable(/** @type {AppRow} */ ({})),
 		validateResource = $bindable(false),
 		availableURL = $bindable(false),
 		oncopy = () => {}
@@ -27,6 +42,7 @@
 
 	let notify = new Notifications();
 	let environment_list = $state(Environment);
+	/** @type {Array<{id: string|number, value: string, enabled?: boolean}>} */
 	let handlers = $state([]);
 	let new_keyword = $state('');
 
@@ -63,15 +79,15 @@
 		}
 
 		if (endpoint) {
-			const newValidateResource = validateURL(endpoint.resource);
+			const newValidateResource = validateURL(endpoint.resource || '');
 			const newAvailableURL = checkEndpointConstraint();
 			if (validateResource !== newValidateResource) validateResource = newValidateResource;
 			if (availableURL !== newAvailableURL) availableURL = newAvailableURL;
 			endpoint.endpoint = createEndpoint(
-				endpoint.method,
+				endpoint.method || '',
 				app?.app || '',
-				endpoint.resource,
-				endpoint.environment
+				endpoint.resource || '',
+				endpoint.environment || ''
 			);
 		}
 	});
@@ -113,33 +129,31 @@
 </script>
 
 <div>
-	<Level left={[enabled_endpoint]} right={[copy_endpoint]}>
-		{#snippet enabled_endpoint()}
-			<Input label="Enabled" type="checkbox" bind:value={endpoint.enabled} placeholder="Enabled" />
-			<Input label="Title" type="text" bind:value={endpoint.title} placeholder="Title" />
-		{/snippet}
-
-		{#snippet copy_endpoint()}
-			{#if endpoint.idendpoint && endpoint.idendpoint.length > 0}
-				<div class="field has-addons">
-					<p class="control">
-						<button
-							class="button is-small is-info"
-							onclick={() => {
-								//console.log('<<<<<<<<<<<<---- ', $state.snapshot(app));
-								openCopyDialog();
-							}}
-						>
-							<span class="icon is-small">
-								<i class="fa-solid fa-copy"></i>
-							</span>
-							<span>Copy endpoint to</span>
-						</button>
-					</p>
-				</div>
-			{/if}
-		{/snippet}
-	</Level>
+	{#snippet copy_endpoint()}
+		{#if endpoint.idendpoint && endpoint.idendpoint.length > 0}
+			<div class="field has-addons">
+				<p class="control">
+					<button
+						class="button is-small is-info"
+						onclick={() => {
+							//console.log('<<<<<<<<<<<<---- ', $state.snapshot(app));
+							openCopyDialog();
+						}}
+					>
+						<span class="icon is-small">
+							<i class="fa-solid fa-copy"></i>
+						</span>
+						<span>Copy endpoint to</span>
+					</button>
+				</p>
+			</div>
+		{/if}
+	{/snippet}
+	{#snippet enabled_endpoint()}
+		<Input label="Enabled" type="checkbox" bind:value={endpoint.enabled} placeholder="Enabled" />
+		<Input label="Title" type="text" bind:value={endpoint.title} placeholder="Title" />
+	{/snippet}
+	<Level left={[enabled_endpoint]} right={[copy_endpoint]}></Level>
 
 	<input class="input" type="hidden" placeholder="Name" bind:value={endpoint.idendpoint} />
 
@@ -170,11 +184,7 @@
 			</p>
 			<p class="control">
 				{#if endpoint && endpoint.environment}
-					<SelectEnvironment
-						bind:options={environment_list}
-						bind:option={endpoint.environment}
-						onselect={(e) => {}}
-					/>
+					<SelectEnvironment bind:options={environment_list} bind:option={endpoint.environment} />
 				{/if}
 			</p>
 		</div>
@@ -223,7 +233,7 @@
 						label="Handler"
 						bind:options={handlers}
 						bind:option={endpoint.handler}
-						onselect={(/** @type {{ detail: { value: string; }; }} */ e) => {
+						onselect={(/** @type {{ value: string }} */ e) => {
 							console.log('endpoint', e);
 							if (e.value == 'MCP') {
 								endpoint.method = 'POST';
@@ -246,7 +256,7 @@
 						label="Access"
 						options={listAccessMethod}
 						bind:option={endpoint.access}
-						onselect={(/** @type {{ detail: { value: string; }; }} */ e) => {
+						onselect={(/** @type {{ value: string }} */ e) => {
 							console.log('endpoint', endpoint);
 						}}
 					/>
@@ -384,6 +394,91 @@
 	</div>
 </div>
 
+{#snippet titleModal()}
+	<span>Copy endpoint to...</span>
+{/snippet}
+{#snippet bodyDialogModal()}
+	<div>
+		Copy the endpoint to another environment including all configuration and testing parameters.
+	</div>
+	<br />
+
+	<div class="field has-addons">
+		<p class="control">
+			<!-- svelte-ignore a11y_missing_attribute -->
+			<a class="button is-small is-static"> Copy to: </a>
+		</p>
+
+		<p class="control">
+			<SelectEnvironment
+				options={available_environments_list}
+				bind:option={endpoint_env_copy}
+				onchange={(/** @type {string} */ e) => {
+					//			console.log('SSSSSSSSSSSS> ', $state.snapshot(app));
+					if (app && app.endpoints) {
+						let endpoint_find = app.endpoints.find((ep) => {
+							//console.log('-------> ', ep.environment, endpoint_env_copy);
+							return (
+								ep.environment == e &&
+								ep.handler == endpoint.handler &&
+								ep.method == endpoint.method &&
+								ep.resource == endpoint.resource
+							);
+						}); //
+
+						endpoint_copied = { ...endpoint };
+						endpoint_copied.environment = e;
+						endpoint_copied.idendpoint = undefined;
+						endpoint_copied.endpoint = createEndpoint(
+							endpoint_copied.method || '',
+							app.app || '',
+							endpoint_copied.resource || '',
+							endpoint_copied.environment || ''
+						);
+						if (endpoint_find) {
+							// Existe ya un endpoint, avisar al usuario si lo quiere reemplazar
+							//endpoint_copied.environment = endpoint_env_copy;
+							endpoint_copied.idendpoint = endpoint_find.idendpoint;
+						}
+						//	console.log('zzzzzzzzzzzzzzz ', endpoint_copied);
+						//console.log($state.snapshot(endpoint_copied));
+					} else {
+						endpoint_copied = {};
+					}
+				}}
+			/>
+		</p>
+	</div>
+
+	{#if endpoint_copied && endpoint_copied.idendpoint && endpoint_copied.idendpoint.length > 0}
+		<label class="checkbox">
+			<input type="checkbox" bind:checked={endpoint_replace_copy} />
+			I agree to replace all data on the endpoint.
+		</label>
+
+		{#if !endpoint_replace_copy}
+			<br />
+			<div class="icon-text">
+				<span class="icon has-text-warning">
+					<i class="fas fa-exclamation-triangle"></i>
+				</span>
+				<span>You are required to accept the replacement in order to continue. </span>
+			</div>
+		{/if}
+	{/if}
+
+	{#if endpoint_env_copy == ''}
+		<div class="icon-text">
+			<span class="icon has-text-warning">
+				<i class="fas fa-exclamation-triangle"></i>
+			</span>
+			<span>Select an environment to copy. </span>
+		</div>
+	{/if}
+
+	<br />
+	<div class="">If you use application variables you must copy or create them individually.</div>
+{/snippet}
 <DialogModal
 	bind:show={ShowDialogCopyEndpoint}
 	title={titleModal}
@@ -419,7 +514,7 @@
 					}
 				} catch (error) {
 					console.error('Error copying endpoint: ', error);
-					notify.push({ message: 'Error copying endpoint: ' + error.message, color: 'danger' });
+					notify.push({ message: 'Error copying endpoint: ' + getErrorMessage(error), color: 'danger' });
 				}
 
 				ShowDialogCopyEndpoint = false;
@@ -431,91 +526,4 @@
 			});
 		}
 	}}
->
-	{#snippet titleModal()}
-		<span>Copy endpoint to...</span>
-	{/snippet}
-
-	{#snippet bodyDialogModal()}
-		<div>
-			Copy the endpoint to another environment including all configuration and testing parameters.
-		</div>
-		<br />
-
-		<div class="field has-addons">
-			<p class="control">
-				<!-- svelte-ignore a11y_missing_attribute -->
-				<a class="button is-small is-static"> Copy to: </a>
-			</p>
-
-			<p class="control">
-				<SelectEnvironment
-					options={available_environments_list}
-					bind:option={endpoint_env_copy}
-					onchange={(e) => {
-						//			console.log('SSSSSSSSSSSS> ', $state.snapshot(app));
-						if (app && app.endpoints) {
-							let endpoint_find = app.endpoints.find((ep) => {
-								//console.log('-------> ', ep.environment, endpoint_env_copy);
-								return (
-									ep.environment == e &&
-									ep.handler == endpoint.handler &&
-									ep.method == endpoint.method &&
-									ep.resource == endpoint.resource
-								);
-							}); //
-
-							endpoint_copied = { ...endpoint };
-							endpoint_copied.environment = e;
-							endpoint_copied.idendpoint = null;
-							endpoint_copied.endpoint = createEndpoint(
-								endpoint_copied.method,
-								app.app,
-								endpoint_copied.resource,
-								endpoint_copied.environment
-							);
-							if (endpoint_find) {
-								// Existe ya un endpoint, avisar al usuario si lo quiere reemplazar
-								//endpoint_copied.environment = endpoint_env_copy;
-								endpoint_copied.idendpoint = endpoint_find.idendpoint;
-							}
-							//	console.log('zzzzzzzzzzzzzzz ', endpoint_copied);
-							//console.log($state.snapshot(endpoint_copied));
-						} else {
-							endpoint_copied = {};
-						}
-					}}
-				/>
-			</p>
-		</div>
-
-		{#if endpoint_copied && endpoint_copied.idendpoint && endpoint_copied.idendpoint.length > 0}
-			<label class="checkbox">
-				<input type="checkbox" bind:checked={endpoint_replace_copy} />
-				I agree to replace all data on the endpoint.
-			</label>
-
-			{#if !endpoint_replace_copy}
-				<br />
-				<div class="icon-text">
-					<span class="icon has-text-warning">
-						<i class="fas fa-exclamation-triangle"></i>
-					</span>
-					<span>You are required to accept the replacement in order to continue. </span>
-				</div>
-			{/if}
-		{/if}
-
-		{#if endpoint_env_copy == ''}
-			<div class="icon-text">
-				<span class="icon has-text-warning">
-					<i class="fas fa-exclamation-triangle"></i>
-				</span>
-				<span>Select an environment to copy. </span>
-			</div>
-		{/if}
-
-		<br />
-		<div class="">If you use application variables you must copy or create them individually.</div>
-	{/snippet}
-</DialogModal>
+></DialogModal>

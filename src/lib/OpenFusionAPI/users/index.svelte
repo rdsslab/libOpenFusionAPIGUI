@@ -3,9 +3,11 @@
 	import { Table } from '@rdsslab/svelte-components';
 	import CellAttrs from '#lib/OpenFusionAPI/Application/widgets/endpoints/columns/cellMethodsAttrs.svelte';
 	import { onMount } from 'svelte';
+	import { getErrorMessage } from '#lib/OpenFusionAPI/Application/utils/errors.js';
 
 	let uf = new uFetch();
 
+	/** @type {Array<Record<string, unknown>>} */
 	let appDataTable = [];
 
 	let columns = {
@@ -30,7 +32,7 @@
 			let data = await apps_res.json();
 			appDataTable = data.attrs.endpoints;
 		} catch (error) {
-			alert(error.message);
+			alert(getErrorMessage(error));
 		}
 	}
 

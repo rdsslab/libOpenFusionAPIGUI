@@ -4,8 +4,8 @@ type Index = {
     $set?(props: Partial<$$ComponentProps>): void;
 };
 declare const Index: import("svelte").Component<{
-    idapp?: any;
+    idapp?: number;
 }, {}, "idapp">;
 type $$ComponentProps = {
-    idapp?: any;
+    idapp?: number;
 };

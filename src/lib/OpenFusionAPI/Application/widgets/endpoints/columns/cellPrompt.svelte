@@ -15,6 +15,6 @@
 		class="textarea is-small"
 		placeholder="Prompt"
 		rows="2"
-		onchange={onchangecell}
+		onchange={(event) => onchangecell(event)}
 	></textarea>
 </td>

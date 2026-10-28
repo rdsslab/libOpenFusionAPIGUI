@@ -8,8 +8,10 @@
 	let css_class_method = $state('');
 	let css_icon = $state('fas fa-home');
 
+	/**
+	 * @param {string} method
+	 */
 	function setCSS(method) {
-		// @ts-ignore
 		let css_selected = listHTTPMethods[method];
 		if (css_selected) {
 			css_class_method = css_selected.color;

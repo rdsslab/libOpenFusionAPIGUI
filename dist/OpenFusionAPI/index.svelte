@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import Login from './login/index.svelte';
 	import Application from './Application/index.svelte';
-	import { Notify } from '@rdsslab/svelte-components';
+	import { Notify, Notifications } from '@rdsslab/svelte-components';
 	import { get } from 'svelte/store';
 	import { userStore, authEventStore } from './Application/utils/stores.js';
 	import {
@@ -10,6 +10,9 @@
 		getJwtExpiresInMinutes,
 		logJwtExpiration
 	} from './Application/utils/jwtUtils.js';
+
+	/** Instancia usada para emitir notificaciones (el componente `Notify` solo las pinta). */
+	const notify = new Notifications();
 
 	let page = $state('login');
 	let sessionExpired = $state(false);
@@ -55,8 +58,7 @@
 		tokenExpiryWarningShown = false;
 
 		jwtWatcherInterval = setInterval(() => {
-			const userData = /** @type {any} */ (get(userStore));
-			const token = userData?.token;
+			const token = get(userStore).token;
 
 			if (!token) return;
 
@@ -72,10 +74,10 @@
 			} else if (isJwtExpiringSoon(token, 5) && !tokenExpiryWarningShown) {
 				tokenExpiryWarningShown = true;
 
-				Notify.push({
+				notify.push({
 					message: `⚠️ Tu sesión expirará en aproximadamente ${Math.floor(minutesLeft)} minuto${Math.floor(minutesLeft) !== 1 ? 's' : ''}. Guarda tu trabajo.`,
 					color: 'warning',
-					duration: 120000 // 2 minutos
+					timeout: 120000 // 2 minutos
 				});
 			}
 
@@ -111,7 +113,7 @@
 		<div class="overlay-container">
 			<Login
 				isOverlay={true}
-				onlogin={(login) => {
+				onlogin={(/** @type {{login?: string}} */ login) => {
 					if (login && login.login) {
 						sessionExpired = false;
 						failedLogins = 0;
@@ -131,7 +133,7 @@
 	{/if}
 {:else}
 	<Login
-		onlogin={(login) => {
+		onlogin={(/** @type {{login?: string}} */ login) => {
 			if (login && login.login) {
 				page = 'main';
 				startJwtWatcher();

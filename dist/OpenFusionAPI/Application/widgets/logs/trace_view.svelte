@@ -1,4 +1,5 @@
 <script>
+	import { getErrorMessage } from '../../utils/errors.js';
 	import { Modal, Notifications, copyTextToClipboard } from '@rdsslab/svelte-components';
 	import { DateTime } from 'luxon';
 	import { httpStatusText } from '../../utils/httpStatus.js';
@@ -8,22 +9,69 @@
 		getTraceSlowestHops
 	} from '../../utils/request.js';
 
+	/**
+	 * @typedef {object} TraceRequest
+	 * @property {string} timestamp
+	 * @property {number} [status_code]
+	 * @property {string} [method]
+	 * @property {string} [url]
+	 * @property {number} [response_time]
+	 */
+	/**
+	 * @typedef {object} TraceError
+	 * @property {string} timestamp
+	 * @property {number} [status_code]
+	 * @property {string} [method]
+	 * @property {string} [url]
+	 * @property {number} [response_time]
+	 * @property {string} message
+	 */
+	/**
+	 * @typedef {object} TraceSlowHop
+	 * @property {string} [url]
+	 * @property {string} [idendpoint]
+	 * @property {string} [method]
+	 * @property {number} [hits]
+	 * @property {number} [avg_response_time]
+	 * @property {number} [min_response_time]
+	 * @property {number} [max_response_time]
+	 */
+	/**
+	 * @typedef {object} TraceSummary
+	 * @property {number} total_requests
+	 * @property {number} errors_total
+	 * @property {number} slow_requests_total
+	 * @property {number} unique_endpoints
+	 * @property {number|null} worst_status_code
+	 * @property {string} first_timestamp
+	 * @property {string} last_timestamp
+	 * @property {Record<string, number>} by_status_family
+	 * @property {TraceRequest|null} first_problematic_request
+	 * @property {TraceRequest|null} slowest_request
+	 */
+
 	let { show = $bindable(false), trace_id = $bindable('') } = $props();
 
 	let notify = new Notifications();
 
-	let summary = $state(null);
-	let errors = $state([]);
-	let slowest = $state([]);
+	let /** @type {TraceSummary|null} */ summary = $state(null);
+	let /** @type {Array<TraceError>} */ errors = $state([]);
+	let /** @type {Array<TraceSlowHop>} */ slowest = $state([]);
 	let loading = $state(false);
 	let errorText = $state('');
 
+	/**
+	 * @param {string|number|null|undefined} v
+	 */
 	function fmtTs(v) {
 		if (v == null) return '—';
 		const d = DateTime.fromISO(String(v));
 		return d.isValid ? d.toFormat('yyyy-MM-dd HH:mm:ss') : String(v);
 	}
 
+	/**
+	 * @param {string|number|null|undefined} v
+	 */
 	function fmtMs(v) {
 		if (v == null) return '—';
 		if (Number.isFinite(Number(v))) return `${Number(v).toLocaleString('en-US')} ms`;
@@ -57,12 +105,12 @@
 				getTraceSlowestHops(base)
 			]);
 			if (gen !== loadGeneration) return;
-			summary = sum;
-			errors = Array.isArray(errs) ? errs : [];
-			slowest = Array.isArray(slw) ? slw : [];
+			summary = /** @type {TraceSummary} */ (sum);
+			errors = Array.isArray(errs) ? /** @type {Array<TraceError>} */ (errs) : [];
+			slowest = Array.isArray(slw) ? /** @type {Array<TraceSlowHop>} */ (slw) : [];
 		} catch (e) {
 			if (gen !== loadGeneration) return;
-			errorText = e?.message || String(e);
+			errorText = getErrorMessage(e);
 		} finally {
 			if (gen === loadGeneration) loading = false;
 		}
@@ -84,14 +132,17 @@
 		}
 	}
 
-	let statusFamilies = $derived.by(() => {
+	let /** @type {Array<{fam: string, count: number}>} */ statusFamilies = $derived.by(() => {
 		if (!summary?.by_status_family) return [];
 		const order = ['2xx', '3xx', '4xx', '5xx', 'other'];
 		return order
-			.filter((key) => summary.by_status_family[key] != null)
-			.map((key) => [key, summary.by_status_family[key]]);
+			.filter((key) => summary?.by_status_family?.[key] != null)
+			.map((key) => ({ fam: key, count: summary?.by_status_family[key] ?? 0 }));
 	});
 
+	/**
+	 * @param {string} fam
+	 */
 	function familyClass(fam) {
 		if (fam === '2xx') return 'is-success';
 		if (fam === '3xx') return 'is-warning';
@@ -135,38 +186,38 @@
 				<div class="columns is-multiline is-variable is-2 mb-2">
 					<div class="cell column">
 						<div class="has-text-weight-semibold is-size-7">Total requests</div>
-						<div class="is-size-6">{summary.total_requests ?? '—'}</div>
+						<div class="is-size-6">{summary?.total_requests ?? '—'}</div>
 					</div>
 					<div class="cell column">
 						<div class="has-text-weight-semibold is-size-7">Errors</div>
-						<div class="is-size-6 has-text-danger">{summary.errors_total ?? '—'}</div>
+						<div class="is-size-6 has-text-danger">{summary?.errors_total ?? '—'}</div>
 					</div>
 					<div class="cell column">
 						<div class="has-text-weight-semibold is-size-7">Slow hops</div>
-						<div class="is-size-6 has-text-warning">{summary.slow_requests_total ?? '—'}</div>
+						<div class="is-size-6 has-text-warning">{summary?.slow_requests_total ?? '—'}</div>
 					</div>
 					<div class="cell column">
 						<div class="has-text-weight-semibold is-size-7">Unique endpoints</div>
-						<div class="is-size-6">{summary.unique_endpoints ?? '—'}</div>
+						<div class="is-size-6">{summary?.unique_endpoints ?? '—'}</div>
 					</div>
-					{#if summary.worst_status_code != null && summary.worst_status_code > 0}
+					{#if summary?.worst_status_code != null && summary?.worst_status_code > 0}
 						<div class="cell column">
 							<div class="has-text-weight-semibold is-size-7">Worst status</div>
-							<div class="is-size-6" title={httpStatusText(summary.worst_status_code)}>
-								{summary.worst_status_code}
+							<div class="is-size-6" title={httpStatusText(/** @type {number} */ (summary?.worst_status_code ?? 0))}>
+								{summary?.worst_status_code}
 							</div>
 						</div>
 					{/if}
-					{#if summary.first_timestamp}
+					{#if summary?.first_timestamp}
 						<div class="cell column">
 							<div class="has-text-weight-semibold is-size-7">First</div>
-							<div class="is-size-7">{fmtTs(summary.first_timestamp)}</div>
+							<div class="is-size-7">{fmtTs(summary?.first_timestamp)}</div>
 						</div>
 					{/if}
-					{#if summary.last_timestamp}
+					{#if summary?.last_timestamp}
 						<div class="cell column">
 							<div class="has-text-weight-semibold is-size-7">Last</div>
-							<div class="is-size-7">{fmtTs(summary.last_timestamp)}</div>
+							<div class="is-size-7">{fmtTs(summary?.last_timestamp)}</div>
 						</div>
 					{/if}
 				</div>
@@ -175,45 +226,45 @@
 					<div class="mb-3">
 						<p class="heading mb-1">Status distribution</p>
 						<div class="tags">
-							{#each statusFamilies as [fam, count]}
-								<span class="tag {familyClass(fam)}">{fam}: {count}</span>
+							{#each statusFamilies as item}
+								<span class="tag {familyClass(item.fam)}">{item.fam}: {item.count}</span>
 							{/each}
 						</div>
 					</div>
 				{/if}
 
-				{#if summary.first_problematic_request}
+				{#if summary?.first_problematic_request}
 					<div class="mb-2">
 						<p class="heading mb-1">First problematic request</p>
 						<div class="columns is-multiline is-variable is-2">
 							<div class="cell column">
 								<div class="has-text-weight-semibold is-size-7">When</div>
-								<div class="is-size-7">{fmtTs(summary.first_problematic_request.timestamp)}</div>
+								<div class="is-size-7">{fmtTs(summary?.first_problematic_request.timestamp)}</div>
 							</div>
-							{#if summary.first_problematic_request.status_code}
+							{#if summary?.first_problematic_request.status_code}
 								<div class="cell column">
 									<div class="has-text-weight-semibold is-size-7">Status</div>
 									<div class="is-size-7">
 										<span
 											class="tag is-danger"
-											title={httpStatusText(summary.first_problematic_request.status_code)}
+											title={httpStatusText(summary?.first_problematic_request.status_code)}
 										>
-											{summary.first_problematic_request.status_code}
+											{summary?.first_problematic_request.status_code}
 										</span>
 									</div>
 								</div>
 							{/if}
-							{#if summary.first_problematic_request.method}
+							{#if summary?.first_problematic_request.method}
 								<div class="cell column">
 									<div class="has-text-weight-semibold is-size-7">Method</div>
-									<div class="is-size-7">{summary.first_problematic_request.method}</div>
+									<div class="is-size-7">{summary?.first_problematic_request.method}</div>
 								</div>
 							{/if}
-							{#if summary.first_problematic_request.url}
+							{#if summary?.first_problematic_request.url}
 								<div class="cell column is-full">
 									<div class="has-text-weight-semibold is-size-7">URL</div>
 									<div class="is-size-7 is-family-monospace" style="word-break: break-all;">
-										{summary.first_problematic_request.url}
+										{summary?.first_problematic_request.url}
 									</div>
 								</div>
 							{/if}
@@ -221,29 +272,29 @@
 					</div>
 				{/if}
 
-				{#if summary.slowest_request}
+				{#if summary?.slowest_request}
 					<div class="mb-2">
 						<p class="heading mb-1">Slowest request</p>
 						<div class="columns is-multiline is-variable is-2">
 							<div class="cell column">
 								<div class="has-text-weight-semibold is-size-7">When</div>
-								<div class="is-size-7">{fmtTs(summary.slowest_request.timestamp)}</div>
+								<div class="is-size-7">{fmtTs(summary?.slowest_request.timestamp)}</div>
 							</div>
 							<div class="cell column">
 								<div class="has-text-weight-semibold is-size-7">Time</div>
-								<div class="is-size-7">{fmtMs(summary.slowest_request.response_time)}</div>
+								<div class="is-size-7">{fmtMs(summary?.slowest_request.response_time)}</div>
 							</div>
-							{#if summary.slowest_request.method}
+							{#if summary?.slowest_request.method}
 								<div class="cell column">
 									<div class="has-text-weight-semibold is-size-7">Method</div>
-									<div class="is-size-7">{summary.slowest_request.method}</div>
+									<div class="is-size-7">{summary?.slowest_request.method}</div>
 								</div>
 							{/if}
-							{#if summary.slowest_request.url}
+							{#if summary?.slowest_request.url}
 								<div class="cell column is-full">
 									<div class="has-text-weight-semibold is-size-7">URL</div>
 									<div class="is-size-7 is-family-monospace" style="word-break: break-all;">
-										{summary.slowest_request.url}
+										{summary?.slowest_request.url}
 									</div>
 								</div>
 							{/if}
@@ -278,7 +329,7 @@
 									<tr>
 										<td class="is-size-7">{fmtTs(err.timestamp)}</td>
 										<td class="is-size-7">
-											<span class="tag is-danger" title={httpStatusText(err.status_code)}
+											<span class="tag is-danger" title={err.status_code != null ? httpStatusText(String(err.status_code)) : undefined}
 												>{err.status_code ?? '—'}</span
 											>
 										</td>

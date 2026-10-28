@@ -47,6 +47,9 @@
 	// ------------------------------------------------------------
 	// Callbacks internos (no modifican use_var_app)
 	// ------------------------------------------------------------
+	/**
+	 * @param {{code: string}} event
+	 */
 	function handleCodeChange(event) {
 		console.log('handleCodeChange', event);
 		_internal = true;
@@ -56,6 +59,9 @@
 		onselect({ custom: event.code, appvar: '' });
 	}
 
+	/**
+	 * @param {string} selected
+	 */
 	function handleVarSelect(selected) {
 		console.log('>> handleVarSelect >> ', selected);
 		_internal = true;

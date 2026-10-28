@@ -9,9 +9,11 @@
 	let {
 		idendpoint = $bindable(),
 
-		onselect = (d) => {}
+		/** @type {(data: {rows?: Array<Record<string, unknown>>}) => void} */
+		onselect = () => {}
 	} = $props();
 
+	/** @type {Array<Record<string, unknown>>} */
 	let dataBackups = $state([]);
 	let selectionType = $state(1);
 	let columns = $state({
@@ -46,13 +48,33 @@
 	});
 </script>
 
+{#snippet restoreBackup()}
+	<button
+		class="button is-small {class_search}"
+		onclick={() => {
+			if (
+				onselect &&
+				data_backup &&
+				data_backup?.data?.idendpoint == idendpoint &&
+				confirm('Are you sure to restore this backup?')
+			) {
+				onselect(data_backup.data);
+			}
+		}}
+	>
+		<span>Restore Backup {data_backup?.idbackup || ''}</span>
+		<span class="icon">
+			<i class="fa-regular fa-circle-up"></i>
+		</span>
+	</button>
+{/snippet}
 <Table
 	{columns}
 	bind:RawDataTable={dataBackups}
 	left_items={[restoreBackup]}
 	bind:selectionType
 	onsearch={fetchData}
-	onselectrows={(selected) => {
+	onselectrows={(/** @type {{rows?: Array<Record<string, unknown>>}} */ selected) => {
 		//console.log('Selected backups', selected);
 		if (selected.rows && selected.rows.length == 1) {
 			data_backup = selected.rows[0];
@@ -60,25 +82,4 @@
 			data_backup = null;
 		}
 	}}
->
-	{#snippet restoreBackup()}
-		<button
-			class="button is-small {class_search}"
-			onclick={() => {
-				if (
-					onselect &&
-					data_backup &&
-					data_backup?.data?.idendpoint == idendpoint &&
-					confirm('Are you sure to restore this backup?')
-				) {
-					onselect(data_backup.data);
-				}
-			}}
-		>
-			<span>Restore Backup {data_backup?.idbackup || ''}</span>
-			<span class="icon">
-				<i class="fa-regular fa-circle-up"></i>
-			</span>
-		</button>
-	{/snippet}
-</Table>
+></Table>

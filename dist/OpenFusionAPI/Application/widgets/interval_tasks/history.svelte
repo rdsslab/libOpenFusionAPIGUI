@@ -13,6 +13,7 @@
 
 	const uF = new uFetch(url_paths.getIntervalTaskRuns);
 
+	/** @type {Array<Record<string, unknown>>} */
 	let dataRuns = $state([]);
 	let loading = $state(false);
 

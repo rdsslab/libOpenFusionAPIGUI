@@ -1,4 +1,5 @@
 <script>
+	import { getErrorMessage } from '#lib/OpenFusionAPI/Application/utils/errors.js';
 	import uFetch from '@rdsslab/uFetch';
 	import { isNewApp, mergeSourceOverwrite } from '../../utils/utils.js';
 	import { defaultApp } from '../../utils/static_values.js';
@@ -12,12 +13,17 @@
 	let notify = new Notifications();
 	let uf = new uFetch();
 
+	/** @type {Record<string, unknown>} */
 	let uploaded_file = {};
+	/**
+	 * @type {{idapp?: number|string, onsavedeploy?: (app: import('#lib/OpenFusionAPI/types/models.js').AppRow) => void}}
+	 */
 	let { idapp = $bindable(), onsavedeploy = () => {} } = $props();
 	let deploying = $state({ show: false, message: '', error: false });
+	/** @type {import('#lib/OpenFusionAPI/types/models.js').AppRow} */
 	let app = $state({ app: '', enabled: false, description: '' });
 
-	$effect(async (onCleanup) => {
+	$effect(() => {
 		// Guardamos el valor actual de idapp para evitar race conditions
 		const idActual = idapp;
 
@@ -27,14 +33,17 @@
 		} else {
 			console.log('Cargar datos de la app');
 
-			await GetApp();
+			GetApp();
 		}
-
-		// IMPORTANTE: NUNCA LEAS `app` DENTRO DE ESTE EFECTO
-		// Cualquier lectura de `app` haría que el efecto se active cuando `app` cambie
 	});
 
+	// IMPORTANTE: NUNCA LEAS `app` DENTRO DE ESTE EFECTO
+	// Cualquier lectura de `app` haría que el efecto se active cuando `app` cambie
+
 	// Función que valida el input para permitir solo letras y números
+	/**
+	 * @param {KeyboardEvent} event
+	 */
 	function validateInput(event) {
 		const tecla = event.key; // obtiene la tecla presionada
 		const permitido = /^[a-zA-Z0-9]$/; // solo letras y números
@@ -71,7 +80,7 @@
 		} catch (error) {
 			console.error(error);
 			deploying.error = true;
-			deploying.message = `Error: ${error.message}`;
+			deploying.message = `Error: ${getErrorMessage(error)}`;
 		} finally {
 			onsavedeploy(app);
 		}
@@ -79,7 +88,7 @@
 
 	async function GetApp() {
 		try {
-			let response = await GetAppRequest(idapp, $userStore.token);
+			let response = await GetAppRequest(/** @type {string|number} */ (idapp ?? ''), $userStore.token);
 
 			if (response) {
 				app = { ...response };
@@ -95,8 +104,11 @@
 	}
 
 	// Alternativamente, también podemos limpiar pegados (Ctrl+V)
+	/**
+	 * @param {Event} e
+	 */
 	function clearInput(e) {
-		const input = e.target;
+		const input = /** @type {HTMLInputElement} */ (e.target);
 		input.value = input.value.replace(/[^a-zA-Z0-9]/g, '');
 	}
 
@@ -129,8 +141,9 @@
 					class="input is-small"
 					type="file"
 					accept=".json"
-					onchange={(event) => {
-						const selectedFile = event.target.files[0]; // Obten el primer archivo seleccionado
+					onchange={(/** @type {Event} */ event) => {
+						const input = /** @type {HTMLInputElement} */ (event.target);
+						const selectedFile = input?.files?.[0]; // Obten el primer archivo seleccionado
 
 						if (!selectedFile) {
 							//alert('Por favor, selecciona un archivo JSON válido.');
@@ -141,14 +154,14 @@
 						const reader = new FileReader();
 
 						// Escucha el evento 'load' que se dispara cuando se ha leído el archivo
-						reader.onload = function (e) {
-							const fileContent = e.target.result; // Aquí tienes el contenido del archivo
+						reader.onload = (event) => {
+							const fileContent = /** @type {string} */ (event.target?.result); // Aquí tienes el contenido del archivo
 
 							try {
 								uploaded_file = JSON.parse(fileContent);
 							} catch (error) {
 								uploaded_file = {};
-								notify.push({ message: error.message, color: 'danger' });
+								notify.push({ message: getErrorMessage(error), color: 'danger' });
 								console.error('Error al analizar el archivo JSON:', error);
 							}
 						};
@@ -174,7 +187,7 @@
 							confirm('This action will replace existing data. ')
 						) {
 							// TODO: Aquí puedes realizar acciones con los datos JSON, por ejemplo, mostrarlos en la página.
-							let data_return = await RestoreAppBackup(uploaded_file, $userStore.token);
+							let data_return = await RestoreAppBackup(uploaded_file);
 
 							if (data_return.idapp == app.idapp) {
 								idapp = data_return.idapp;
@@ -232,7 +245,7 @@
 						const minutes = String(now.getMinutes()).padStart(2, '0');
 
 						//const formattedDateTime = `${year}-${month}-${day} ${hours}:${minutes}`;
-						let app_json = await GetAppBackup(app.idapp, $userStore.token);
+						let app_json = await GetAppBackup(/** @type {string|number} */ (app.idapp ?? ''), $userStore.token);
 						// Convertir el objeto JSON a una cadena
 						const jsonString = JSON.stringify(app_json, null, 2);
 

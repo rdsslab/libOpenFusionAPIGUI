@@ -2,6 +2,7 @@
 	import { onMount, onDestroy, untrack } from 'svelte';
 	import { Table, Notifications, Modal } from '@rdsslab/svelte-components';
 	import { isNewApp } from '../../utils/utils.js';
+	import { getErrorMessage } from '../../utils/errors.js';
 	import {
 		userStore,
 		storeCountResponseStatusCode,
@@ -26,11 +27,21 @@
 	} from '../../utils/request.js';
 	import EndPointEditor from './widgets/editor.svelte';
 
+	/**
+	 * @typedef {import('../../../types/models.js').AppRow} AppRow
+	 * @typedef {import('../../../types/models.js').EndpointRow} EndpointRow
+	 * @typedef {import('../../../types/models.js').ServerModelChangedEvent} ServerModelChangedEvent
+	 */
+
+	/**
+	 * @type {{idapp?: number, onsavedeploy?: (app: AppRow) => void}}
+	 */
 	let { idapp = $bindable(0), onsavedeploy = () => {} } = $props();
 
 	let notify = new Notifications();
 	let EndpointEditorWidget = $state();
-	let app = $state({ app: '', enabled: false, description: '' });
+	/** @type {AppRow} */
+	let app = $state({ app: '', enabled: false, description: '', endpoints: [] });
 	let showMigrateModal = $state(false);
 	let migrateTargetEnv = $state('');
 
@@ -40,6 +51,7 @@
 	const canEdit = $derived(currentUserHasPermission(currentUser, permEnv, 'endpoints', 'edit'));
 	const canDelete = $derived(currentUserHasPermission(currentUser, permEnv, 'endpoints', 'delete'));
 	let migrateConfirmCheck = $state(false);
+	/** @type {Array<string|number>} */
 	let selectedEndpointsForMigration = $state([]);
 	let showEndpointEdit = $state(false);
 	let TableSelectionType = $state(0);
@@ -64,8 +76,13 @@
 		});
 	});
 
+	/** @type {ReturnType<typeof setTimeout>|undefined} */
 	let reloadEndpointsTimeout;
+	/** @type {ReturnType<typeof setTimeout>|undefined} */
 	let reloadAppVarsTimeout;
+	/**
+	 * @param {ServerModelChangedEvent|undefined} change
+	 */
 	function handleServerModelChanged(change) {
 		if (change && change.idapp === idapp) {
 			if (change.model === 'ofapi_endpoint') {
@@ -92,6 +109,11 @@
 	});
 
 	// Función para descargar el archivo
+	/**
+	 * @param {string} text
+	 * @param {string} file_name
+	 * @param {string} [type]
+	 */
 	function downloadFileAppDoc(text, file_name, type = 'text/html') {
 		// Crear un blob con el contenido
 		const blob = new Blob([text], { type: type });
@@ -111,13 +133,13 @@
 	}
 
 	async function clearcacheSelected() {
-		let urls_clear = TableObject.GetSelectedRows().map((u) => {
+		let urls_clear = TableObject.GetSelectedRows().map((/** @type {EndpointRow} */ u) => {
 			return `${u.endpoint}|${u.method}`;
 		});
 
 		try {
 			if (urls_clear && Array.isArray(urls_clear) && urls_clear.length > 0) {
-				await clearCache($userStore.token, urls_clear);
+				await clearCache(/** @type {string} */ ($userStore.token ?? ''), urls_clear);
 
 				notify.push({ message: 'Cache deleted', color: 'success' });
 			} else {
@@ -126,7 +148,7 @@
 			}
 		} catch (error) {
 			//alert(error.message);
-			notify.push({ message: error.message, color: 'danger' });
+			notify.push({ message: getErrorMessage(error), color: 'danger' });
 		}
 	}
 
@@ -139,25 +161,25 @@
 	}
 
 	async function exportAppDocumentation() {
-		let idendpoints = TableObject.GetSelectedRows().map((u) => {
+		let idendpoints = TableObject.GetSelectedRows().map((/** @type {EndpointRow} */ u) => {
 			return u.idendpoint;
 		});
 
 		try {
 			if (idendpoints && Array.isArray(idendpoints) && idendpoints.length > 0) {
-				let doc = await getAppDocumentation($userStore.token, app.idapp, idendpoints);
+				let doc = await getAppDocumentation(/** @type {string} */ ($userStore.token ?? ''), /** @type {string|number} */ (app.idapp ?? ''), idendpoints);
 				downloadFileAppDoc(doc.html, `${app.app}_${getCurrentDateToNameDoc()}.html`);
 			} else {
 				TableSelectionType = 2;
 				notify.push({ message: 'You must select at least one record.', color: 'warning' });
 			}
 		} catch (error) {
-			notify.push({ message: error.message, color: 'danger' });
+			notify.push({ message: getErrorMessage(error), color: 'danger' });
 		}
 	}
 
 	function openMigrateModal() {
-		let idendpoints = TableObject.GetSelectedRows().map((u) => {
+		let idendpoints = TableObject.GetSelectedRows().map((/** @type {EndpointRow} */ u) => {
 			return u.idendpoint;
 		});
 		console.log('Selected endpoints for migration:', idendpoints);
@@ -240,7 +262,7 @@
 				notify.push({ message: 'Unexpected response from server.', color: 'danger' });
 			}
 		} catch (error) {
-			notify.push({ message: error.message, color: 'danger' });
+			notify.push({ message: getErrorMessage(error), color: 'danger' });
 		}
 	}
 
@@ -276,6 +298,7 @@
 	/**
 	 * Normaliza una versión para poder compararla: descarta los textos de
 	 * marcador de posición y tolera espacios o un prefijo "v".
+	 * @param {string} value
 	 */
 	function normalizeVersion(value) {
 		let v = typeof value === 'string' ? value.trim() : '';
@@ -305,10 +328,13 @@
 	 * Los errores se loguean y se notifican como antes, pero nunca impiden
 	 * que la tabla de endpoints se muestre.
 	 */
+	/**
+	 * @param {() => Promise<unknown>} fn
+	 */
 	function runInBackground(fn) {
 		fn().catch((error) => {
 			console.error(error);
-			notify.push({ message: error.message, color: 'danger' });
+			notify.push({ message: getErrorMessage(error), color: 'danger' });
 		});
 	}
 
@@ -317,8 +343,9 @@
 			let statusCodeEndpoints = await getLogSummaryByAppStatusCode({ idapp }, $userStore.token);
 
 			if (statusCodeEndpoints && Array.isArray(statusCodeEndpoints)) {
+				/** @type {Record<string, Record<string, number>>} */
 				let dataStatus = {};
-				for (const element of statusCodeEndpoints) {
+				for (const /** @type {EndpointRow} */ element of statusCodeEndpoints) {
 					if (dataStatus[element.idendpoint] === undefined) {
 						dataStatus[element.idendpoint] = {};
 					}
@@ -329,6 +356,9 @@
 		});
 	}
 
+	/**
+	 * @param {boolean} [full]
+	 */
 	async function GetEndpoints(full = false) {
 		try {
 			loadingEndpoints = true;
@@ -341,7 +371,7 @@
 			app = freshApp;
 
 			// Datos secundarios (editores JS / selectores): no bloquean la tabla.
-			getListFunction(freshApp.app).catch((error) => console.error(error));
+			getListFunction(/** @type {string} */ (String(freshApp.app ?? ''))).catch((error) => console.error(error));
 
 			// Resumen de status codes por endpoint (columna "Status Code").
 			loadStatusCodeSummary();
@@ -350,13 +380,12 @@
 				// Variables de la app (selector del editor).
 				GetAppVars(idapp, true).catch((error) => {
 					console.error(error);
-					notify.push({ message: error.message, color: 'danger' });
+					notify.push({ message: getErrorMessage(error), color: 'danger' });
 				});
-
 			}
 		} catch (error) {
 			console.error(error);
-			notify.push({ message: error.message, color: 'danger' });
+			notify.push({ message: getErrorMessage(error), color: 'danger' });
 		} finally {
 			loadingEndpoints = false;
 		}
@@ -369,8 +398,81 @@
 
 <div class="">
 	<div>
+		{#snippet lt01()}
+			<div class="control">
+				<div class="tags has-addons">
+					<span class="tag is-dark">Server API</span>
+					<span class="tag is-success">{serverAPIVersion}</span>
+				</div>
+			</div>
+
+			<div class="control">
+				<div class="tags has-addons">
+					<span class="tag is-dark">DataBase</span>
+					<span class="tag is-link">{serverDDBB}</span>
+				</div>
+			</div>
+			{#if hayVersionDistinta}
+				<div class="control">
+					<div class="tags has-addons" title={avisoVersionTitulo}>
+						<span class="tag is-dark">
+							<span class="icon is-small mr-1 has-text-warning">
+								<i class="fa-solid fa-bell fa-shake"></i>
+							</span>
+							Update
+						</span>
+						<span class="tag is-warning">
+							{serverAPILastVersion}
+							{#if serverAPILastVersionStale}
+								<span class="icon is-small ml-1">
+									<i class="fa-solid fa-clock-rotate-left"></i>
+								</span>
+							{/if}
+						</span>
+					</div>
+				</div>
+			{/if}
+		{/snippet}
+		{#snippet rt1()}
+			<span>
+				<button class="button is-small" onclick={clearcacheSelected} title="Clear Cache">
+					<span class="icon is-small">
+						<i class="fa-solid fa-eraser"></i>
+					</span>
+					<span>Cache</span>
+				</button>
+			</span>
+		{/snippet}
+		{#snippet rt2()}
+			<span>
+				<button
+					title="Generate Documentation"
+					class="button is-small"
+					onclick={exportAppDocumentation}
+				>
+					<span class="icon is-small">
+						<i class="fa-solid fa-file-export"></i>
+					</span>
+					<span>Doc</span>
+				</button>
+			</span>
+		{/snippet}
+		{#snippet rt3()}
+			<span>
+				<button
+					class="button is-small"
+					onclick={openMigrateModal}
+					title="Migrate selected endpoints to another environment"
+				>
+					<span class="icon is-small">
+						<i class="fa-solid fa-route"></i>
+					</span>
+					<span>Migrate</span>
+				</button>
+			</span>
+		{/snippet}
 		<Table
-			showEditRow="true"
+			showEditRow={true}
 			showNewButton={canCreate}
 			showEditButton={canEdit}
 			showDeleteButton={canDelete}
@@ -380,7 +482,7 @@
 			bind:this={TableObject}
 			left_items={[lt01]}
 			right_items={[rt3, rt2, rt1]}
-			ondeleterow={(data) => {
+			ondeleterow={(/** @type {{rows: Array<EndpointRow>}} */ data) => {
 				if (confirm('Do you want to delete the endpoints selected?')) {
 					const rows = data.rows || [];
 					Promise.all(
@@ -395,100 +497,25 @@
 							})
 						)
 					).finally(() => {
-						app.endpoints = app.endpoints.filter((item) => {
-							return !rows.some((element) => element.idendpoint == item.idendpoint);
+						app.endpoints = (app.endpoints ?? []).filter((item) => {
+							return !rows.some((/** @type {EndpointRow} */ element) => element.idendpoint == item.idendpoint);
 						});
 					});
 				}
 			}}
 			onnewrow={() => {
-				if (idapp && idapp.length > 5) {
+				if (idapp) {
 					showEndpointEdit = true;
 					EndpointEditorWidget.setData({ app: app });
 				} else {
 					notify.push({ message: 'Not app selected', color: 'warning' });
 				}
 			}}
-			oneditrow={(data) => {
+			oneditrow={(/** @type {EndpointRow} */ data) => {
 				showEndpointEdit = true;
 				EndpointEditorWidget.setData({ app: app, idendpoint: data.idendpoint });
 			}}
-		>
-			{#snippet lt01()}
-				<div class="control">
-					<div class="tags has-addons">
-						<span class="tag is-dark">Server API</span>
-						<span class="tag is-success">{serverAPIVersion}</span>
-					</div>
-				</div>
-
-				<div class="control">
-					<div class="tags has-addons">
-						<span class="tag is-dark">DataBase</span>
-						<span class="tag is-link">{serverDDBB}</span>
-					</div>
-				</div>
-				{#if hayVersionDistinta}
-					<div class="control">
-						<div class="tags has-addons" title={avisoVersionTitulo}>
-							<span class="tag is-dark">
-								<span class="icon is-small mr-1 has-text-warning">
-									<i class="fa-solid fa-bell fa-shake"></i>
-								</span>
-								Update
-							</span>
-							<span class="tag is-warning">
-								{serverAPILastVersion}
-								{#if serverAPILastVersionStale}
-									<span class="icon is-small ml-1">
-										<i class="fa-solid fa-clock-rotate-left"></i>
-									</span>
-								{/if}
-							</span>
-						</div>
-					</div>
-				{/if}
-			{/snippet}
-
-			{#snippet rt1()}
-				<span>
-					<button class="button is-small" onclick={clearcacheSelected} title="Clear Cache">
-						<span class="icon is-small">
-							<i class="fa-solid fa-eraser"></i>
-						</span>
-						<span>Cache</span>
-					</button>
-				</span>
-			{/snippet}
-			{#snippet rt2()}
-				<span>
-					<button
-						title="Generate Documentation"
-						class="button is-small"
-						onclick={exportAppDocumentation}
-					>
-						<span class="icon is-small">
-							<i class="fa-solid fa-file-export"></i>
-						</span>
-						<span>Doc</span>
-					</button>
-				</span>
-			{/snippet}
-			{#snippet rt3()}
-				<span>
-					<button
-						class="button is-small"
-						onclick={openMigrateModal}
-						title="Migrate selected endpoints to another environment"
-					>
-						<span class="icon is-small">
-							<i class="fa-solid fa-route"></i>
-						</span>
-						<span>Migrate</span>
-					</button>
-				</span>
-			{/snippet}
-		</Table>
+		></Table>
 		{#if loadingEndpoints}
 			<div class="is-flex is-justify-content-center p-4">
 				<span class="icon has-text-grey">
@@ -566,11 +593,11 @@
 		bind:showEditor={showEndpointEdit}
 		oncopy={async (eps) => {
 			//await GetEndpoints();
-			onsavedeploy();
+			onsavedeploy?.(app);
 		}}
 		onsave={async (e) => {
 			//await GetEndpoints();
-			onsavedeploy();
+			onsavedeploy?.(app);
 		}}
 	></EndPointEditor>
 {/if}

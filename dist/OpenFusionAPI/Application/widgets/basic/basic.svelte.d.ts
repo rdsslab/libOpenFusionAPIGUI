@@ -4,10 +4,10 @@ type Basic = {
     $set?(props: Partial<$$ComponentProps>): void;
 };
 declare const Basic: import("svelte").Component<{
-    idapp?: any;
-    onsavedeploy?: Function;
+    idapp?: number | string;
+    onsavedeploy?: (app: import("../../../types/models.js").AppRow) => void;
 }, {}, "idapp">;
 type $$ComponentProps = {
-    idapp?: any;
-    onsavedeploy?: Function;
+    idapp?: number | string;
+    onsavedeploy?: (app: import("../../../types/models.js").AppRow) => void;
 };

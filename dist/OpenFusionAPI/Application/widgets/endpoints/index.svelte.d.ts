@@ -5,9 +5,18 @@ type Index = {
 };
 declare const Index: import("svelte").Component<{
     idapp?: number;
-    onsavedeploy?: Function;
+    onsavedeploy?: (app: import("../../../types/models.js").AppRow) => void;
 }, {}, "idapp">;
 type $$ComponentProps = {
     idapp?: number;
-    onsavedeploy?: Function;
+    onsavedeploy?: (app: {
+        idapp?: string | number | undefined;
+        app?: string | undefined;
+        description?: string | undefined;
+        enabled?: boolean | undefined;
+        rowkey?: number | undefined;
+        endpoint?: string | undefined;
+        endpoints?: import("../../../types/models.js").EndpointRow[] | undefined;
+        jwt_key?: string | undefined;
+    }) => void;
 };

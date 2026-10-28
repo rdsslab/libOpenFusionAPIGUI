@@ -4,8 +4,8 @@ type PermissionEditor = {
     $set?(props: Partial<$$ComponentProps>): void;
 };
 declare const PermissionEditor: import("svelte").Component<{
-    ctrl?: Record<string, any>;
+    ctrl: import("../../../types/models.js").UserCtrl;
 }, {}, "ctrl">;
 type $$ComponentProps = {
-    ctrl?: Record<string, any>;
+    ctrl: import("../../../types/models.js").UserCtrl;
 };

@@ -1,6 +1,7 @@
 <script>
 	let { value = $bindable(), row = $bindable() } = $props();
 
+	/** @type {Record<string, string>} */
 	const ACTION_CLASS = {
 		login: 'is-info',
 		login_failed: 'is-danger',

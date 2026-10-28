@@ -7,6 +7,7 @@ const packagePath = path.resolve('package.json');
 const versionFilePath = path.resolve('./src/lib/OpenFusionAPI/version.js');
 
 // Leer package.json
+/** @type {{version?: string}} */
 const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
 
 // Validar antes de tocar nada: si la versión no es semver de 3 partes (o trae un

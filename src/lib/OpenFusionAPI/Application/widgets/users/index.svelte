@@ -1,4 +1,5 @@
 <script>
+	import { getErrorMessage } from '#lib/OpenFusionAPI/Application/utils/errors.js';
 	import {
 		Table,
 		ColumnTypes,
@@ -31,6 +32,7 @@
 	let showEditor = $state(false);
 	let showChangePassword = $state(false);
 	let isEditing = $state(false);
+	/** @type {Array<Record<string, unknown>>} */
 	let DataTableUsers = $state([]);
 	let selectedRow = $state(getDefaultValues());
 	let passwordData = $state({ newPassword: '', repeatNewPassword: '' });
@@ -94,6 +96,9 @@
 		}
 	});
 
+	/**
+	 * @returns {import('#lib/OpenFusionAPI/types/models.js').ApiClientForm}
+	 */
 	function getDefaultValues() {
 		return {
 			idclient: '',
@@ -116,8 +121,8 @@
 
 	let passwordMatch = $derived(passwordData.newPassword === passwordData.repeatNewPassword);
 
-	$effect(async () => {
-		await loadUsers();
+	$effect(() => {
+		loadUsers();
 	});
 
 	async function loadUsers() {
@@ -134,7 +139,7 @@
 			}
 		} catch (error) {
 			console.error('loadUsers error:', error);
-			notify.push({ message: error.message || 'Failed to load users', color: 'danger' });
+			notify.push({ message: getErrorMessage(error) || 'Failed to load users', color: 'danger' });
 			DataTableUsers = [];
 		}
 	}
@@ -176,7 +181,7 @@
 			}
 		} catch (error) {
 			console.error('saveUser error:', error);
-			notify.push({ message: error.message || 'Failed to save client', color: 'danger' });
+			notify.push({ message: getErrorMessage(error) || 'Failed to save client', color: 'danger' });
 		}
 	}
 
@@ -207,10 +212,13 @@
 			}
 		} catch (error) {
 			console.error('changePassword error:', error);
-			notify.push({ message: error.message || 'Failed to change password', color: 'danger' });
+			notify.push({ message: getErrorMessage(error) || 'Failed to change password', color: 'danger' });
 		}
 	}
 
+	/**
+	 * @param {import('#lib/OpenFusionAPI/types/models.js').ApiClientForm|null} [row]
+	 */
 	function openEditor(row = null) {
 		if (row) {
 			isEditing = true;
@@ -240,12 +248,48 @@
 		showEditor = true;
 	}
 
+	/**
+	 * @param {import('#lib/OpenFusionAPI/types/models.js').ApiClientForm} row
+	 */
 	function openChangePassword(row) {
 		selectedRow = { ...row };
 		passwordData = { newPassword: '', repeatNewPassword: '' };
 		showChangePassword = true;
 	}
 </script>
+
+	{#snippet r01()}
+		<div class="field has-addons">
+			<p class="control">
+				<button
+					class="button is-small is-link"
+					onclick={async () => {
+						if (!confirm('Are you sure you want to save and deploy this client?')) return;
+						await saveUser();
+					}}
+				>
+					<span class="icon is-small">
+						<i class="fa-solid fa-rocket"></i>
+					</span>
+					<span>Save & Deploy</span>
+				</button>
+			</p>
+			<p class="control">
+				<button
+					class="button is-small"
+					onclick={() => {
+						showEditor = false;
+					}}
+				>
+					<span class="icon is-small">
+						<i class="fa-solid fa-xmark"></i>
+					</span>
+					<span>Cancel</span>
+				</button>
+			</p>
+		</div>
+	{/snippet}
+
 
 <Table
 	bind:RawDataTable={DataTableUsers}
@@ -254,7 +298,7 @@
 	showNewButton={canCreate}
 	showDeleteButton={false}
 	showEditButton={canEdit}
-	oneditrow={(r) => {
+	oneditrow={(/** @type {import('#lib/OpenFusionAPI/types/models.js').ApiClientForm} */ r) => {
 		openEditor(r);
 	}}
 	onnewrow={() => {
@@ -264,39 +308,7 @@
 
 {#if showEditor}
 	<SlideFullScreen bind:show={showEditor}>
-		<Level left={[]} right={[r01]}>
-			{#snippet r01()}
-				<div class="field has-addons">
-					<p class="control">
-						<button
-							class="button is-small is-link"
-							onclick={async () => {
-								if (!confirm('Are you sure you want to save and deploy this client?')) return;
-								await saveUser();
-							}}
-						>
-							<span class="icon is-small">
-								<i class="fa-solid fa-rocket"></i>
-							</span>
-							<span>Save & Deploy</span>
-						</button>
-					</p>
-					<p class="control">
-						<button
-							class="button is-small"
-							onclick={() => {
-								showEditor = false;
-							}}
-						>
-							<span class="icon is-small">
-								<i class="fa-solid fa-xmark"></i>
-							</span>
-							<span>Cancel</span>
-						</button>
-					</p>
-				</div>
-			{/snippet}
-		</Level>
+		<Level left={[]} right={[r01]}></Level>
 
 		<div>
 			<div class="columns">
@@ -396,6 +408,22 @@
 	</SlideFullScreen>
 {/if}
 
+{#snippet titleModal()}
+	<span>Change Password: {selectedRow.username}</span>
+{/snippet}
+{#snippet bodyDialogModal()}
+	<Input type="password" label="New Password" bind:value={passwordData.newPassword}></Input>
+	<Input type="password" label="Repeat New Password" bind:value={passwordData.repeatNewPassword}
+	></Input>
+	{#if !passwordMatch && passwordData.newPassword && passwordData.repeatNewPassword}
+		<div class="notification is-warning is-light py-2 px-3">
+			<span class="icon-text">
+				<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+				<span>You must repeat the new password twice.</span>
+			</span>
+		</div>
+	{/if}
+{/snippet}
 <DialogModal
 	title={titleModal}
 	body={bodyDialogModal}
@@ -407,22 +435,4 @@
 		passwordData = { newPassword: '', repeatNewPassword: '' };
 	}}
 	bind:show={showChangePassword}
->
-	{#snippet titleModal()}
-		<span>Change Password: {selectedRow.username}</span>
-	{/snippet}
-
-	{#snippet bodyDialogModal()}
-		<Input type="password" label="New Password" bind:value={passwordData.newPassword}></Input>
-		<Input type="password" label="Repeat New Password" bind:value={passwordData.repeatNewPassword}
-		></Input>
-		{#if !passwordMatch && passwordData.newPassword && passwordData.repeatNewPassword}
-			<div class="notification is-warning is-light py-2 px-3">
-				<span class="icon-text">
-					<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
-					<span>You must repeat the new password twice.</span>
-				</span>
-			</div>
-		{/if}
-	{/snippet}
-</DialogModal>
+></DialogModal>

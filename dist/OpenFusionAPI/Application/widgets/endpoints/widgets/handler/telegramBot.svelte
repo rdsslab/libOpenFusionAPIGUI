@@ -36,7 +36,7 @@
 	}
 
 	let tabList = $state([
-		{ label: 'Bot Code', isActive: true, classIcon: ' fa-brands fa-node-js ', component: tab_code },
+		{ label: 'Bot Code', classIcon: ' fa-brands fa-node-js ', component: tab_code },
 		{ label: 'Modules and functions', component: tab_pred_vars }
 	]);
 </script>
@@ -51,7 +51,7 @@
 			label="Telegram Bot Token"
 			bind:value={endpoint.custom_data.token}
 			placeholder="Telegram Bot Token"
-			onchange={(v) => {
+			onchange={(/** @type {string} */ v) => {
 				endpoint.custom_data.token = v;
 				fnOnChange();
 			}}
@@ -63,7 +63,7 @@
 		lang="js"
 		showFormat={true}
 		bind:code={internal_code}
-		onchange={(c) => {
+		onchange={(/** @type {{code: string}} */ c) => {
 			fnOnChange();
 		}}
 	></EditorCode>

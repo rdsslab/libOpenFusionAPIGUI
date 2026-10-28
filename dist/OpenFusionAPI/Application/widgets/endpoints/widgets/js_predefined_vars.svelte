@@ -5,16 +5,41 @@
 	import { copyTextToClipboard } from '@rdsslab/svelte-components';
 
 	let uF;
+	/**
+	 * @typedef {object} JSVarParam
+	 * @property {string} name
+	 * @property {string} type
+	 * @property {boolean} [required]
+	 * @property {unknown} [default]
+	 * @property {string} [description]
+	 */
+	/**
+	 * @typedef {object} JSVarReturn
+	 * @property {string} [type]
+	 * @property {string} [description]
+	 * @property {Array<{name: string, type: string, description?: string}>} [object]
+	 */
+	/**
+	 * @typedef {object} JSVarEntry
+	 * @property {string} [description]
+	 * @property {string} [web]
+	 * @property {JSVarReturn} [return]
+	 * @property {Array<JSVarParam>} [params]
+	 * @property {string} [example]
+	 */
+	/** @type {Record<string, JSVarEntry>} */
 	let vars_js = {};
 	let loading = true;
+	/** @type {Array<string>} */
 	let activeItems = [];
+	/** @type {Record<string, boolean>} */
 	let copiedStates = {};
 
 	onMount(async () => {
 		uF = new uFetch();
 		try {
 			let req_uf = await uF.get({ url: url_paths.getlistFunctionsVarsJS });
-			vars_js = await req_uf.json();
+			vars_js = /** @type {Record<string, JSVarEntry>} */ (await req_uf.json());
 		} catch (error) {
 			console.error('Error fetching JS predefined vars:', error);
 		} finally {
@@ -22,7 +47,7 @@
 		}
 	});
 
-	function toggleItem(key) {
+	function toggleItem(/** @type {string} */ key) {
 		if (activeItems.includes(key)) {
 			activeItems = activeItems.filter((k) => k !== key);
 		} else {
@@ -30,7 +55,7 @@
 		}
 	}
 
-	async function copyToClipboard(event, text, id) {
+	async function copyToClipboard(/** @type {Event} */ event, /** @type {string} */ text, /** @type {string} */ id) {
 		event.stopPropagation(); // Prevent toggling when clicking copy
 		const { result } = await copyTextToClipboard(text);
 		if (result) {
@@ -38,14 +63,15 @@
 			copiedStates = { ...copiedStates, [id]: true };
 			setTimeout(() => {
 				const newState = { ...copiedStates };
-				delete newState[id];
-				copiedStates = newState;
+				copiedStates = Object.fromEntries(
+					Object.entries(copiedStates).filter(([k]) => k !== id)
+				);
 			}, 3000);
 		}
 	}
 </script>
 
-{#snippet render_params(params)}
+{#snippet render_params(/** @type {Array<JSVarParam>} */ params)}
 	<div class="table-container mb-2">
 		<table
 			class="table is-narrow is-fullwidth is-striped is-hoverable"
@@ -193,7 +219,7 @@
 											class="button is-small is-ghost p-0 is-height-auto"
 											style="height: auto; min-height: unset;"
 											class:has-text-success={copiedStates['ex_' + key]}
-											onclick={(e) => copyToClipboard(e, data.example, 'ex_' + key)}
+											onclick={(e) => copyToClipboard(e, data.example ?? '', 'ex_' + key)}
 										>
 											<span class="icon is-small"
 												><i

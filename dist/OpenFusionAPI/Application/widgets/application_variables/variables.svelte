@@ -1,4 +1,5 @@
 <script>
+	import { getErrorMessage } from '../../utils/errors.js';
 	import { GetAppVars, migrateAppVars } from '../../utils/request.js';
 	import {
 		userStore,
@@ -13,6 +14,19 @@
 
 	let noty = new Notifications();
 
+	/**
+	 * @typedef {import('../../../types/models.js').AppVarRow} AppVarRow
+	 * @typedef {import('../../../types/models.js').ServerModelChangedEvent} ServerModelChangedEvent
+	 */
+
+	/**
+	 * @type {{
+	 *   idapp?: number,
+	 *   environment?: string,
+	 *   isReadOnly?: boolean,
+	 *   onchange?: (vars: unknown) => void
+	 * }}
+	 */
 	let {
 		idapp = $bindable(0),
 		environment = $bindable('*'),
@@ -22,6 +36,7 @@
 
 	let ShowDialogCopyEndpoint = $state(false);
 	let var_replace_copy = $state(false);
+	/** @type {AppVarRow} */
 	let var_to_copy = $state({});
 	// El <select> de destino vive dentro del modal y el modal NO se desmonta al
 	// cerrarse (solo alterna la clase `is-active`), asi que su `option` interna
@@ -31,7 +46,9 @@
 	// "Missing idappvar or target_env". Esta variable bindea el `option` del
 	// desplegable y se limpia en cada apertura.
 	let target_env_selected = $state('');
+	/** @type {Record<string, unknown>} */
 	let Datavars = $state({});
+	/** @type {Array<AppVarRow>} */
 	let DataAppVars = $state([]);
 
 	let env_dev = $derived.by(() => {
@@ -67,17 +84,18 @@
 			: [];
 	});
 
-	$effect(async () => {
-		//idapp;
-		// La app nueva todavia no tiene variables que cargar. El estado `app` que
-		// se reseteaba en ambas ramas no lo leia nadie, asi que queda solo la carga.
+	$effect(() => {
+		// La app nueva todavia no tiene variables que cargar.
 		if (!isNewApp(idapp)) {
-			//	await GetListEnvironment();
-			await GetData();
+			GetData();
 		}
 	});
 
+	/** @type {ReturnType<typeof setTimeout>|undefined} */
 	let reloadVarsTimeout;
+	/**
+	 * @param {ServerModelChangedEvent|undefined} change
+	 */
 	function handleServerModelChanged(change) {
 		if (change && change.model === 'ofapi_appvars' && change.idapp === idapp) {
 			clearTimeout(reloadVarsTimeout);
@@ -137,7 +155,7 @@
 		} catch (error) {
 			console.error(error);
 			noty.push({
-				message: `Error migrating variable: ${error.message}`,
+				message: `Error migrating variable: ${getErrorMessage(error)}`,
 				color: 'danger'
 			});
 		}
@@ -147,7 +165,10 @@
 
 	async function GetData() {
 		try {
-			DataAppVars = await GetAppVars(idapp, $userStore.token);
+			// El segundo argumento refresca el store global de variables; antes se le
+			// pasaba el token, que solo funcionaba por ser truthy.
+			const rows = await GetAppVars(idapp, true);
+			DataAppVars = Array.isArray(rows) ? rows : [];
 		} catch (error) {
 			console.error(error);
 			DataAppVars = [];
@@ -158,6 +179,9 @@
 		onchange($state.snapshot(Datavars));
 	}
 
+	/**
+	 * @param {AppVarRow} v
+	 */
 	function internalOncopy(v) {
 		// Copia del appvar (no mutar el objeto de DataAppVars) y reset del estado
 		// del dialogo: sin esto el desplegable conserva el destino de la apertura
@@ -168,7 +192,7 @@
 		ShowDialogCopyEndpoint = true;
 	}
 
-	onMount(async () => {
+	onMount(() => {
 		//await GetListEnvironment();
 	});
 </script>
@@ -182,10 +206,10 @@
 				environment="dev"
 				{isReadOnly}
 				title={'DEVELOPMENT'}
-				onchange={(x) => {
+				onchange={() => {
 					internalOnchange();
 				}}
-				oncopy={(x) => {
+				oncopy={(/** @type {AppVarRow} */ x) => {
 					internalOncopy(x);
 				}}
 			></VarEnv>
@@ -229,6 +253,73 @@
 	{/if}
 </div>
 
+{#snippet titleModal()}
+	<span>{`Copy ${var_to_copy.name}`}</span>
+{/snippet}
+{#snippet bodyDialogModal()}
+	<div>Copy or replace the variable to another environment.</div>
+	<br />
+
+	<div class="field has-addons">
+		<p class="control">
+			<!-- svelte-ignore a11y_missing_attribute -->
+			<a class="button is-small is-static"> Copy to: </a>
+		</p>
+
+		<p class="control">
+			<SelectEnvironment
+				bind:option={target_env_selected}
+				options={available_environments_list}
+				onchange={(/** @type {string} */ e) => {
+					//console.log('SELECCIONADO TO COPY >>>> ', e);
+					var_to_copy.env_destination = e;
+					// Al cambiar de destino se recalcula si existe la variable en el
+					// nuevo entorno; si no existe hay que limpiar el idvar de destino
+					// que haya quedado de una seleccion previa.
+					var_to_copy.idvar_destination = undefined;
+					if (DataAppVars && Array.isArray(DataAppVars)) {
+						let var_exists = DataAppVars.find((item) => {
+							return (
+								item.name == var_to_copy.name && item.environment == var_to_copy.env_destination
+							);
+						});
+
+						if (var_exists && var_exists.idvar) {
+							var_to_copy.idvar_destination = var_exists.idvar;
+						}
+					}
+				}}
+			/>
+		</p>
+	</div>
+
+	{#if !var_to_copy.env_destination || var_to_copy.env_destination == ''}
+		<div class="icon-text">
+			<span class="icon has-text-warning">
+				<i class="fas fa-exclamation-triangle"></i>
+			</span>
+			<span> Select an environment to copy. </span>
+		</div>
+	{/if}
+
+	{#if var_to_copy && var_to_copy.idvar_destination}
+		<label class="checkbox">
+			<input type="checkbox" bind:checked={var_replace_copy} />
+			I agree to copy and/or replace the application variable to the
+			<strong>{var_to_copy.env_destination}</strong> environment.
+		</label>
+
+		{#if !var_replace_copy}
+			<br />
+			<div class="icon-text">
+				<span class="icon has-text-warning">
+					<i class="fas fa-exclamation-triangle"></i>
+				</span>
+				<span> You must agree to continue. </span>
+			</div>
+		{/if}
+	{/if}
+{/snippet}
 <DialogModal
 	bind:show={ShowDialogCopyEndpoint}
 	title={titleModal}
@@ -255,73 +346,4 @@
 	oncancel={() => {
 		var_to_copy = {};
 	}}
->
-	{#snippet titleModal()}
-		<span>{`Copy ${var_to_copy.name}`}</span>
-	{/snippet}
-
-	{#snippet bodyDialogModal()}
-		<div>Copy or replace the variable to another environment.</div>
-		<br />
-
-		<div class="field has-addons">
-			<p class="control">
-				<!-- svelte-ignore a11y_missing_attribute -->
-				<a class="button is-small is-static"> Copy to: </a>
-			</p>
-
-			<p class="control">
-				<SelectEnvironment
-					bind:option={target_env_selected}
-					options={available_environments_list}
-					onchange={(e) => {
-						//console.log('SELECCIONADO TO COPY >>>> ', e);
-						var_to_copy.env_destination = e;
-						// Al cambiar de destino se recalcula si existe la variable en el
-						// nuevo entorno; si no existe hay que limpiar el idvar de destino
-						// que haya quedado de una seleccion previa.
-						var_to_copy.idvar_destination = undefined;
-						if (DataAppVars && Array.isArray(DataAppVars)) {
-							let var_exists = DataAppVars.find((item) => {
-								return (
-									item.name == var_to_copy.name && item.environment == var_to_copy.env_destination
-								);
-							});
-
-							if (var_exists && var_exists.idvar) {
-								var_to_copy.idvar_destination = var_exists.idvar;
-							}
-						}
-					}}
-				/>
-			</p>
-		</div>
-
-		{#if !var_to_copy.env_destination || var_to_copy.env_destination == ''}
-			<div class="icon-text">
-				<span class="icon has-text-warning">
-					<i class="fas fa-exclamation-triangle"></i>
-				</span>
-				<span> Select an environment to copy. </span>
-			</div>
-		{/if}
-
-		{#if var_to_copy && var_to_copy.idvar_destination}
-			<label class="checkbox">
-				<input type="checkbox" bind:checked={var_replace_copy} />
-				I agree to copy and/or replace the application variable to the
-				<strong>{var_to_copy.env_destination}</strong> environment.
-			</label>
-
-			{#if !var_replace_copy}
-				<br />
-				<div class="icon-text">
-					<span class="icon has-text-warning">
-						<i class="fas fa-exclamation-triangle"></i>
-					</span>
-					<span> You must agree to continue. </span>
-				</div>
-			{/if}
-		{/if}
-	{/snippet}
-</DialogModal>
+></DialogModal>

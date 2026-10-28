@@ -1,3 +1,10 @@
+/**
+ * @typedef {import('#lib/OpenFusionAPI/types/models.js').IntervalTaskRow} IntervalTaskRow
+ * @typedef {import('#lib/OpenFusionAPI/types/models.js').BotRow} BotRow
+ * @typedef {{label: string, background: string, icon: string, description: string}} StatusMeta
+ */
+
+/** @type {Array<{value: string, id: number}>} */
 export const listAccessMethod = [
 	{ value: 'Public', id: 0 },
 	{ value: 'Basic', id: 1 },
@@ -5,6 +12,7 @@ export const listAccessMethod = [
 	{ value: 'Basic & Bearer', id: 3 }
 ];
 
+/** @type {Record<string, {color: string, icon: string}>} */
 export const listHTTPMethods = {
 	GET: { color: 'primary', icon: 'fa-brands fa-get-pocket' },
 	POST: { color: 'link', icon: 'fa-solid fa-signs-post' },
@@ -67,9 +75,9 @@ export const defaultEndpoint = {
 	},
 	resource: '',
 	code: '',
-	idapp: 0,
+	idapp: '',
 	description: '',
-	idendpoint: 0,
+	idendpoint: '',
 	cors: {},
 	headers_test: {},
 	data_test: {
@@ -106,10 +114,22 @@ export const defaultEndpoint = {
 				properties: {},
 				additionalProperties: true
 			}
-		}
+		},
+		custom_data: {},
+		docs: '',
+		title: '',
+		keywords: '',
+		timeout: 0,
+		price_by_request: 0,
+		price_kb_request: 0,
+		price_kb_response: 0
 	}
 };
 
+/**
+ * @param {Partial<IntervalTaskRow>|null|undefined} task
+ * @returns {IntervalTaskRow}
+ */
 export const defaultValuesIntervalTask = (task) => {
 	const baseTask = {
 		idtask: null,
@@ -164,6 +184,7 @@ export const defaultValuesIntervalTask = (task) => {
  * Estados que el planificador escribe en `status`. La tabla y el editor muestran la
  * etiqueta, nunca el número: un "3" no le dice nada a quien administra las tareas.
  */
+/** @type {Record<number, StatusMeta>} */
 export const IntervalTaskStatus = {
 	0: {
 		label: 'Waiting',
@@ -204,6 +225,7 @@ export const IntervalTaskStatus = {
 	}
 };
 
+/** @type {StatusMeta} */
 export const IntervalTaskStatusFallback = {
 	label: 'Unknown',
 	background: 'light',
@@ -215,6 +237,10 @@ export const IntervalTaskStatusFallback = {
  * `status` conserva el resultado de la última corrida cuando esta termina. Para mostrar
  * el estado operativo actual, toda tarea que no esté ejecutándose vuelve a Waiting.
  */
+/**
+ * @param {number|string|null|undefined} value
+ * @returns {StatusMeta}
+ */
 export function getIntervalTaskRuntimeStatus(value) {
 	return Number(value) === 1 ? IntervalTaskStatus[1] : IntervalTaskStatus[0];
 }
@@ -223,14 +249,20 @@ export function getIntervalTaskRuntimeStatus(value) {
  * Resultado de la última ejecución, separado del estado operativo actual. El payload
  * permite corregir corridas antiguas que se guardaron como OK pese a `success: false`.
  */
+/**
+ * @param {number|string|null|undefined} value
+ * @param {unknown} response
+ * @returns {StatusMeta|null}
+ */
 export function getIntervalTaskLastResultStatus(value, response) {
 	const numericStatus = Number(value);
+	const payload = /** @type {{success?: unknown}|null|undefined} */ (response);
 	if (
 		numericStatus === 2 &&
-		response &&
-		typeof response === 'object' &&
-		!Array.isArray(response) &&
-		response.success === false
+		payload &&
+		typeof payload === 'object' &&
+		!Array.isArray(payload) &&
+		payload.success === false
 	) {
 		return IntervalTaskStatus[3];
 	}
@@ -244,6 +276,7 @@ export function getIntervalTaskLastResultStatus(value, response) {
  * distinto de "Unabled" y merece su propia etiqueta: el usuario quiere que corra, pero
  * no correrá hasta que se corrija la causa y se reinicien los intentos.
  */
+/** @type {StatusMeta} */
 export const IntervalTaskSuspendedStatus = {
 	label: 'Suspended',
 	background: 'danger',
@@ -254,11 +287,19 @@ export const IntervalTaskSuspendedStatus = {
 };
 
 /** Devuelve el estado de suspensión, o `null` si el planificador no la suspendió. */
+/**
+ * @param {Partial<IntervalTaskRow>|null|undefined} task
+ * @returns {StatusMeta|null}
+ */
 export function getIntervalTaskSuspensionStatus(task) {
 	return task?.disabled_by === 'system' ? IntervalTaskSuspendedStatus : null;
 }
 
 /** `true` cuando la tarea está suspendida por el planificador (no por el usuario). */
+/**
+ * @param {Partial<IntervalTaskRow>|null|undefined} task
+ * @returns {boolean}
+ */
 export function isIntervalTaskSuspended(task) {
 	return task?.disabled_by === 'system';
 }
@@ -277,6 +318,10 @@ export const INTERVAL_TASK_RUNTIME_FIELDS = [
 	'disabled_reason'
 ];
 
+/**
+ * @param {Partial<BotRow>|null|undefined} bot
+ * @returns {BotRow}
+ */
 export const defaultValuesBot = (bot) => {
 	const baseBot = {
 		idbot: null,
@@ -307,6 +352,7 @@ export const defaultValuesBot = (bot) => {
  * QUARANTINED se recupera solo y NO requiere que nadie lo toque. Por eso cada estado
  * declara `needsAction`: es lo que decide si la interfaz debe alarmar o tranquilizar.
  */
+/** @type {Record<string, StatusMeta & {color: string, needsAction: boolean}>} */
 export const BotRuntimeStatus = {
 	STOPPED: {
 		label: 'Stopped',

@@ -39,7 +39,7 @@
 </script>
 
 <td>
-	<div class="tags has-addons" {titleText}>
+	<div class="tags has-addons" title={titleText}>
 		{#if value != null && value !== ''}
 			<span class="tag {statusClass}">{value}</span>
 		{:else}

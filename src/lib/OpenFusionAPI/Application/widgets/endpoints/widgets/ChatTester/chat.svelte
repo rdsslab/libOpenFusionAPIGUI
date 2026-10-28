@@ -1,6 +1,18 @@
 <script>
 	import { onMount } from 'svelte';
 
+	/**
+	 * @typedef {import('#lib/OpenFusionAPI/types/models.js').ChatMessage} ChatMessage
+	 */
+
+	/**
+	 * @type {{
+	 *   class_content?: string,
+	 *   onmessage?: (e: {message: string}) => void,
+	 *   currentChat?: Record<string, unknown>,
+	 *   messages?: Array<ChatMessage>
+	 * }}
+	 */
 	let {
 		class_content = $bindable('is-small'),
 		onmessage = () => {},
@@ -12,7 +24,7 @@
 			avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
 			active: true
 		}),
-		messages = $bindable([
+		messages = $bindable(/** @type {Array<ChatMessage>} */ ([
 			{ type: 'ia', sender: 'Ana Pérez', prompt: 'Hola, ¿cómo estás?', time: '12:30' },
 			{ type: 'user', prompt: '¡Hola! Todo bien, ¿y tú?', time: '12:31', status: 'read' },
 			{
@@ -33,12 +45,13 @@
 				prompt: 'Igual, pero me encanta lo que hago. ¿Tienes planes para el fin de semana?',
 				time: '12:34'
 			}
-		])
+		]))
 	} = $props();
 	// Mensaje actual en el input
 	let messageInput = $state('');
 
 	// Referencia al contenedor de mensajes
+	/** @type {HTMLDivElement|undefined} */
 	let chatMessages;
 
 	// Chat actual seleccionado
@@ -98,9 +111,7 @@
 				<!-- svelte-ignore a11y_consider_explicit_label -->
 				<button
 					class="button"
-					onclick={(e) => {
-						sendMessage();
-					}}
+					onclick={() => sendMessage()}
 				>
 					<span class="icon {class_content} has-text-success">
 						<i class="fas fa-paper-plane"></i>

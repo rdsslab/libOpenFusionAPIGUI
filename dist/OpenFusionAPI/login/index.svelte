@@ -16,6 +16,7 @@
 		logJwtExpiration
 	} from '../Application/utils/jwtUtils.js';
 	import { getDefaultEnvironment } from '../Application/utils/permissions.js';
+	import { getErrorMessage } from '../Application/utils/errors.js';
 	import logo from '../img/favicon.png';
 	import {
 		Notifications,
@@ -30,9 +31,10 @@
 	let { onlogin = () => {}, onfail = () => {}, isOverlay = false } = $props();
 	let username = $state('');
 	let password = $state('');
-	let processing = $state({ waiting: false, error: null });
+	let processing = $state({ waiting: false, error: '' });
 	let showPassword = $state(false);
 	let rateLimit = $state({ active: false, total: 0, left: 0 });
+	/** @type {ReturnType<typeof setInterval>|null} */
 	let countdownTimer = null;
 	let mounted = $state(false);
 	let serverVersion = $state('...');
@@ -46,7 +48,11 @@
 
 	// ── Recuperación / reset de clave (OTP por email o Telegram) ──
 	const environment = getDefaultEnvironment();
-	let recoveryOptions = $state(null);
+	/**
+	 * Canales de recuperación que reporta el backend.
+	 * @typedef {{email?: {enabled?: boolean}, telegram?: {enabled?: boolean}}} RecoveryOptions
+	 */
+	let recoveryOptions = $state(/** @type {RecoveryOptions|null} */ (null));
 	let showRecovery = $state(false);
 	let recoveryStep = $state('request');
 	let recoveryBusy = $state(false);
@@ -102,6 +108,10 @@
 		};
 	});
 
+	/**
+	 * @param {number} seconds
+	 * @returns {string}
+	 */
 	function formatRetryTime(seconds) {
 		const total = Math.max(0, Math.round(seconds || 0));
 		const mins = Math.floor(total / 60);
@@ -110,18 +120,22 @@
 		return `${secs}s`;
 	}
 
+	/**
+	 * @param {number|string} seconds
+	 */
 	function startRateLimit(seconds) {
 		const total = Math.max(1, Math.ceil(Number(seconds) || 0));
 		rateLimit = { active: true, total, left: total };
 		if (countdownTimer) clearInterval(countdownTimer);
-		countdownTimer = setInterval(() => {
+		const timer = setInterval(() => {
 			rateLimit = { ...rateLimit, left: rateLimit.left - 1 };
 			if (rateLimit.left <= 0) {
-				clearInterval(countdownTimer);
+				clearInterval(timer);
 				countdownTimer = null;
 				rateLimit = { active: false, total: 0, left: 0 };
 			}
 		}, 1000);
+		countdownTimer = timer;
 	}
 
 	async function loadRecoveryOptions() {
@@ -178,7 +192,7 @@
 			recoveryStep = 'code';
 		} catch (error) {
 			console.error(error);
-			recoveryError = error.message || 'The code could not be sent. Try again later.';
+			recoveryError = getErrorMessage(error) || 'The code could not be sent. Try again later.';
 		} finally {
 			recoveryBusy = false;
 		}
@@ -222,7 +236,7 @@
 			}
 		} catch (error) {
 			console.error(error);
-			recoveryError = error.message || 'The password could not be updated.';
+			recoveryError = getErrorMessage(error) || 'The password could not be updated.';
 		} finally {
 			recoveryBusy = false;
 		}
@@ -310,11 +324,14 @@
 			}
 		} catch (error) {
 			console.error(error);
-			const seconds = error?.retry_after_seconds || error?.data?.retry_after_seconds;
+			const err = /** @type {{retry_after_seconds?: number|string, data?: {retry_after_seconds?: number|string, error?: string}, error?: string}} */ (
+				error
+			);
+			const seconds = err?.retry_after_seconds || err?.data?.retry_after_seconds;
 			const message =
-				error?.error ||
-				error?.data?.error ||
-				(seconds ? 'Too many failed attempts. Please retry later.' : error.message);
+				err?.error ||
+				err?.data?.error ||
+				(seconds ? 'Too many failed attempts. Please retry later.' : getErrorMessage(error));
 			if (seconds) startRateLimit(Number(seconds));
 			noty.push({ message, color: 'danger' });
 			processing.waiting = false;
@@ -359,7 +376,7 @@
 			}
 		} catch (error) {
 			console.error(error);
-			forcedChangeError = error.message || 'Password could not be changed.';
+			forcedChangeError = getErrorMessage(error) || 'Password could not be changed.';
 		}
 	}
 
@@ -514,6 +531,69 @@
 	</div>
 </Modal>
 
+{#snippet recoveryTitle()}
+	<span class="has-text-info">
+		<i class="fa-solid fa-key"></i> Password recovery
+	</span>
+{/snippet}
+{#snippet recoveryBody()}
+	{#if recoveryStep === 'request'}
+		<p class="mb-2">
+			Enter your username and we will send a one-time verification code to your registered email or
+			Telegram.
+		</p>
+		<Input label="Username:" bind:value={recovery.username}></Input>
+		{#if recoveryChannels.length > 1}
+			<div class="mt-2">
+				<BasicSelect
+					label="Delivery channel"
+					options={recoveryChannels}
+					bind:option={recovery.channel}
+					isExpanded
+				></BasicSelect>
+			</div>
+		{/if}
+	{:else}
+		<p class="mb-2">
+			Enter the 6-digit code you received and choose your new password (minimum 8 characters).
+		</p>
+		<Input label="Username:" bind:value={recovery.username} disabled={true}></Input>
+		<Input
+			label="Verification code:"
+			type="text"
+			maxlength="6"
+			placeholder="123456"
+			bind:value={recovery.otp}
+		></Input>
+		<Input label="New password:" type="password" bind:value={recovery.newPassword}></Input>
+		<Input label="Repeat new password:" type="password" bind:value={recovery.repeat}></Input>
+		{#if recovery.newPassword && !recoveryPwdMatch}
+			<div class="notification is-danger is-light py-2 px-3 mt-2">
+				<span class="icon-text">
+					<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+					<span>Passwords do not match.</span>
+				</span>
+			</div>
+		{/if}
+	{/if}
+
+	{#if recoveryInfo}
+		<div class="notification is-info is-light py-2 px-3 mt-2">
+			<span class="icon-text">
+				<span class="icon"><i class="fa-solid fa-circle-info"></i></span>
+				<span>{recoveryInfo}</span>
+			</span>
+		</div>
+	{/if}
+	{#if recoveryError}
+		<div class="notification is-danger is-light py-2 px-3 mt-2">
+			<span class="icon-text">
+				<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+				<span>{recoveryError}</span>
+			</span>
+		</div>
+	{/if}
+{/snippet}
 <DialogModal
 	title={recoveryTitle}
 	body={recoveryBody}
@@ -526,73 +606,38 @@
 	}}
 	oncancel={closeRecovery}
 	bind:show={showRecovery}
->
-	{#snippet recoveryTitle()}
-		<span class="has-text-info">
-			<i class="fa-solid fa-key"></i> Password recovery
+></DialogModal>
+
+{#snippet forcedChangeTitle()}
+	<span class="has-text-warning"><i class="fa-solid fa-key"></i> Password change required</span>
+{/snippet}
+{#snippet forcedChangeBody()}
+	<div class="notification is-warning is-light">
+		<span class="icon-text">
+			<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+			<span>For security reasons you must change your password before continuing.</span>
 		</span>
-	{/snippet}
-
-	{#snippet recoveryBody()}
-		{#if recoveryStep === 'request'}
-			<p class="mb-2">
-				Enter your username and we will send a one-time verification code to your registered email
-				or Telegram.
-			</p>
-			<Input label="Username:" bind:value={recovery.username}></Input>
-			{#if recoveryChannels.length > 1}
-				<div class="mt-2">
-					<BasicSelect
-						label="Delivery channel"
-						options={recoveryChannels}
-						bind:option={recovery.channel}
-						isExpanded
-					></BasicSelect>
-				</div>
-			{/if}
-		{:else}
-			<p class="mb-2">
-				Enter the 6-digit code you received and choose your new password (minimum 8 characters).
-			</p>
-			<Input label="Username:" bind:value={recovery.username} disabled={true}></Input>
-			<Input
-				label="Verification code:"
-				type="text"
-				maxlength="6"
-				placeholder="123456"
-				bind:value={recovery.otp}
-			></Input>
-			<Input label="New password:" type="password" bind:value={recovery.newPassword}></Input>
-			<Input label="Repeat new password:" type="password" bind:value={recovery.repeat}></Input>
-			{#if recovery.newPassword && !recoveryPwdMatch}
-				<div class="notification is-danger is-light py-2 px-3 mt-2">
-					<span class="icon-text">
-						<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
-						<span>Passwords do not match.</span>
-					</span>
-				</div>
-			{/if}
-		{/if}
-
-		{#if recoveryInfo}
-			<div class="notification is-info is-light py-2 px-3 mt-2">
-				<span class="icon-text">
-					<span class="icon"><i class="fa-solid fa-circle-info"></i></span>
-					<span>{recoveryInfo}</span>
-				</span>
-			</div>
-		{/if}
-		{#if recoveryError}
-			<div class="notification is-danger is-light py-2 px-3 mt-2">
-				<span class="icon-text">
-					<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
-					<span>{recoveryError}</span>
-				</span>
-			</div>
-		{/if}
-	{/snippet}
-</DialogModal>
-
+	</div>
+	<Input label="Current password:" bind:value={changePwd.current}></Input>
+	<Input label="New password:" bind:value={changePwd.newPassword}></Input>
+	<Input label="Repeat new password:" bind:value={changePwd.repeat}></Input>
+	{#if changePwd.newPassword && !changePwdMatch}
+		<div class="notification is-danger is-light py-2 px-3 mt-2">
+			<span class="icon-text">
+				<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+				<span>Passwords do not match.</span>
+			</span>
+		</div>
+	{/if}
+	{#if forcedChangeError}
+		<div class="notification is-danger is-light py-2 px-3 mt-2">
+			<span class="icon-text">
+				<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+				<span>{forcedChangeError}</span>
+			</span>
+		</div>
+	{/if}
+{/snippet}
 <DialogModal
 	title={forcedChangeTitle}
 	body={forcedChangeBody}
@@ -605,39 +650,7 @@
 		cancelForcedChange();
 	}}
 	bind:show={mustChangePassword}
->
-	{#snippet forcedChangeTitle()}
-		<span class="has-text-warning"><i class="fa-solid fa-key"></i> Password change required</span>
-	{/snippet}
-
-	{#snippet forcedChangeBody()}
-		<div class="notification is-warning is-light">
-			<span class="icon-text">
-				<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
-				<span>For security reasons you must change your password before continuing.</span>
-			</span>
-		</div>
-		<Input label="Current password:" bind:value={changePwd.current}></Input>
-		<Input label="New password:" bind:value={changePwd.newPassword}></Input>
-		<Input label="Repeat new password:" bind:value={changePwd.repeat}></Input>
-		{#if changePwd.newPassword && !changePwdMatch}
-			<div class="notification is-danger is-light py-2 px-3 mt-2">
-				<span class="icon-text">
-					<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
-					<span>Passwords do not match.</span>
-				</span>
-			</div>
-		{/if}
-		{#if forcedChangeError}
-			<div class="notification is-danger is-light py-2 px-3 mt-2">
-				<span class="icon-text">
-					<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
-					<span>{forcedChangeError}</span>
-				</span>
-			</div>
-		{/if}
-	{/snippet}
-</DialogModal>
+></DialogModal>
 
 <style>
 	/* Overlay style override */

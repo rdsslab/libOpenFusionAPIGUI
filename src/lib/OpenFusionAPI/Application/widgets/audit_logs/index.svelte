@@ -7,6 +7,7 @@
 		DialogModal,
 		Notifications
 	} from '@rdsslab/svelte-components';
+	import { getErrorMessage } from '#lib/OpenFusionAPI/Application/utils/errors.js';
 	import {
 		SearchAuditLogs,
 		GetAuditLogDetail,
@@ -62,6 +63,35 @@
 	];
 	const STATS_WINDOWS = [7, 30, 90];
 
+	/**
+	 * @typedef {object} AuditLogRow
+	 * @property {string} [action]
+	 * @property {string} [entity_type]
+	 * @property {string} [entity_id]
+	 * @property {string} [actor_kind]
+	 * @property {string} [actor_username]
+	 * @property {string} [target_username]
+	 * @property {string} [environment]
+	 * @property {boolean} [status]
+	 * @property {string} [message]
+	 * @property {string} [trace_id]
+	 * @property {number|string} [id]
+	 */
+	/**
+	 * @typedef {object} AuditLogStats
+	 * @property {number} total
+	 * @property {number} failures
+	 * @property {Array<{action: string, count: number}>} by_action
+	 * @property {Array<{entity_type: string, count: number}>} by_entity
+	 * @property {Array<{actor_username: string, count: number}>} by_actor
+	 */
+	/**
+	 * @typedef {object} AuditLogSearchResult
+	 * @property {Array<AuditLogRow>} rows
+	 * @property {number} total
+	 */
+
+
 	// === Filtros ===
 	let action = $state('');
 	let entityType = $state('');
@@ -79,19 +109,19 @@
 	let statsDays = $state(30);
 
 	// === Datos ===
-	let logs = $state([]);
+	let /** @type {Array<AuditLogRow>} */ logs = $state([]);
 	let total = $state(0);
 	let offset = $state(0);
 	let loading = $state(false);
 	let loadingMore = $state(false);
 
 	// === Stats ===
-	let stats = $state(null);
+	let /** @type {AuditLogStats|null} */ stats = $state(null);
 	let loadingStats = $state(false);
 
 	// === Detalle ===
 	let showDetail = $state(false);
-	let detailData = $state(null);
+	let /** @type {AuditLogRow|null} */ detailData = $state(null);
 	let detailLoading = $state(false);
 
 	// === Poda ===
@@ -99,6 +129,10 @@
 	let pruning = $state(false);
 	let retentionDays = $state(365);
 
+	/**
+	 * @param {unknown} n
+	 * @returns {boolean}
+	 */
 	function isNumeric(n) {
 		return Number.isFinite(Number(n));
 	}
@@ -118,7 +152,12 @@
 		return !isNaN(ds.getTime()) && !isNaN(de.getTime()) && ds < de;
 	}
 
+	/**
+	 * @param {number} [forOffset]
+	 * @returns {{limit: number, offset: number, action?: string, entity_type?: string, entity_id?: string, actor_kind?: string, actor_username?: string, target_username?: string, environment?: string, status?: string, from?: string, to?: string}}
+	 */
 	function buildQuery(forOffset = 0) {
+		/** @type {{limit: number, offset: number, action?: string, entity_type?: string, entity_id?: string, actor_kind?: string, actor_username?: string, target_username?: string, environment?: string, status?: string, from?: string, to?: string}} */
 		const q = { limit: normalizedLimit(), offset: forOffset };
 
 		if (action) q.action = action;
@@ -148,6 +187,10 @@
 		return q;
 	}
 
+	/**
+	 * @param {AuditLogRow} row
+	 * @returns {AuditLogRow}
+	 */
 	function decorateRow(row) {
 		return {
 			...row,
@@ -180,7 +223,7 @@
 				logs = [];
 				total = 0;
 				offset = 0;
-				notify.push({ message: e.message || 'Failed to load audit logs', color: 'danger' });
+				notify.push({ message: getErrorMessage(e) || 'Failed to load audit logs', color: 'danger' });
 			}
 		} finally {
 			if (rid === logs_guard) loading = false;
@@ -201,14 +244,15 @@
 		} catch (e) {
 			console.error(e);
 			if (rid === logs_guard) {
-				notify.push({ message: e.message || 'Failed to load more audit logs', color: 'danger' });
+				notify.push({ message: getErrorMessage(e) || 'Failed to load more audit logs', color: 'danger' });
 			}
 		} finally {
 			if (rid === logs_guard) loadingMore = false;
 		}
 	}
 
-	let reloadTimer = null;
+	/** @type {ReturnType<typeof setTimeout>|undefined} */
+	let reloadTimer;
 
 	function scheduleReload() {
 		clearTimeout(reloadTimer);
@@ -259,12 +303,15 @@
 		await Promise.all([loadAudit(), loadStats()]);
 	}
 
+	/**
+	 * @param {{row: AuditLogRow}} param
+	 */
 	async function onRowClick({ row }) {
 		showDetail = true;
 		detailData = null;
 		detailLoading = true;
 		try {
-			const detail = await GetAuditLogDetail(row?.id);
+			const detail = await GetAuditLogDetail(/** @type {string|number} */ (row?.id ?? ''));
 			detailData = detail && !detail.error ? detail : row;
 		} catch (e) {
 			console.error(e);
@@ -295,19 +342,21 @@
 			if (res && !res.error) await refreshAll();
 		} catch (e) {
 			console.error(e);
-			notify.push({ message: e.message || 'Failed to prune audit logs', color: 'danger' });
+			notify.push({ message: getErrorMessage(e) || 'Failed to prune audit logs', color: 'danger' });
 		} finally {
 			pruning = false;
 		}
 	}
 
-	function handlePresetHoursChange(e) {
-		const value = Math.floor(Number(e.target.value));
+	function handlePresetHoursChange(/** @type {Event} */ e) {
+		const input = /** @type {HTMLInputElement} */ (e.target);
+		const value = Math.floor(Number(input.value));
 		presetHours = Number.isFinite(value) && value > 0 ? value : 24;
 	}
 
-	function handleLimitChange(e) {
-		const value = Math.floor(Number(e.target.value));
+	function handleLimitChange(/** @type {Event} */ e) {
+		const input = /** @type {HTMLInputElement} */ (e.target);
+		const value = Math.floor(Number(input.value));
 		limit = Number.isFinite(value) && value > 0 ? value : 100;
 	}
 
@@ -575,28 +624,27 @@
 
 <AuditDetail bind:show={showDetail} bind:detail={detailData} bind:loading={detailLoading} />
 
+{#snippet pruneTitle()}
+	<span>Confirm audit pruning</span>
+{/snippet}
+{#snippet pruneBody()}
+	<div class="notification is-warning is-light py-2 px-3">
+		<span class="icon-text">
+			<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+			<span>
+				This permanently deletes all audit events older than the configured retention (default {retentionDays}
+				days). This cannot be undone.
+			</span>
+		</span>
+	</div>
+	{#if pruning}
+		<p class="has-text-grey is-italic is-size-7">Pruning…</p>
+	{/if}
+{/snippet}
 <DialogModal
 	title={pruneTitle}
 	body={pruneBody}
 	onaccept={confirmPrune}
 	oncancel={() => (showPrune = false)}
 	bind:show={showPrune}
->
-	{#snippet pruneTitle()}
-		<span>Confirm audit pruning</span>
-	{/snippet}
-	{#snippet pruneBody()}
-		<div class="notification is-warning is-light py-2 px-3">
-			<span class="icon-text">
-				<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
-				<span>
-					This permanently deletes all audit events older than the configured retention (default {retentionDays}
-					days). This cannot be undone.
-				</span>
-			</span>
-		</div>
-		{#if pruning}
-			<p class="has-text-grey is-italic is-size-7">Pruning…</p>
-		{/if}
-	{/snippet}
-</DialogModal>
+></DialogModal>

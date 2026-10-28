@@ -1,4 +1,5 @@
 <script>
+	import { getErrorMessage } from '#lib/OpenFusionAPI/Application/utils/errors.js';
 	import { onMount } from 'svelte';
 	import {
 		EditorCode,
@@ -10,6 +11,22 @@
 	import { UpsertAppVar, DeleteAppVar } from '#lib/OpenFusionAPI/Application/utils/request.js';
 	import { userStore } from '#lib/OpenFusionAPI/Application/utils/stores.js';
 
+	/**
+	 * @typedef {import('#lib/OpenFusionAPI/types/models.js').AppVarRow} AppVarRow
+	 */
+
+	/**
+	 * @type {{
+	 *   idapp?: number|string,
+	 *   isReadOnly?: boolean,
+	 *   showCode?: boolean,
+	 *   appVars?: Array<AppVarRow>,
+	 *   title?: string,
+	 *   environment?: string,
+	 *   onchange?: (vars: Array<AppVarRow>) => void,
+	 *   oncopy?: (appvar: AppVarRow) => void
+	 * }}
+	 */
 	let {
 		idapp = $bindable('-'),
 		isReadOnly = $bindable(false),
@@ -24,6 +41,7 @@
 	let new_var_name = $state('');
 	let search_var = $state('');
 	let classAnimationCopyName = $state('');
+	/** @type {Record<string, unknown>} */
 	let appVarsInternal = $state({});
 
 	let appVarsFiltered = $derived.by(() => {
@@ -52,6 +70,10 @@
 
 	let noty = new Notifications();
 
+	/**
+	 * @param {string} name
+	 * @param {string} vars
+	 */
 	function internalOnchange(name, vars) {
 		if (!equalObjs(appVarsInternal[name], vars)) {
 			appVarsInternal[name] = vars;
@@ -59,6 +81,10 @@
 		}
 	}
 
+	/**
+	 * @param {string} name_app
+	 * @returns {boolean}
+	 */
 	function appNameExists(name_app) {
 		return appVars.some((item) => {
 			return item.name == name_app;
@@ -78,7 +104,6 @@
 	 * Valida si en la matriz existe más de un registro
 	 * con el mismo valor en la propiedad "name".
 	 *
-	 * @param {Array<Object>} items - Arreglo de objetos como el que enviaste.
 	 * @returns {boolean} - true si hay nombres duplicados, false si todos son únicos.
 	 */
 	function thereAreDuplicateNames() {
@@ -101,7 +126,7 @@
 	onMount(() => {});
 </script>
 
-{#snippet left_header(appvar)}
+{#snippet left_header(/** @type {AppVarRow} */ appvar)}
 	<span>
 		<div class="field has-addons">
 			{#if !appvar.edit_name}
@@ -196,10 +221,10 @@
 					class="button is-small"
 					title="Copy Name"
 					onclick={async () => {
-						let rc = await copyTextToClipboard(appvar.name);
+						let rc = await copyTextToClipboard(appvar.name ?? '');
 
 						if (rc.result) {
-							classAnimationCopyName = appvar.name;
+							classAnimationCopyName = appvar.name ?? '';
 							setTimeout(() => {
 								classAnimationCopyName = '';
 							}, 1500);
@@ -216,7 +241,7 @@
 	</span>
 {/snippet}
 
-{#snippet right_header(appvar)}
+{#snippet right_header(/** @type {AppVarRow} */ appvar)}
 	<span>
 		{#if !isReadOnly}
 			<div class="field has-addons">
@@ -264,7 +289,7 @@
 									console.error(error);
 									noty.push({
 										message: `Error saving variable ${appvar.name}: ${
-											error.message || 'Unknown error'
+											getErrorMessage(error) || 'Unknown error'
 										}`,
 										color: 'danger'
 									});
@@ -306,7 +331,7 @@
 									console.error(error);
 									noty.push({
 										message: `Error deleting variable ${appvar.name}: ${
-											error.message || 'Unknown error'
+											getErrorMessage(error) || 'Unknown error'
 										}`,
 										color: 'danger'
 									});
@@ -326,76 +351,80 @@
 
 {#if appVars}
 	<div class="box">
-		<Level left={[l01]} right={[r01]}>
-			{#snippet l01()}
-				{title}
-			{/snippet}
-
-			{#snippet r01()}
-				<div>
-					<div class="field has-addons">
-						{#if !isReadOnly}
-							<div class="control">
-								<button class="button is-small is-static"> $_VAR_ </button>
-							</div>
-
-							<div class="control">
-								<input
-									class="input is-small"
-									type="text"
-									placeholder="New app variable"
-									bind:value={new_var_name}
-								/>
-							</div>
-							<div class="control">
-								<button
-									class="button is-success is-small"
-									onclick={() => {
-										if (new_var_name && new_var_name.length > 4) {
-											// Verificar que la variable no exista
-											let var_full_name = '$_VAR_' + new_var_name.toUpperCase();
-
-											if (appNameExists(var_full_name)) {
-												alert('Var ' + var_full_name + ' already exists.');
-											} else {
-												appVars.push({
-													idapp: idapp,
-													name: var_full_name,
-													environment: environment
-												});
-												appVars = [...appVars];
-											}
-										} else {
-											alert('You must enter at least 5 characters');
-										}
-									}}
-								>
-									New
-								</button>
-							</div>
-						{/if}
+		{#snippet l01()}
+			{title}
+		{/snippet}
+		{#snippet r01()}
+			<div>
+				<div class="field has-addons">
+					{#if !isReadOnly}
+						<div class="control">
+							<button class="button is-small is-static"> $_VAR_ </button>
+						</div>
 
 						<div class="control">
 							<input
 								class="input is-small"
 								type="text"
-								placeholder="Search variable"
-								bind:value={search_var}
+								placeholder="New app variable"
+								bind:value={new_var_name}
 							/>
 						</div>
 						<div class="control">
-							<button class="button is-small is-static" title="Search" type="button">
-								<span class="icon is-small">
-									<i class="fa-solid fa-magnifying-glass"></i>
-								</span>
+							<button
+								class="button is-success is-small"
+								onclick={() => {
+									if (new_var_name && new_var_name.length > 4) {
+										// Verificar que la variable no exista
+										let var_full_name = '$_VAR_' + new_var_name.toUpperCase();
+
+										if (appNameExists(var_full_name)) {
+											alert('Var ' + var_full_name + ' already exists.');
+										} else {
+											appVars.push({
+												idapp: idapp,
+												name: var_full_name,
+												environment: environment
+											});
+											appVars = [...appVars];
+										}
+									} else {
+										alert('You must enter at least 5 characters');
+									}
+								}}
+							>
+								New
 							</button>
 						</div>
+					{/if}
+
+					<div class="control">
+						<input
+							class="input is-small"
+							type="text"
+							placeholder="Search variable"
+							bind:value={search_var}
+						/>
+					</div>
+					<div class="control">
+						<button class="button is-small is-static" title="Search" type="button">
+							<span class="icon is-small">
+								<i class="fa-solid fa-magnifying-glass"></i>
+							</span>
+						</button>
 					</div>
 				</div>
-			{/snippet}
-		</Level>
+			</div>
+		{/snippet}
+		<Level left={[l01]} right={[r01]}></Level>
 
 		{#each appVarsFiltered as av, i}
+			{#snippet left_Editor()}
+				{@render left_header(av)}
+			{/snippet}
+			{#snippet right_Editor()}
+				{@render right_header(av)}
+			{/snippet}
 			<EditorCode
 				showSelectLang={true}
 				left={left_Editor}
@@ -405,18 +434,10 @@
 				{isReadOnly}
 				bind:code={av.value}
 				bind:lang={av.type}
-				onchange={(e) => {
-					internalOnchange(av.name, e.code);
+				onchange={(/** @type {{code: string}} */ e) => {
+					internalOnchange(av.name ?? '', e.code);
 				}}
-			>
-				{#snippet left_Editor()}
-					{@render left_header(av)}
-				{/snippet}
-
-				{#snippet right_Editor()}
-					{@render right_header(av)}
-				{/snippet}
-			</EditorCode>
+			></EditorCode>
 			<hr class="reset_margin" />
 		{:else}
 			{#if search_var.trim()}

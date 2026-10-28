@@ -1,18 +1,24 @@
 <script>
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { BasicSelect } from '@rdsslab/svelte-components';
 	import { listMethodStore } from '../../utils/stores.js';
 
-	let { disabled = $bindable(false), option = $bindable({}), onselect } = $props();
+	/**
+	 * @type {{disabled?: boolean, option?: string|number|undefined, onselect?: (e: {value: any}) => void}}
+	 */
+	let {
+		disabled = $bindable(false),
+		option = $bindable(undefined),
+		onselect = (/** @type {{value: any}} */ s) => {}
+	} = $props();
 
+	/** @type {Array<{id: string, value: string, enabled?: boolean, description?: string}>} */
 	let methods = $state([]);
 
 	const unsubscribe = listMethodStore.subscribe((value) => {
 		methods = value;
 		//console.log('methods', methods);
 	});
-	// TODO: Hay que agregar la lógica para manejar el estado disabled
-	onMount(async () => {});
 	onDestroy(unsubscribe);
 </script>
 

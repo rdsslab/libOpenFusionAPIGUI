@@ -2,6 +2,20 @@ import { get } from 'svelte/store';
 import { listHandlerStore } from './stores.js';
 
 /**
+ * @typedef {import('../../types/models.js').DataTest} DataTest
+ * @typedef {import('../../types/models.js').EndpointRow} EndpointRow
+ * @typedef {object} HandlerParam
+ * @property {string} [id]
+ * @property {string} [label]
+ * @property {string|number} [value]
+ * @property {boolean} [enabled]
+ * @property {string} [description]
+ * @property {string} [css_class]
+ * @property {string} [css_icon]
+ * @property {unknown} [modules]
+ */
+
+/**
  * Normaliza un `data_test` a la forma canónica que espera el `RESTTester` y que
  * el backend reconoce como suya: `query`/`headers` como arrays y `body`/`auth`
  * como objetos con `selection` numérico.
@@ -11,6 +25,8 @@ import { listHandlerStore } from './stores.js';
  * traiga ninguna señal del Tester, y un `body`/`auth` vacío sin `selection` era
  * justo el disparador de que la configuración de query/headers acabara dentro
  * del Body como JSON.
+ * @param {Partial<DataTest>|null|undefined} data_test
+ * @returns {DataTest}
  */
 export const ensureDataTestShape = (data_test) => {
 	const dt =
@@ -23,14 +39,22 @@ export const ensureDataTestShape = (data_test) => {
 	if (dt.auth == null || typeof dt.auth !== 'object' || Array.isArray(dt.auth)) dt.auth = {};
 	if (typeof dt.auth.selection !== 'number') dt.auth.selection = 0;
 
-	return dt;
+	return /** @type {DataTest} */ (dt);
 };
 
+/**
+ * @param {string} handler
+ * @returns {HandlerParam|undefined}
+ */
 export const getHandlerParams = (handler) => {
 	const list = get(listHandlerStore); // ← obtiene el valor actual del store
 	return Array.isArray(list) ? list.find((item) => item.id == handler) : {};
 };
 
+/**
+ * @param {unknown} idapp
+ * @returns {boolean}
+ */
 export const isNewApp = (idapp) => {
 	if (typeof idapp === 'string' && idapp.trim().length > 5) {
 		console.log('Basic cargar idapp: ', idapp);
@@ -41,12 +65,21 @@ export const isNewApp = (idapp) => {
 	}
 };
 
+/**
+ * @param {unknown} value
+ * @param {unknown} new_value
+ * @returns {boolean}
+ */
 export const equalObjs = (value, new_value) => {
 	let new_value_str = typeof new_value == 'object' ? JSON.stringify(new_value) : new_value;
 	let currect_value_str = typeof value == 'object' ? JSON.stringify(value) : value;
 	return new_value_str == currect_value_str;
 };
 
+/**
+ * @param {unknown} obj
+ * @returns {string}
+ */
 export const jsonToHtmlString = (obj) => {
 	// Convierte el objeto en JSON con identación (2 espacios)
 	let jsonString = JSON.stringify(obj, null, 2);
@@ -67,6 +100,12 @@ export const jsonToHtmlString = (obj) => {
 		.join('<br>'); // saltos → <br>
 };
 
+/**
+ * @param {ReturnType<typeof setTimeout>|undefined} idTimeout
+ * @param {() => void} fn_handler
+ * @param {number} [timeout]
+ * @returns {ReturnType<typeof setTimeout>}
+ */
 export const TimeOutChangeValue = (idTimeout, fn_handler, timeout = 600) => {
 	clearTimeout(idTimeout);
 	return setTimeout(() => {
@@ -74,6 +113,10 @@ export const TimeOutChangeValue = (idTimeout, fn_handler, timeout = 600) => {
 	}, timeout);
 };
 
+/**
+ * @param {EndpointRow|null} [row]
+ * @returns {EndpointRow}
+ */
 export const defaultValuesEndpointRow = (row) => {
 	if (row == null) {
 		row = {};
@@ -158,53 +201,68 @@ export const defaultValuesEndpointRow = (row) => {
 		row.ctrl = {};
 	}
 
-	if (row && row.ctrl.users == null) {
-		row.ctrl.users = [];
-	}
+	if (row?.ctrl) {
+		if (row.ctrl.users == null) {
+			row.ctrl.users = [];
+		}
 
-	if (row && row.ctrl.log == null) {
-		row.ctrl.log = {};
+		if (row.ctrl.log == null) {
+			row.ctrl.log = {};
+		}
 	}
 
 	if (row && row.data_test == null) {
 		row.data_test = ensureDataTestShape({});
 	}
 
-	if (row && row.data_test.query == null) {
-		row.data_test.query = [];
-	} else if (!Array.isArray(row.data_test.query)) {
-		row.data_test.query = [];
-	}
+	if (row?.data_test) {
+		const data_test = row.data_test;
 
-	if (row && row.data_test.body == null) {
-		row.data_test.body = {};
-	}
+		if (data_test.query == null) {
+			data_test.query = [];
+		} else if (!Array.isArray(data_test.query)) {
+			data_test.query = [];
+		}
 
-	if (row && row.data_test.headers == null) {
-		row.data_test.headers = [];
-	} else if (!Array.isArray(row.data_test.headers)) {
-		row.data_test.headers = [];
-	}
+		if (data_test.body == null) {
+			data_test.body = {};
+		}
 
-	if (row && row.data_test.auth == null) {
-		row.data_test.auth = {};
-	}
+		if (data_test.headers == null) {
+			data_test.headers = [];
+		} else if (!Array.isArray(data_test.headers)) {
+			data_test.headers = [];
+		}
 
-	// Forma canónica que espera el Tester y acepta el backend: query/headers
-	// como arrays y body/auth con `selection` numérico.
-	if (row) {
-		row.data_test = ensureDataTestShape(row.data_test);
+		if (data_test.auth == null) {
+			data_test.auth = {};
+		}
+
+		// Forma canónica que espera el Tester y acepta el backend: query/headers
+		// como arrays y body/auth con `selection` numérico.
+		row.data_test = ensureDataTestShape(data_test);
 	}
 
 	return row;
 };
 
+/**
+ * @param {string} method
+ * @param {string} app
+ * @param {string} resource
+ * @param {string} environment
+ * @returns {string}
+ */
 export function createEndpoint(method, app, resource, environment) {
 	return `${method == 'WS' ? '/ws/' : '/api/'}${app}${resource}/${environment}`;
 }
 
 /**
  * @param {string} string_url
+ */
+/**
+ * @param {string} string_url
+ * @returns {boolean}
  */
 export function validateURL(string_url) {
 	const patron = /^\/[a-zA-Z0-9\-._~%]+(\/[a-zA-Z0-9\-._~%]+)*\/?$/;
@@ -222,20 +280,33 @@ export function validateURL(string_url) {
 	}
 }
 
+/**
+ * @template {object} T
+ * @param {T} target
+ * @param {unknown} source
+ * @returns {T}
+ */
 export const mergeSourceOverwrite = (target, source) => {
 	// Early return para casos triviales
 	if (target === source) return target;
 	if (source == null || typeof source !== 'object') return target;
-	if (target == null || typeof target !== 'object') return source;
+	if (target == null || typeof target !== 'object') return /** @type {T} */ (source);
 
+	/**
+	 * @param {unknown} val
+	 * @returns {val is Record<string, unknown>}
+	 */
 	const isPlainObject = (val) => val !== null && typeof val === 'object' && !Array.isArray(val);
 
 	// Clon superficial del target (NO se muta el original)
-	const result = { ...target };
+	/** @type {Record<string, unknown>} */
+	const result = /** @type {Record<string, unknown>} */ (/** @type {unknown} */ ({ ...target }));
+	const targetRecord = /** @type {Record<string, unknown>} */ (target);
+	const sourceRecord = /** @type {Record<string, unknown>} */ (source);
 
-	for (const key of Object.keys(source)) {
-		const srcVal = source[key];
-		const tarVal = target[key];
+	for (const key of Object.keys(sourceRecord)) {
+		const srcVal = sourceRecord[key];
+		const tarVal = targetRecord[key];
 
 		// data_test se une aparte para no perder los tipos del Tester
 		// (query/headers arrays; body/auth con `selection`).
@@ -250,7 +321,7 @@ export const mergeSourceOverwrite = (target, source) => {
 		}
 	}
 
-	return result;
+	return /** @type {T} */ (result);
 };
 
 // NOTA: Para copiar texto al portapapeles (clipboard), no defina una función local ni use copyToClipboard.

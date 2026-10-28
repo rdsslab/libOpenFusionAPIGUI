@@ -11,6 +11,7 @@
 
 	let { endpoint = $bindable({}), onchange = () => {} } = $props();
 	let functions = $derived.by(() => {
+		/** @type {Array<{id: string, value: string|number}>} */
 		let r = [];
 
 		switch (endpoint.environment) {
@@ -27,7 +28,7 @@
 		return r;
 	});
 
-	let tabList = $state([{ label: 'Function', isActive: true, component: tab_fn }]);
+	let tabList = $state([{ label: 'Function', component: tab_fn }]);
 
 	function defaultValues() {
 		if (!endpoint) {
@@ -83,7 +84,7 @@
 				<SelectFns
 					options={functions}
 					bind:option={endpoint.code}
-					onchange={(s) => {
+					onchange={(/** @type {string} */ s) => {
 						fnOnChange();
 					}}
 				/>

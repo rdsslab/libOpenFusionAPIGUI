@@ -7,6 +7,7 @@
 	let { idbot = $bindable(), hours = 24 } = $props();
 
 	let uF = new uFetch(url_paths.getBotLogs);
+	/** @type {Array<Record<string, unknown>>} */
 	let dataLogs = $state([]);
 
 	let columns = $state({

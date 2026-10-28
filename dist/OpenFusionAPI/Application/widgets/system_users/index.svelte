@@ -1,4 +1,5 @@
 <script>
+	import { getErrorMessage } from '../../utils/errors.js';
 	import {
 		Table,
 		ColumnTypes,
@@ -29,6 +30,7 @@
 	let showChangePassword = $state(false);
 	let showResetPassword = $state(false);
 	let isEditing = $state(false);
+	/** @type {Array<Record<string, unknown>>} */
 	let DataTableUsers = $state([]);
 	let selectedRow = $state(getDefaultValues());
 	let passwordData = $state({ oldPassword: '', newPassword: '', repeatNewPassword: '' });
@@ -72,6 +74,9 @@
 		}
 	});
 
+	/**
+	 * @returns {import('../../../types/models.js').SystemUserForm}
+	 */
 	function getDefaultValues() {
 		return {
 			iduser: 0,
@@ -92,8 +97,8 @@
 
 	let passwordMatch = $derived(passwordData.newPassword === passwordData.repeatNewPassword);
 
-	$effect(async () => {
-		await loadUsers();
+	$effect(() => {
+		loadUsers();
 	});
 
 	async function loadUsers() {
@@ -110,7 +115,7 @@
 			}
 		} catch (error) {
 			console.error('loadUsers error:', error);
-			notify.push({ message: error.message || 'Failed to load users', color: 'danger' });
+			notify.push({ message: getErrorMessage(error) || 'Failed to load users', color: 'danger' });
 			DataTableUsers = [];
 		}
 	}
@@ -160,7 +165,7 @@
 			}
 		} catch (error) {
 			console.error('saveUser error:', error);
-			notify.push({ message: error.message || 'Failed to save user', color: 'danger' });
+			notify.push({ message: getErrorMessage(error) || 'Failed to save user', color: 'danger' });
 		}
 	}
 
@@ -181,7 +186,7 @@
 			}
 		} catch (error) {
 			console.error('deleteUser error:', error);
-			notify.push({ message: error.message || 'Failed to delete user', color: 'danger' });
+			notify.push({ message: getErrorMessage(error) || 'Failed to delete user', color: 'danger' });
 		}
 	}
 
@@ -211,7 +216,7 @@
 			}
 		} catch (error) {
 			console.error('changePassword error:', error);
-			notify.push({ message: error.message || 'Failed to change password', color: 'danger' });
+			notify.push({ message: getErrorMessage(error) || 'Failed to change password', color: 'danger' });
 		}
 	}
 
@@ -243,10 +248,13 @@
 			}
 		} catch (error) {
 			console.error('resetPassword error:', error);
-			notify.push({ message: error.message || 'Failed to reset password', color: 'danger' });
+			notify.push({ message: getErrorMessage(error) || 'Failed to reset password', color: 'danger' });
 		}
 	}
 
+	/**
+	 * @param {import('../../../types/models.js').SystemUserForm|null} [row]
+	 */
 	function openEditor(row = null) {
 		if (row) {
 			isEditing = true;
@@ -274,18 +282,73 @@
 		showEditor = true;
 	}
 
+	/**
+	 * @param {import('../../../types/models.js').SystemUserForm} row
+	 */
 	function openChangePassword(row) {
-		selectedRow = { ...row };
+		selectedRow = {
+			...getDefaultValues(),
+			...row,
+			custom_data: row.custom_data ?? {},
+			ctrl: row.ctrl ?? { as_admin: false, env: {} }
+		};
 		passwordData = { oldPassword: '', newPassword: '', repeatNewPassword: '' };
 		showChangePassword = true;
 	}
 
+	/**
+	 * @param {import('../../../types/models.js').SystemUserForm} row
+	 */
 	function openResetPassword(row) {
-		selectedRow = { ...row };
+		selectedRow = {
+			...getDefaultValues(),
+			...row,
+			custom_data: row.custom_data ?? {},
+			ctrl: row.ctrl ?? { as_admin: false, env: {} }
+		};
 		resetPwdData = { newPassword: '', repeat: '' };
 		showResetPassword = true;
 	}
 </script>
+
+	{#snippet r01()}
+		<div class="field has-addons">
+			{#if canCreate || canEdit}
+				<p class="control">
+					<button
+						class="button is-small is-link"
+						onclick={async () => {
+							if (!confirm('Are you sure you want to save and deploy this user?')) return;
+							await saveUser();
+						}}
+					>
+						<span class="icon is-small"><i class="fa-solid fa-rocket"></i></span>
+						<span>Save & Deploy</span>
+					</button>
+				</p>
+			{/if}
+			{#if isEditing && canDelete}
+				<p class="control">
+					<button class="button is-small is-danger is-outlined" onclick={deleteUser}>
+						<span class="icon is-small"><i class="fa-solid fa-trash"></i></span>
+						<span>Delete</span>
+					</button>
+				</p>
+			{/if}
+			<p class="control">
+				<button
+					class="button is-small"
+					onclick={() => {
+						showEditor = false;
+					}}
+				>
+					<span class="icon is-small"><i class="fa-solid fa-xmark"></i></span>
+					<span>Cancel</span>
+				</button>
+			</p>
+		</div>
+	{/snippet}
+
 
 <Table
 	bind:RawDataTable={DataTableUsers}
@@ -294,7 +357,7 @@
 	showNewButton={canCreate}
 	showDeleteButton={false}
 	showEditButton={canEdit}
-	oneditrow={(r) => {
+	oneditrow={(/** @type {import('../../../types/models.js').SystemUserForm} */ r) => {
 		openEditor(r);
 	}}
 	onnewrow={() => {
@@ -304,45 +367,7 @@
 
 {#if showEditor}
 	<SlideFullScreen bind:show={showEditor}>
-		<Level left={[]} right={[r01]}>
-			{#snippet r01()}
-				<div class="field has-addons">
-					{#if canCreate || canEdit}
-						<p class="control">
-							<button
-								class="button is-small is-link"
-								onclick={async () => {
-									if (!confirm('Are you sure you want to save and deploy this user?')) return;
-									await saveUser();
-								}}
-							>
-								<span class="icon is-small"><i class="fa-solid fa-rocket"></i></span>
-								<span>Save & Deploy</span>
-							</button>
-						</p>
-					{/if}
-					{#if isEditing && canDelete}
-						<p class="control">
-							<button class="button is-small is-danger is-outlined" onclick={deleteUser}>
-								<span class="icon is-small"><i class="fa-solid fa-trash"></i></span>
-								<span>Delete</span>
-							</button>
-						</p>
-					{/if}
-					<p class="control">
-						<button
-							class="button is-small"
-							onclick={() => {
-								showEditor = false;
-							}}
-						>
-							<span class="icon is-small"><i class="fa-solid fa-xmark"></i></span>
-							<span>Cancel</span>
-						</button>
-					</p>
-				</div>
-			{/snippet}
-		</Level>
+		<Level left={[]} right={[r01]}></Level>
 
 		<div>
 			<div class="columns">
@@ -460,6 +485,23 @@
 	</SlideFullScreen>
 {/if}
 
+{#snippet titleModal()}
+	<span>Change Password: {selectedRow.username}</span>
+{/snippet}
+{#snippet bodyDialogModal()}
+	<Input type="password" label="Current Password" bind:value={passwordData.oldPassword}></Input>
+	<Input type="password" label="New Password" bind:value={passwordData.newPassword}></Input>
+	<Input type="password" label="Repeat New Password" bind:value={passwordData.repeatNewPassword}
+	></Input>
+	{#if !passwordMatch && passwordData.newPassword && passwordData.repeatNewPassword}
+		<div class="notification is-warning is-light py-2 px-3">
+			<span class="icon-text">
+				<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+				<span>You must repeat the new password twice.</span>
+			</span>
+		</div>
+	{/if}
+{/snippet}
 <DialogModal
 	title={titleModal}
 	body={bodyDialogModal}
@@ -471,27 +513,29 @@
 		passwordData = { oldPassword: '', newPassword: '', repeatNewPassword: '' };
 	}}
 	bind:show={showChangePassword}
->
-	{#snippet titleModal()}
-		<span>Change Password: {selectedRow.username}</span>
-	{/snippet}
+></DialogModal>
 
-	{#snippet bodyDialogModal()}
-		<Input type="password" label="Current Password" bind:value={passwordData.oldPassword}></Input>
-		<Input type="password" label="New Password" bind:value={passwordData.newPassword}></Input>
-		<Input type="password" label="Repeat New Password" bind:value={passwordData.repeatNewPassword}
-		></Input>
-		{#if !passwordMatch && passwordData.newPassword && passwordData.repeatNewPassword}
-			<div class="notification is-warning is-light py-2 px-3">
-				<span class="icon-text">
-					<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
-					<span>You must repeat the new password twice.</span>
-				</span>
-			</div>
-		{/if}
-	{/snippet}
-</DialogModal>
-
+{#snippet resetTitleModal()}
+	<span>Reset Password (temporary): {selectedRow.username}</span>
+{/snippet}
+{#snippet resetBodyDialogModal()}
+	<div class="notification is-warning is-light py-2 px-3">
+		<span class="icon-text">
+			<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+			<span>The user will need to change this password on their next login.</span>
+		</span>
+	</div>
+	<Input type="password" label="Temporary Password" bind:value={resetPwdData.newPassword}></Input>
+	<Input type="password" label="Repeat Temporary Password" bind:value={resetPwdData.repeat}></Input>
+	{#if resetPwdData.newPassword && resetPwdData.newPassword !== resetPwdData.repeat}
+		<div class="notification is-warning is-light py-2 px-3">
+			<span class="icon-text">
+				<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+				<span>Passwords do not match.</span>
+			</span>
+		</div>
+	{/if}
+{/snippet}
 <DialogModal
 	title={resetTitleModal}
 	body={resetBodyDialogModal}
@@ -503,28 +547,4 @@
 		resetPwdData = { newPassword: '', repeat: '' };
 	}}
 	bind:show={showResetPassword}
->
-	{#snippet resetTitleModal()}
-		<span>Reset Password (temporary): {selectedRow.username}</span>
-	{/snippet}
-
-	{#snippet resetBodyDialogModal()}
-		<div class="notification is-warning is-light py-2 px-3">
-			<span class="icon-text">
-				<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
-				<span>The user will need to change this password on their next login.</span>
-			</span>
-		</div>
-		<Input type="password" label="Temporary Password" bind:value={resetPwdData.newPassword}></Input>
-		<Input type="password" label="Repeat Temporary Password" bind:value={resetPwdData.repeat}
-		></Input>
-		{#if resetPwdData.newPassword && resetPwdData.newPassword !== resetPwdData.repeat}
-			<div class="notification is-warning is-light py-2 px-3">
-				<span class="icon-text">
-					<span class="icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
-					<span>Passwords do not match.</span>
-				</span>
-			</div>
-		{/if}
-	{/snippet}
-</DialogModal>
+></DialogModal>

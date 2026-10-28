@@ -16,17 +16,40 @@
 	} from '../../utils/request.js';
 	import { httpStatusText } from '../../utils/httpStatus.js';
 	let { idapp = $bindable() } = $props();
+	/**
+ * @typedef {Record<string, unknown>} RowAny
+ * @typedef {{value: Array<string|number>, name?: string, other?: string, seriesName?: string}} DashboardChartPoint
+ * @typedef {{idendpoint?: string|number, type?: string, name?: string, showSymbol?: boolean, smooth?: boolean, large?: boolean, data?: Array<DashboardChartPoint>, itemStyle?: Record<string, unknown>, lineStyle?: Record<string, unknown>, extra?: Record<string, unknown>}} ChartSeriesItem
+ * @typedef {{status_class?: string, count?: string|number, minute?: string}} StatusClassRow
+ * @typedef {{status_code?: string|number, recordCount?: string|number}} StatusCodeRow
+ * @typedef {{resource?: string, requestCount?: string|number}} EndpointUsageRow
+ * @typedef {{idendpoint?: string|number, method?: string, resource?: string, series?: Array<DashboardChartPoint>, count?: string|number, bucket?: string, title?: string}} TopErrorEndpointRow
+ * @typedef {{cpuUsage: number}} ServerCpuEvent
+ * @typedef {{memoryUsage: number}} ServerMemoryEvent
+ * @typedef {{name: string, value: number}} StatusSummaryEntry
+ * @typedef {{idendpoint: string|number, name: string, showSymbol: boolean, symbolSize: number, data: Array<DashboardChartPoint>}} EndpointSeriesEntry
+ */
+	/** @type {Array<ChartSeriesItem>} */
 	let data_request_series = $state([]);
 
+	/** @type {Array<DashboardChartPoint>} */
 	let data_logs_per_minute = $state([]);
+	/** @type {Array<ChartSeriesItem>} */
 	let data_status_class = $state([]);
+	/** @type {Array<StatusSummaryEntry>} */
 	let data_status_summary = $state([]);
+	/** @type {Array<{name: string, value: number}>} */
 	let data_top_endpoints = $state([]);
+	/** @type {Array<RowAny>} */
 	let data_unused_endpoints = $state([]);
+	/** @type {Array<ChartSeriesItem>} */
 	let data_top_error_endpoints = $state([]);
+	/** @type {Array<RowAny>} */
 	let data_error_requests = $state([]);
 	let loading_error_requests = $state(false);
+	/** @type {Array<DashboardChartPoint>} */
 	let data_cpu = $state([]);
+	/** @type {Array<DashboardChartPoint>} */
 	let data_memory = $state([]);
 	let cpuUsage = $state();
 	let memoryUsage = $state();
@@ -34,6 +57,7 @@
 	let selectedHours = $state(12);
 	let selectedStatusClasses = $state(['5xx']);
 
+	/** @type {Record<string, Array<number>>} */
 	const STATUS_CODE_RANGES = {
 		'1xx': [100, 199],
 		'2xx': [200, 299],
@@ -42,21 +66,21 @@
 		'5xx': [500, 599]
 	};
 
-	function statusMatchesSelectedClasses(statusCode, classes) {
+	function statusMatchesSelectedClasses(/** @type {number} */ statusCode, /** @type {Array<string>} */ classes) {
 		return classes.some((cls) => {
-			const [min, max] = STATUS_CODE_RANGES[cls] || [];
+			const [min, max] = /** @type {Record<string, Array<number>>} */ (STATUS_CODE_RANGES)[cls] || [];
 			return min && statusCode >= min && statusCode <= max;
 		});
 	}
 
-	function topErrorsTooltipFormatter(params) {
+	function topErrorsTooltipFormatter(/** @type {any} */ params) {
 		const points = Array.isArray(params) ? params : [params];
 		return points
-			.map((p) => {
-				const date = new Date(p.value[0]);
-				const pad = (n) => String(n).padStart(2, '0');
+			.map((/** @type {DashboardChartPoint} */ p) => {
+				const date = new Date((/** @type {Array} */ p.value)[0]);
+				const pad = (/** @type {number} */ n) => String(n).padStart(2, '0');
 				const formattedDate = `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-				return `URL: ${p.seriesName}<br/>${formattedDate}<br/>Errores: ${p.value[1]}`;
+				return `URL: ${/** @type {string} */ (p.seriesName)}<br/>${formattedDate}<br/>Errores: ${(/** @type {Array} */ p.value)[1]}`;
 			})
 			.join('<br/><br/>');
 	}
@@ -90,112 +114,139 @@
 
 	// El componente Input es un passthrough al <input type="number"> nativo, sin validación
 	// propia — hay que sanear acá que sea un entero positivo mayor a 1.
-	function handleHoursChange(e) {
-		let value = Math.floor(Number(e.target.value));
+	function handleHoursChange(/** @type {Event} */ e) {
+		const input = /** @type {HTMLInputElement} */ (e.target);
+		if (!input) return;
+		let value = Math.floor(Number(input.value));
 		selectedHours = Number.isFinite(value) && value > 1 ? value : 12;
 	}
 
-	function formatDataCPUUsage(data) {
+	function formatDataCPUUsage(/** @type {ServerCpuEvent} */ data) {
 		let now = new Date();
 		cpuUsage = data.cpuUsage;
-		return {
+		return /** @type {DashboardChartPoint} */ ({
 			name: now.toISOString(),
 			value: [now, cpuUsage],
 			other: 'Nada'
-		};
+		});
 	}
 
-	function formatDataMemoryUsage(data) {
+	function formatDataMemoryUsage(/** @type {ServerMemoryEvent} */ data) {
 		let now = new Date();
 		memoryUsage = data.memoryUsage;
-		return {
+		return /** @type {DashboardChartPoint} */ ({
 			name: now.toISOString(),
 			value: [now, memoryUsage],
 			other: 'Nada'
-		};
+		});
 	}
 
-	function matchesSelection(data_endpoint) {
+	function matchesSelection(/** @type {RowAny} */ data_endpoint) {
 		return (
 			idapp && data_endpoint?.idapp == idapp && data_endpoint?.environment == selectedEnvironment
 		);
 	}
 
-	function formatData(data_endpoint) {
+	function formatData(/** @type {RowAny} */ data_endpoint) {
 		if (matchesSelection(data_endpoint)) {
-			let now = new Date(data_endpoint.dateTime || Date.now());
+			let now = new Date((/** @type {string|number} */ (data_endpoint.dateTime || Date.now())));
 			let label = data_endpoint.method
 				? `${data_endpoint.method} ${data_endpoint.resource || data_endpoint.url || ''}`.trim()
 				: `Endpoint ${data_endpoint.idendpoint}`;
-			return {
+			return /** @type {DashboardChartPoint} */ ({
 				name: now.toISOString(),
 				value: [now, data_endpoint?.responseTime],
 				other: label
-			};
+			});
 		}
 	}
 
 	// Los eventos llegan por websocket y no siempre en orden cronológico, por lo que no se
 	// puede asumir que el punto más nuevo cae al final del arreglo: hay que ubicarlo por
 	// fecha para que la gráfica de líneas no dibuje saltos hacia atrás en el tiempo.
+	/**
+		 * @param {Array<DashboardChartPoint>} dataArray
+		 * @param {DashboardChartPoint} point
+		 * @returns {Array<DashboardChartPoint>}
+	 */
 	function insertSortedPoint(dataArray, point) {
-		const t = new Date(point.value[0]).getTime();
+		const t = new Date((/** @type {Array<string|number>} */ point.value)[0]).getTime();
 		let i = dataArray.length - 1;
-		while (i >= 0 && new Date(dataArray[i].value[0]).getTime() > t) {
+		while (i >= 0 && new Date((/** @type {Array<string|number>} */ dataArray[i].value)[0]).getTime() > t) {
 			i--;
 		}
 		const result = [...dataArray];
-		result.splice(i + 1, 0, point);
+		result.splice(i + 1, 0, /** @type {DashboardChartPoint} */ (point));
 		return result;
 	}
 
 	// Inserta `point` (ya ordenado cronológicamente vía insertSortedPoint) en la serie de
 	// `data_request_series` correspondiente a `idendpoint`, creando la serie si el endpoint
 	// no tenía actividad en la ventana histórica cargada.
+	/**
+		 * @param {Array<ChartSeriesItem>} seriesArray
+		 * @param {string|number} idendpoint
+		 * @param {string} label
+		 * @param {DashboardChartPoint} point
+		 * @returns {Array<ChartSeriesItem>}
+	 */
 	function upsertSeriesPoint(seriesArray, idendpoint, label, point) {
 		const index = seriesArray.findIndex((series) => series.idendpoint === idendpoint);
 		if (index === -1) {
 			return [
 				...seriesArray,
-				{ idendpoint, name: label, showSymbol: true, symbolSize: 4, data: [point] }
+				/** @type {ChartSeriesItem} */ ({ idendpoint, name: label, showSymbol: true, symbolSize: 4, data: [point] })
 			];
 		}
 		const updated = [...seriesArray];
-		updated[index] = { ...updated[index], data: insertSortedPoint(updated[index].data, point) };
+		updated[index] = { ...updated[index], data: insertSortedPoint((/** @type {Array<DashboardChartPoint>} */ (updated[index].data || [])), point) };
 		return updated;
 	}
 
 	// Trunca al minuto e incrementa el punto del arreglo que ya corresponda a ese minuto
 	// (buscándolo, no asumiendo que es el último), o inserta uno nuevo en su posición
 	// cronológica — misma agrupación que hace el backend, pero incremental.
+	/**
+		 * @param {Array<DashboardChartPoint>} dataArray
+		 * @param {string|number} dateValue
+		 * @returns {Array<DashboardChartPoint>}
+	 */
 	function incrementMinutePoint(dataArray, dateValue) {
 		const minuteDate = new Date(dateValue || Date.now());
 		minuteDate.setSeconds(0, 0);
 		const t = minuteDate.getTime();
 
 		let i = dataArray.length - 1;
-		while (i >= 0 && new Date(dataArray[i].value[0]).getTime() > t) {
+		while (i >= 0 && new Date((/** @type {Array<string|number>} */ dataArray[i].value)[0]).getTime() > t) {
 			i--;
 		}
 
-		if (i >= 0 && new Date(dataArray[i].value[0]).getTime() === t) {
+		if (i >= 0 && new Date((/** @type {Array<string|number>} */ dataArray[i].value)[0]).getTime() === t) {
 			const updated = [...dataArray];
-			updated[i] = { ...updated[i], value: [updated[i].value[0], updated[i].value[1] + 1] };
+			const pt = /** @type {DashboardChartPoint} */ (updated[i]);
+			pt.value = [pt.value[0], (/** @type {number} */ (/** @type {string|number} */ pt.value[1])) + 1];
+			updated[i] = pt;
 			return updated;
 		}
 
 		const updated = [...dataArray];
-		updated.splice(i + 1, 0, {
+		updated.splice(i + 1, 0, /** @type {DashboardChartPoint} */ ({
 			name: minuteDate.toISOString(),
 			value: [minuteDate, 1],
 			other: 'Nada'
-		});
+		}));
 		return updated;
 	}
 
 	// Igual que incrementMinutePoint, pero truncando al bucket de tiempo indicado
 	// ('hour' o 'minute') en vez de asumir siempre minuto — para series agrupadas
 	// por hora, como la de top error endpoints.
+	/**
+		 * @param {Array<DashboardChartPoint>} dataArray
+		 * @param {string|number} dateValue
+		 * @param {string} granularity
+		 * @returns {Array<DashboardChartPoint>}
+	 */
 	function incrementBucketPoint(dataArray, dateValue, granularity) {
 		const bucketDate = new Date(dateValue || Date.now());
 		if (granularity === 'hour') {
@@ -206,26 +257,28 @@
 		const t = bucketDate.getTime();
 
 		let i = dataArray.length - 1;
-		while (i >= 0 && new Date(dataArray[i].value[0]).getTime() > t) {
+		while (i >= 0 && new Date((/** @type {Array<string|number>} */ dataArray[i].value)[0]).getTime() > t) {
 			i--;
 		}
 
-		if (i >= 0 && new Date(dataArray[i].value[0]).getTime() === t) {
+		if (i >= 0 && new Date((/** @type {Array<string|number>} */ dataArray[i].value)[0]).getTime() === t) {
 			const updated = [...dataArray];
-			updated[i] = { ...updated[i], value: [updated[i].value[0], updated[i].value[1] + 1] };
+			const pt = /** @type {DashboardChartPoint} */ (updated[i]);
+			pt.value = [pt.value[0], (/** @type {number} */ (/** @type {string|number} */ pt.value[1])) + 1];
+			updated[i] = pt;
 			return updated;
 		}
 
 		const updated = [...dataArray];
-		updated.splice(i + 1, 0, {
+		updated.splice(i + 1, 0, /** @type {DashboardChartPoint} */ ({
 			name: bucketDate.toISOString(),
 			value: [bucketDate, 1],
 			other: 'Nada'
-		});
+		}));
 		return updated;
 	}
 
-	function statusClassForCode(status_code) {
+	function statusClassForCode(/** @type {string|number} */ status_code) {
 		const code = Number(status_code);
 		if (code < 200) return 'info';
 		if (code < 300) return 'success';
@@ -237,6 +290,11 @@
 	// Busca o crea la entrada de `status_code` en el resumen y le suma 1 — mismo estilo que
 	// incrementMinutePoint/incrementBucketPoint, pero sin bucket de tiempo (es un total, no
 	// una serie temporal).
+	/**
+		 * @param {Array<StatusSummaryEntry>} dataArray
+		 * @param {string|number} statusCode
+		 * @returns {Array<StatusSummaryEntry>}
+	 */
 	function incrementStatusSummary(dataArray, statusCode) {
 		const code = String(statusCode);
 		const index = dataArray.findIndex((d) => d.name === code);
@@ -252,9 +310,15 @@
 	// de que pase `intervalMs`, los acumula y los aplica todos juntos al cumplirse el
 	// intervalo — usado para las gráficas a nivel de endpoint (deben verse casi inmediatas,
 	// pero sin repintar más de una vez cada `intervalMs` bajo ráfaga).
+	/**
+		 * @param {number} intervalMs
+		 * @param {() => void} flush
+		 * @returns {{trigger: () => void, cancel: () => void}}
+	 */
 	function createLeadingTrailingThrottle(intervalMs, flush) {
 		let cooling = false;
 		let pending = false;
+		/** @type {ReturnType<typeof setTimeout>|null|undefined} */
 		let timer = null;
 		function trigger() {
 			if (!cooling) {
@@ -287,7 +351,13 @@
 	// Throttle solo-trailing: agrupa todo lo que llegue durante `intervalMs` y lo aplica de
 	// una vez al final de la ventana, sin aplicación inmediata — usado para las gráficas
 	// agregadas, que deben actualizarse a lo sumo cada `intervalMs`.
+	/**
+		 * @param {number} intervalMs
+		 * @param {() => void} flush
+		 * @returns {{trigger: () => void, cancel: () => void}}
+	 */
 	function createTrailingThrottle(intervalMs, flush) {
+		/** @type {ReturnType<typeof setTimeout>|null|undefined} */
 		let timer = null;
 		function trigger() {
 			if (!timer) {
@@ -304,27 +374,29 @@
 		return { trigger, cancel };
 	}
 
+	/** @type {Array<RowAny>} */
 	let pendingEndpointEvents = [];
+	/** @type {Array<RowAny>} */
 	let pendingAggregateEvents = [];
 
 	function flushEndpointCharts() {
 		const events = pendingEndpointEvents;
 		pendingEndpointEvents = [];
-		for (const event of events) {
+		for (const /** @type {RowAny} */ event of events) {
 			let point = formatData(event);
 			if (point) {
 				data_request_series = upsertSeriesPoint(
 					data_request_series,
-					event.idendpoint,
-					point.other,
+					/** @type {string|number} */ (event.idendpoint),
+					/** @type {string} */ (point.other),
 					point
 				);
 			}
 
-			if (Number(event.statusCode) >= 400) {
+			if (Number((/** @type {string|number} */ event.statusCode)) >= 400) {
 				data_top_error_endpoints = data_top_error_endpoints.map((series) =>
 					series.idendpoint === event.idendpoint
-						? { ...series, data: incrementBucketPoint(series.data, event.dateTime, 'hour') }
+						? { ...series, data: incrementBucketPoint((/** @type {Array<DashboardChartPoint>} */ (series.data || [])), /** @type {string|number} */ (event.dateTime), 'hour') }
 						: series
 				);
 			}
@@ -334,17 +406,17 @@
 	function flushAggregateCharts() {
 		const events = pendingAggregateEvents;
 		pendingAggregateEvents = [];
-		for (const event of events) {
-			data_logs_per_minute = incrementMinutePoint(data_logs_per_minute, event.dateTime);
+		for (const /** @type {RowAny} */ event of events) {
+			data_logs_per_minute = incrementMinutePoint(data_logs_per_minute, /** @type {string|number} */ (event.dateTime));
 
-			let status_class = statusClassForCode(event.statusCode);
+			let status_class = statusClassForCode(/** @type {string|number} */ (event.statusCode));
 			data_status_class = data_status_class.map((series, index) =>
 				STATUS_CLASSES[index].key === status_class
-					? { ...series, data: incrementMinutePoint(series.data, event.dateTime) }
+					? { ...series, data: incrementMinutePoint((/** @type {Array<DashboardChartPoint>} */ (series.data || [])), /** @type {string|number} */ (event.dateTime)) }
 					: series
 			);
 
-			data_status_summary = incrementStatusSummary(data_status_summary, event.statusCode);
+			data_status_summary = incrementStatusSummary(data_status_summary, /** @type {string|number} */ (event.statusCode));
 		}
 	}
 
@@ -421,11 +493,11 @@
 					$userStore.token
 				);
 				if (Array.isArray(data_log_pm)) {
-					data_logs_per_minute = data_log_pm.map((dl) => {
-						let now = new Date(dl.minute || Date.now());
+					data_logs_per_minute = data_log_pm.map((/** @type {{minute?: string|number, count?: string|number}} */ dl) => {
+						let now = new Date((dl.minute ? /** @type {string|number} */ dl.minute : Date.now()));
 						return {
 							name: now.toISOString(),
-							value: [now, parseInt(dl?.count)],
+							value: [now.getTime(), parseInt(/** @type {string} */ (String(dl?.count)))],
 							other: 'Nada'
 						};
 					});
@@ -448,22 +520,22 @@
 				);
 				if (Array.isArray(request_logs)) {
 					let seriesByEndpoint = new Map();
-					for (const log of request_logs) {
+					for (const /** @type {RowAny} */ log of request_logs) {
 						if (!seriesByEndpoint.has(log.idendpoint)) {
-							seriesByEndpoint.set(log.idendpoint, {
+							seriesByEndpoint.set(log.idendpoint, /** @type {ChartSeriesItem} */ ({
 								idendpoint: log.idendpoint,
 								name: `${log.method} ${log.url}`,
 								showSymbol: true,
 								symbolSize: 4,
 								data: []
-							});
+							}));
 						}
 						let now = new Date(log.timestamp || Date.now());
-						seriesByEndpoint.get(log.idendpoint).data.push({
+						seriesByEndpoint.get(log.idendpoint).data.push(/** @type {DashboardChartPoint} */ ({
 							name: now.toISOString(),
 							value: [now, log?.response_time],
 							other: `${log.method} ${log.url}`
-						});
+						}));
 					}
 					data_request_series = Array.from(seriesByEndpoint.values());
 				} else {
@@ -477,19 +549,19 @@
 				);
 				if (Array.isArray(data_status)) {
 					data_status_class = STATUS_CLASSES.map((statusClass) => ({
-						name: statusClass.name,
-						color: statusClass.color,
-						data: data_status
-							.filter((row) => row.status_class === statusClass.key)
-							.map((row) => {
-								let now = new Date(row.minute || Date.now());
-								return {
-									name: now.toISOString(),
-									value: [now, parseInt(row?.count)],
-									other: 'Nada'
-								};
-							})
-					}));
+									name: statusClass.name,
+									color: statusClass.color,
+									data: data_status
+										.filter((row) => (/** @type {StatusClassRow} */ row).status_class === statusClass.key)
+										.map((row) => {
+											let now = new Date((/** @type {StatusClassRow} */ row).minute || Date.now());
+											return /** @type {DashboardChartPoint} */ ({
+												name: now.toISOString(),
+												value: [now, parseInt((/** @type {StatusClassRow} */ row)?.count)],
+												other: 'Nada'
+											});
+										})
+									}));
 				} else {
 					console.error('getLogsStatusClassPerMinute did not return an array:', data_status);
 					data_status_class = [];
@@ -500,12 +572,12 @@
 					$userStore.token
 				);
 				if (Array.isArray(summary)) {
-					let countByStatusCode = {};
-					for (const row of summary) {
+					let countByStatusCode = /** @type {Record<string, number>} */ ({});
+					for (const /** @type {StatusCodeRow} */ row of summary) {
 						const code = String(row.status_code);
 						countByStatusCode[code] = (countByStatusCode[code] || 0) + parseInt(row.recordCount);
 					}
-					data_status_summary = Object.entries(countByStatusCode).map(([name, value]) => ({
+					data_status_summary = Object.entries(countByStatusCode).map(([name, value]) => /** @type {StatusSummaryEntry} */ ({
 						name,
 						value
 					}));
@@ -519,7 +591,7 @@
 					$userStore.token
 				);
 				data_top_endpoints = Array.isArray(usage?.most_used)
-					? usage.most_used.map((e) => ({ name: e.resource, value: parseInt(e.requestCount) }))
+					? usage.most_used.map((/** @type {EndpointUsageRow} */ e) => ({ name: e.resource, value: parseInt(/** @type {string} */ (String(e.requestCount || '0'))) }))
 					: [];
 				data_unused_endpoints = Array.isArray(usage?.unused) ? usage.unused : [];
 
@@ -534,16 +606,16 @@
 					$userStore.token
 				);
 				data_top_error_endpoints = Array.isArray(top_errors?.top_error_endpoints)
-					? top_errors.top_error_endpoints.map((ep) => ({
+					? top_errors.top_error_endpoints.map((/** @type {TopErrorEndpointRow} */ ep) => ({
 							idendpoint: ep.idendpoint,
 							name: `${ep.method} ${ep.resource}`,
-							data: (ep.series || []).map((s) => {
+							data: (/** @type {Array<{bucket: string, count: string|number}>} */ (/** @type {unknown} */ (ep.series || []))).map((/** @type {{bucket: string, count: string|number}} */ s) => {
 								let bucketDate = new Date(s.bucket);
-								return {
+								return /** @type {DashboardChartPoint} */ ({
 									name: bucketDate.toISOString(),
-									value: [bucketDate, s.count],
+									value: [bucketDate, /** @type {number} */ s.count],
 									other: ep.title
-								};
+								});
 							})
 						}))
 					: [];
@@ -561,19 +633,21 @@
 		}
 	}
 
+	/** @type {(() => void)|undefined} */
 	let unsubscribe_dy;
+/** @type {(() => void)|undefined} */
 	let unsubscribe_com;
 
 	onMount(() => {
 		unsubscribe_dy = storeServerDynamicInformation.subscribe((event) => {
 			//	console.log(event);
-			data_cpu.push(formatDataCPUUsage(event));
+			data_cpu.push(formatDataCPUUsage(/** @type {ServerCpuEvent} */ (event)));
 			data_cpu = [...data_cpu];
-			data_memory.push(formatDataMemoryUsage(event));
+			data_memory.push(formatDataMemoryUsage(/** @type {ServerMemoryEvent} */ (event)));
 			data_memory = [...data_memory];
 		});
 
-		unsubscribe_com = storeEndpointOnComplete.subscribe((event) => {
+		unsubscribe_com = storeEndpointOnComplete.subscribe((/** @type {RowAny} */ event) => {
 			console.log('[dashboard] request_completed event:', event, {
 				idapp,
 				selectedEnvironment,
@@ -585,7 +659,7 @@
 				endpointThrottle.trigger();
 				aggregateThrottle.trigger();
 
-				if (statusMatchesSelectedClasses(Number(event.statusCode), selectedStatusClasses)) {
+				if (statusMatchesSelectedClasses(Number((/** @type {string|number} */ event.statusCode)), selectedStatusClasses)) {
 					tableRefreshThrottle.trigger();
 				}
 			}
@@ -594,8 +668,8 @@
 
 	onDestroy(() => {
 		tableRefreshThrottle.cancel();
-		unsubscribe_dy();
-		unsubscribe_com();
+		unsubscribe_dy?.();
+		unsubscribe_com?.();
 		endpointThrottle.cancel();
 		aggregateThrottle.cancel();
 	});
@@ -617,7 +691,7 @@
 		options={[
 			{ id: 'dev', value: 'Development' },
 			{ id: 'qa', value: 'QA' },
-			{ id: 'prd', value: 'Production', label: 'Production' }
+			{ id: 'prd', value: 'Production' }
 		]}
 		bind:option={selectedEnvironment}
 		class="is-small"
@@ -631,8 +705,10 @@
 			<input
 				type="checkbox"
 				checked={selectedStatusClasses.includes(cls)}
-				onchange={(e) => {
-					selectedStatusClasses = e.target.checked
+				onchange={(/** @type {Event} */ e) => {
+					const input = /** @type {HTMLInputElement} */ (e.target);
+						if (!input) return;
+					selectedStatusClasses = input.checked
 						? [...selectedStatusClasses, cls]
 						: selectedStatusClasses.filter((c) => c !== cls);
 				}}
@@ -694,17 +770,14 @@
 					// el mouse por encima.
 					tooltip: {
 						show: true,
-						formatter: (params) => `${params.name} — ${httpStatusText(params.name)}`
+						formatter: (/** @type {{ name: string }} */ params) => `${params.name} — ${httpStatusText(params.name)}`
 					}
 				}
 			}}
 			series={[
 				{
 					type: 'pie',
-					radius: ['40%', '70%'],
-					label: { show: false },
-					labelLine: { show: false },
-					data: data_status_summary
+					data: /** @type {Array<{ value: any[]; name?: string }>} */ (data_status_summary.map((e) => ({ value: [e.value], name: e.name })))
 				}
 			]}
 		></Chart.Base>
@@ -720,7 +793,7 @@
 				yAxis: { type: 'category', data: data_top_endpoints.map((d) => d.name) },
 				xAxis: { type: 'value' }
 			}}
-			series={[{ type: 'bar', data: data_top_endpoints.map((d) => d.value) }]}
+			series={[{ type: 'bar', data: data_top_endpoints.map((/** @type {{name: string, value: number}} */ d) => ({ value: [d.value] })) }]}
 		></Chart.Base>
 		<p class="help has-text-centered">
 			Most-used endpoints for the selected app and environment in the last 7 days
@@ -730,7 +803,7 @@
 		<Chart.TimeSeries
 			title="Top 10 Endpoints with Most Errors ({selectedHours}h)"
 			bind:series={data_top_error_endpoints}
-			tooltipFormatter={topErrorsTooltipFormatter}
+			tooltipFormatter={/** @type {(params: any) => string} */ (topErrorsTooltipFormatter)}
 		></Chart.TimeSeries>
 		<p class="help has-text-centered">
 			Endpoints with the most errors (status code &gt;= 400) per hour in the last {selectedHours} hours,
@@ -780,7 +853,7 @@
 		{#if data_unused_endpoints.length}
 			<ul>
 				{#each data_unused_endpoints as ep}
-					<li>{ep.resource} ({ep.method})</li>
+					<li>{/** @type {RowAny} */ (ep).resource} ({/** @type {RowAny} */ (ep).method})</li>
 				{/each}
 			</ul>
 		{:else}

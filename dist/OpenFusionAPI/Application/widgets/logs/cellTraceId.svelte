@@ -15,6 +15,9 @@
 		}
 	}
 
+	/**
+	 * @param {MouseEvent} event
+	 */
 	function openTrace(event) {
 		event.stopPropagation();
 		if (onOpenTrace) {

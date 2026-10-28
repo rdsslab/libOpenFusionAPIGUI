@@ -9,57 +9,56 @@
 	} = $props();
 </script>
 
-<Level {left} right={[r01]}>
-	{#snippet r01()}
-		<div class="field has-addons">
-			<p class="control">
-				<button
-					class="button is-small is-warning"
-					onclick={() => {
-						console.log('onsavedeploy org', onsavedeploy);
+{#snippet r01()}
+	<div class="field has-addons">
+		<p class="control">
+			<button
+				class="button is-small is-warning"
+				onclick={() => {
+					console.log('onsavedeploy org', onsavedeploy);
 
+					if (
+						onsavedeploy &&
+						confirm('Are you sure you want to save the changes and deploy the application?')
+					) {
+						deploying.show = true;
+						deploying.message = 'Saving and deploying...';
+						onsavedeploy();
+					}
+				}}
+			>
+				<span class="icon is-small">
+					<i class="fa-solid fa-rocket"></i>
+				</span>
+				<span>Save & Deploy</span>
+			</button>
+		</p>
+		<p class="control">
+			<button
+				class="button is-small"
+				onclick={() => {
+					if (dirty) {
 						if (
-							onsavedeploy &&
-							confirm('Are you sure you want to save the changes and deploy the application?')
+							confirm(
+								'If you cancel, you will lose absolutely all changes made to the app. Do you want to continue?'
+							)
 						) {
-							deploying.show = true;
-							deploying.message = 'Saving and deploying...';
-							onsavedeploy();
-						}
-					}}
-				>
-					<span class="icon is-small">
-						<i class="fa-solid fa-rocket"></i>
-					</span>
-					<span>Save & Deploy</span>
-				</button>
-			</p>
-			<p class="control">
-				<button
-					class="button is-small"
-					onclick={() => {
-						if (dirty) {
-							if (
-								confirm(
-									'If you cancel, you will lose absolutely all changes made to the app. Do you want to continue?'
-								)
-							) {
-								oncancel();
-							}
-						} else {
 							oncancel();
 						}
-					}}
-				>
-					<span class="icon is-small">
-						<i class="fa-solid fa-xmark"></i>
-					</span>
-					<span>Cancel</span>
-				</button>
-			</p>
-		</div>
-	{/snippet}
-</Level>
+					} else {
+						oncancel();
+					}
+				}}
+			>
+				<span class="icon is-small">
+					<i class="fa-solid fa-xmark"></i>
+				</span>
+				<span>Cancel</span>
+			</button>
+		</p>
+	</div>
+{/snippet}
+<Level {left} right={[r01]}></Level>
 
 <Modal bind:show={deploying.show} bind:showCloseButton={deploying.error}>
 	<div class="box">

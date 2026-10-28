@@ -1,10 +1,28 @@
 <script>
 	import { Input, PredictiveInput } from '@rdsslab/svelte-components';
 	import { createEndpoint } from '#lib/OpenFusionAPI/Application/utils/utils.js';
+
 	/**
-	 * @type {{endpoint: any, onchange: Function, app: any}}
+	 * @typedef {import('#lib/OpenFusionAPI/types/models.js').EndpointRow} EndpointRow
+	 * @typedef {import('#lib/OpenFusionAPI/types/models.js').AsyncWrapperConfig} AsyncWrapperConfig
+	 * @typedef {import('#lib/OpenFusionAPI/types/models.js').HandlerChangePayload} HandlerChangePayload
 	 */
-	let { endpoint = $bindable({}), onchange = () => {}, app = $bindable({}) } = $props();
+
+	/**
+	 * @type {{
+	 *   endpoint: EndpointRow,
+	 *   onchange: (data: HandlerChangePayload) => void,
+	 *   app: {app?: string, endpoints?: Array<EndpointRow>}
+	 * }}
+	 */
+	let {
+		endpoint = $bindable(/** @type {EndpointRow} */ ({})),
+		onchange = () => {},
+		app = $bindable(/** @type {{app?: string, endpoints?: Array<EndpointRow>}} */ ({}))
+	} = $props();
+
+	/** Configuración async del endpoint, creada por `ensureAsyncConfig`. */
+	const asyncConfig = $derived(endpoint.custom_data?.async);
 
 	let endpointOptions = $derived.by(() => {
 		const list = app?.endpoints || [];
@@ -29,13 +47,26 @@
 			}));
 	});
 
+	/**
+	 * Garantiza que exista `custom_data.async` y la devuelve.
+	 * @returns {AsyncWrapperConfig}
+	 */
 	function ensureAsyncConfig() {
 		if (!endpoint.custom_data) endpoint.custom_data = {};
-		if (!endpoint.custom_data.async) {
-			endpoint.custom_data.async = { ttl_ms: 3600000, max_consumes: 5, notify_ws: false };
+		const custom_data = endpoint.custom_data;
+		if (!custom_data.async) {
+			custom_data.async = { ttl_ms: 3600000, max_consumes: 5, notify_ws: false };
 		}
+		return custom_data.async;
 	}
 
+	/**
+	 * @param {string} method
+	 * @param {string} appName
+	 * @param {string} resource
+	 * @param {string} environment
+	 * @returns {string}
+	 */
 	function createEndpointUrl(method, appName, resource, environment) {
 		try {
 			return `${method == 'WS' ? '/ws/' : '/api/'}${appName || ''}${resource || ''}/${environment || ''}`;
@@ -44,6 +75,10 @@
 		}
 	}
 
+	/**
+	 * @param {EndpointRow|null|undefined} e
+	 * @returns {string}
+	 */
 	function getFullRoute(e) {
 		if (!e) return '';
 		const method = e.method || '';
@@ -54,6 +89,9 @@
 		return `[${method}] ${full}`.trim();
 	}
 
+	/**
+	 * @param {unknown} baseId
+	 */
 	function applyBaseEndpoint(baseId) {
 		if (!baseId) return;
 		const list = app?.endpoints || [];
@@ -145,32 +183,11 @@
 		placeholder="Select the base endpoint this async wrapper will call"
 		classLabel="is-small"
 		classInput="is-small"
-		bind:options={endpointOptions}
+		options={endpointOptions}
 		bind:selectedValue={endpoint.code}
-		optionValueKey="value"
-		optionLabelKey="name"
-		displayValue={(val) => {
-			if (!val) return '';
-			const found = endpointOptions.find((o) => o.value === val);
-			if (found) return found.name;
-			// Fallback directo a app.endpoints por si las opciones aún no se han propagado
-			const list = app?.endpoints || [];
-			const e = list.find((x) => x && x.idendpoint === val);
-			if (e) {
-				const method = e.method || '';
-				const appName = app?.app || e.app || '';
-				const resource = e.resource || e.endpoint || '';
-				const env = e.environment || '';
-				const full = `${method == 'WS' ? '/ws/' : '/api/'}${appName}${resource}/${env}`;
-				return `[${method}] ${full}`.trim();
-			}
-			return val;
-		}}
-		onselect={(val) => {
-			applyBaseEndpoint(val);
-		}}
-		onchange={(val) => {
-			applyBaseEndpoint(val);
+		onselect={(/** @type {{value?: unknown}} */ option) => {
+			// Predictive entrega el objeto { name, value }: applyBaseEndpoint espera el id.
+			applyBaseEndpoint(option?.value ?? option);
 		}}
 	/>
 
@@ -187,28 +204,37 @@
 			<Input
 				label="TTL (ms)"
 				type="number"
-				bind:value={endpoint.custom_data.async.ttl_ms}
+				value={asyncConfig?.ttl_ms ?? 3600000}
 				min="1000"
 				step="1000"
-				onchange={update}
+				onchange={(/** @type {string} */ value) => {
+					ensureAsyncConfig().ttl_ms = Number(value);
+					update();
+				}}
 			/>
 		</div>
 		<div class="column">
 			<Input
 				label="Max consumes"
 				type="number"
-				bind:value={endpoint.custom_data.async.max_consumes}
+				value={asyncConfig?.max_consumes ?? 5}
 				min="1"
 				step="1"
-				onchange={update}
+				onchange={(/** @type {string} */ value) => {
+					ensureAsyncConfig().max_consumes = Number(value);
+					update();
+				}}
 			/>
 		</div>
 		<div class="column" style="display: flex; align-items: flex-end; padding-bottom: 0.75rem;">
 			<label class="checkbox">
 				<input
 					type="checkbox"
-					bind:checked={endpoint.custom_data.async.notify_ws}
-					onchange={update}
+					checked={asyncConfig?.notify_ws ?? false}
+					onchange={(event) => {
+						ensureAsyncConfig().notify_ws = event.currentTarget.checked;
+						update();
+					}}
 				/>
 				<span>Notify via WebSocket</span>
 			</label>

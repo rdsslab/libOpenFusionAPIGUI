@@ -4,7 +4,8 @@
 	import { storeCountResponseStatusCode } from '../../../utils/stores.js';
 
 	let { value = $bindable(), row = $bindable() } = $props();
-	let value_count_status_code = $state({});
+	/** @type {Record<string, number>|undefined} */
+	let value_count_status_code = $state(undefined);
 
 	const unsubscribe = storeCountResponseStatusCode.subscribe((ListCountStatusCode) => {
 		//console.log('storeCountResponseStatusCode >>>> ', ListCountStatusCode);
@@ -26,23 +27,24 @@
 	{#if row.method !== 'WS'}
 		{#if value_count_status_code}
 			<div class="field is-grouped is-grouped-multiline">
-				{#each Object.keys(value_count_status_code) as statusCode}
+				{#each Object.entries(value_count_status_code) as [statusCode, count]}
+					{@const code = Number(statusCode)}
 					<div class="control">
 						<div class="tags has-addons">
-							{#if statusCode >= 100 && statusCode < 200}
+							{#if code >= 100 && code < 200}
 								<span class="tag is-info">{statusCode}</span>
-							{:else if statusCode >= 200 && statusCode < 300}
+							{:else if code >= 200 && code < 300}
 								<span class="tag is-success">{statusCode}</span>
-							{:else if statusCode >= 300 && statusCode < 400}
+							{:else if code >= 300 && code < 400}
 								<span class="tag is-primary">{statusCode}</span>
-							{:else if statusCode >= 400 && statusCode < 500}
+							{:else if code >= 400 && code < 500}
 								<span class="tag is-warning">{statusCode}</span>
-							{:else if statusCode >= 500 && statusCode < 600}
+							{:else if code >= 500 && code < 600}
 								<span class="tag is-danger">{statusCode}</span>
 							{:else}
 								<span class="tag is-dark">{statusCode}</span>
 							{/if}
-							<span class="tag is-dark">{value_count_status_code[statusCode]}</span>
+							<span class="tag is-dark">{count}</span>
 						</div>
 					</div>
 				{/each}

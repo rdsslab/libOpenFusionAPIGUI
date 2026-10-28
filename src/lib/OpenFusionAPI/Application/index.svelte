@@ -48,16 +48,17 @@
 		currentUserHasPermission,
 		getDefaultEnvironment
 	} from '#lib/OpenFusionAPI/Application/utils/permissions.js';
+	import { getErrorMessage } from '#lib/OpenFusionAPI/Application/utils/errors.js';
 
 	let notify = new Notifications();
 	let { onexit = () => {} } = $props();
 	let idapp = $state(0);
 	let loading = $state(false);
-	let options = $state([]);
+	let options = $state(/** @type {Array<import('#lib/OpenFusionAPI/types/models.js').PredictiveOption>} */ ([]));
 	let menu_item_selected = $state('');
 	let show_dialog_change_pwd = $state(false);
 
-	let restore_all_file_input = $state(null);
+	let restore_all_file_input = $state(/** @type {HTMLInputElement|null} */ (null));
 	let loading_full_backup = $state(false);
 	let loading_full_restore = $state(false);
 	const wsClient = new OpenFusionWebsocketClient(url_paths.wsServerEvents);
@@ -219,7 +220,7 @@
 	async function getListAppsInternal() {
 		try {
 			loading = true;
-			let apps = await getListApps($userStore.token);
+			let apps = await getListApps();
 			if (apps && Array.isArray(apps) && apps.length > 0) {
 				options = apps.map((item) => {
 					return { name: item.app, value: item.idapp };
@@ -228,16 +229,19 @@
 				options = [];
 			}
 
-			let status_sys_endp = await restoreSystemEndpoints(false, $userStore.token);
+			let status_sys_endp = await restoreSystemEndpoints(false);
 			statusSystemEndpointsStore.set(status_sys_endp);
 		} catch (error) {
 			console.error(error);
-			notify.push({ message: error.message, color: 'danger' });
+			notify.push({ message: getErrorMessage(error), color: 'danger' });
 		} finally {
 			loading = false;
 		}
 	}
 
+	/**
+	 * @param {unknown} full_backup
+	 */
 	function downloadFullBackupFile(full_backup) {
 		const now = new Date();
 		const year = now.getFullYear();
@@ -272,14 +276,17 @@
 			});
 		} catch (error) {
 			console.error(error);
-			notify.push({ message: error.message, color: 'danger' });
+			notify.push({ message: getErrorMessage(error), color: 'danger' });
 		} finally {
 			loading_full_backup = false;
 		}
 	}
 
+	/**
+	 * @param {Event & {currentTarget: HTMLInputElement}} event
+	 */
 	async function onRestoreAllFileSelected(event) {
-		const selectedFile = event.target.files[0];
+		const selectedFile = event.currentTarget.files?.[0];
 
 		if (!selectedFile) {
 			notify.push({ message: 'Invalid JSON file', color: 'warning' });
@@ -290,12 +297,18 @@
 
 		reader.onload = async (e) => {
 			let full_backup;
+			const content = e.target?.result;
+
+			if (typeof content !== 'string') {
+				notify.push({ message: 'Invalid JSON file', color: 'warning' });
+				return;
+			}
 
 			try {
-				full_backup = JSON.parse(e.target.result);
+				full_backup = JSON.parse(content);
 			} catch (error) {
 				console.error('Error parsing the JSON file:', error);
-				notify.push({ message: error.message, color: 'danger' });
+				notify.push({ message: getErrorMessage(error), color: 'danger' });
 				return;
 			}
 
@@ -337,10 +350,10 @@
 				}
 			} catch (error) {
 				console.error(error);
-				notify.push({ message: error.message, color: 'danger' });
+				notify.push({ message: getErrorMessage(error), color: 'danger' });
 			} finally {
 				loading_full_restore = false;
-				event.target.value = '';
+				event.currentTarget.value = '';
 			}
 		};
 
@@ -470,7 +483,7 @@
 		class="button is-small is-warning is-outlined"
 		title="Restore all applications from a full backup file"
 		disabled={loading_full_restore}
-		onclick={() => restore_all_file_input.click()}
+		onclick={() => restore_all_file_input?.click()}
 	>
 		<span class="icon is-small">
 			<i class="fa-solid {loading_full_restore ? 'fa-spinner fa-spin' : 'fa-upload'}"></i>
@@ -505,7 +518,7 @@
 					href="#"
 					class="dropdown-item"
 					onclick={async () => {
-						let status_sys_endp = await restoreSystemEndpoints(true, $userStore.token);
+						let status_sys_endp = await restoreSystemEndpoints(true);
 						statusSystemEndpointsStore.set(status_sys_endp);
 					}}
 				>
@@ -584,8 +597,8 @@
 			label="Application"
 			classLabel="is-small"
 			classInput="is-small"
-			bind:options
-			onselect={async (e) => {
+			{options}
+			onselect={async (/** @type {{value: number}} */ e) => {
 				if ($userStore) {
 					// Limpiar stores de la app anterior antes de cargar la nueva
 					storeCacheSize.set({});
@@ -645,6 +658,25 @@
 	{/key}</AppBase
 >
 
+{#snippet titleModal()}
+	<span>{`Change Password: ${password_change.username}`}</span>
+{/snippet}
+{#snippet bodyDialogModal()}
+	<Input label="Current password" type="password" bind:value={password_change.oldPassword}></Input>
+	<Input label="New Password" type="password" bind:value={password_change.newPassword}></Input>
+	<Input label="Repeat new Password" type="password" bind:value={password_change.repeatNewPassword}
+	></Input>
+	<div>
+		{#if !changepwd_compare_verify}
+			<span class="icon-text has-text-warning is-small">
+				<span class="icon">
+					<i class="fas fa-exclamation-triangle"></i>
+				</span>
+				<span>You must repeat the new password twice.</span>
+			</span>
+		{/if}
+	</div>
+{/snippet}
 <DialogModal
 	title={titleModal}
 	body={bodyDialogModal}
@@ -666,29 +698,4 @@
 		password_change = { ...defaultPasswordChange };
 	}}
 	bind:show={show_dialog_change_pwd}
->
-	{#snippet titleModal()}
-		<span>{`Change Password: ${password_change.username}`}</span>
-	{/snippet}
-
-	{#snippet bodyDialogModal()}
-		<Input label="Current password" type="password" bind:value={password_change.oldPassword}
-		></Input>
-		<Input label="New Password" type="password" bind:value={password_change.newPassword}></Input>
-		<Input
-			label="Repeat new Password"
-			type="password"
-			bind:value={password_change.repeatNewPassword}
-		></Input>
-		<div>
-			{#if !changepwd_compare_verify}
-				<span class="icon-text has-text-warning is-small">
-					<span class="icon">
-						<i class="fas fa-exclamation-triangle"></i>
-					</span>
-					<span>You must repeat the new password twice.</span>
-				</span>
-			{/if}
-		</div>
-	{/snippet}
-</DialogModal>
+></DialogModal>

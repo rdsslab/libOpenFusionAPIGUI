@@ -8,6 +8,7 @@
 	//let list_chats = $state([]);
 	//let text_message = $state('');
 
+	/** @type {Array<import('../../../../../types/models.js').ChatMessage>} */
 	let messages = $state([]);
 
 	/**
@@ -36,6 +37,9 @@
 	
 	 */
 
+	/**
+	 * @param {{message: string}} e
+	 */
 	async function fnSendMessage(e) {
 		console.log(e, $state.snapshot(init_prompts));
 		const prompt = e.message;

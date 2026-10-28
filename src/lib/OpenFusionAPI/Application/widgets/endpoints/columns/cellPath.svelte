@@ -6,20 +6,22 @@
 
 	let { value = $bindable(), row = $bindable() } = $props();
 	let isRunning = $state(false);
+	/** @type {ReturnType<typeof setTimeout>|undefined} */
 	let timeoutIsRunning;
 	let env_params = $derived.by(() => {
 		return Environment && Array.isArray(Environment)
 			? Environment.find((item) => {
 					return row.environment == item.id;
 				})
-			: [];
+			: undefined;
 	});
 
+	/** @type {(() => void)|undefined} */
 	let unsubscribe;
 
 	onDestroy(() => {
 		clearTimeout(timeoutIsRunning);
-		unsubscribe();
+		unsubscribe?.();
 	});
 	onMount(() => {
 		unsubscribe = storeEndpointOnStart.subscribe((data) => {
