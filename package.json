@@ -1,6 +1,6 @@
 {
 	"name": "@rdsslab/libopenfusionapigui",
-	"version": "9.5.41",
+	"version": "9.5.42",
 	"main": "./dist/index.js",
 	"repository": {
 		"type": "git",
@@ -50,7 +50,7 @@
 		"!dist/**/*.spec.*"
 	],
 	"peerDependencies": {
-		"svelte": "^5.57.1"
+		"svelte": "^5.57.3"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.39.5",
@@ -66,7 +66,7 @@
 		"prettier": "^3.3.2",
 		"prettier-plugin-svelte": "^3.2.6",
 		"publint": "^0.1.9",
-		"svelte": "^5.57.2",
+		"svelte": "^5.57.3",
 		"svelte-check": "^4.0.0",
 		"tslib": "^2.4.1",
 		"typescript": "^6.0.0",
