@@ -8,6 +8,16 @@
  */
 export function getIntervalTaskRuntimeStatus(value: number | string | null | undefined): StatusMeta;
 /**
+ * Estado efectivo de un job: EXPIRED se calcula — no se persiste — comparando
+ * `expires_at` contra el reloj (mismo criterio que el endpoint del sistema).
+ * @param {{status?: string, expires_at?: string}|null|undefined} row
+ * @returns {StatusMeta}
+ */
+export function getAsyncJobStatus(row: {
+    status?: string;
+    expires_at?: string;
+} | null | undefined): StatusMeta;
+/**
  * Resultado de la última ejecución, separado del estado operativo actual. El payload
  * permite corregir corridas antiguas que se guardaron como OK pese a `success: false`.
  */
@@ -148,6 +158,15 @@ export function defaultValuesIntervalTask(task: Partial<IntervalTaskRow> | null 
 export const IntervalTaskStatus: Record<number, StatusMeta>;
 /** @type {StatusMeta} */
 export const IntervalTaskStatusFallback: StatusMeta;
+/**
+ * Estados que el ejecutor async escribe en la tabla. Todos menos EXPIRED
+ * existen como ENUM en la BD: el backend deriva EXPIRED al vuelo cuando
+ * `expires_at` ya pasó (lo mismo hace `getAsyncJobStatus` en la GUI).
+ */
+/** @type {Record<string, StatusMeta>} */
+export const AsyncJobStatus: Record<string, StatusMeta>;
+/** @type {StatusMeta} */
+export const AsyncJobStatusFallback: StatusMeta;
 /**
  * Suspensión del planificador. Cuando una tarea agota `max_failed_attempts` el servidor
  * deja de programarla SIN apagar `enabled`: esa bandera es la intención del usuario y se

@@ -19,6 +19,7 @@ export function GetAllAppsBackup(token?: string): Promise<any>;
 export function RestoreAllAppsBackup(backup: unknown): Promise<any>;
 export function GetEndpointsByIdapp(idapp: number | string): Promise<import("../../types/models.js").AppDetail>;
 export function GetAPIKeys(idapp: number | string): Promise<any>;
+export function GetAsyncJobs(idapp: number | string): Promise<Array<import("../../types/models.js").AsyncJobRow>>;
 export function GetAPIClients(data: JsonBody): Promise<any>;
 export function saveAPIClient(data: JsonBody): Promise<any>;
 export function GetAPIClientsList(filters?: Record<string, unknown>): Promise<any>;

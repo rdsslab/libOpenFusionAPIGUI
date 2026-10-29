@@ -14,6 +14,7 @@ export function syncCurrentUserCtrl(users: Array<{
  * @typedef {import('../../types/models.js').SystemEndpointsStatus} SystemEndpointsStatus
  * @typedef {import('../../types/models.js').ServerModelChangedEvent} ServerModelChangedEvent
  * @typedef {import('../../types/models.js').IntervalTaskEvent} IntervalTaskEvent
+ * @typedef {import('../../types/models.js').AsyncJobChangedEvent} AsyncJobChangedEvent
  * @typedef {import('../../types/models.js').BotStatusChangedEvent} BotStatusChangedEvent
  * @typedef {import('../../types/models.js').BotChangedEvent} BotChangedEvent
  * @typedef {import('../../types/models.js').SelectOption} SelectOption
@@ -91,6 +92,13 @@ export const storeServerModelChanged: import("svelte/store").Writable<ServerMode
  */
 export const storeIntervalTaskEvent: import("svelte/store").Writable<IntervalTaskEvent | null>;
 /**
+ * Cambio en la tabla `ofapi_async_jobs` (databaseHook): la GUI recibe un
+ * evento por cada create/update/destroy que el ASYNC_WRAPPER hace sobre una
+ * petición en segundo plano, para que Async Requests se actualice en vivo.
+ * @type {import('svelte/store').Writable<AsyncJobChangedEvent|null>}
+ */
+export const storeAsyncJobChanged: import("svelte/store").Writable<AsyncJobChangedEvent | null>;
+/**
  * Cambio de estado runtime de un bot (bot_status_changed).
  * Contiene { idbot, idapp, runtime_status, failure_count, ... } para que la tabla
  * y el editor de bots actualicen sin recarga.
@@ -112,6 +120,7 @@ export type SessionState = import("../../types/models.js").SessionState;
 export type SystemEndpointsStatus = import("../../types/models.js").SystemEndpointsStatus;
 export type ServerModelChangedEvent = import("../../types/models.js").ServerModelChangedEvent;
 export type IntervalTaskEvent = import("../../types/models.js").IntervalTaskEvent;
+export type AsyncJobChangedEvent = import("../../types/models.js").AsyncJobChangedEvent;
 export type BotStatusChangedEvent = import("../../types/models.js").BotStatusChangedEvent;
 export type BotChangedEvent = import("../../types/models.js").BotChangedEvent;
 export type SelectOption = import("../../types/models.js").SelectOption;

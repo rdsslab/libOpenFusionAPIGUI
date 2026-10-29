@@ -272,6 +272,31 @@ export const GetAPIKeys = async (idapp) => {
 };
 
 /**
+ * Lista las peticiones asíncronas del ASYNC_WRAPPER de una aplicación
+ * (`ofapi_async_jobs`). Solo lectura: el endpoint del sistema excluye los
+ * campos pesados (`result`, `response_headers`, `error_message`) y exige
+ * sesión admin (access 2). El filtro de estado se aplica en cliente: la
+ * vista necesita derivar EXPIRED a partir de `expires_at`, que el backend
+ * nunca escribe en la tabla.
+ * @param {number|string} idapp
+ * @returns {Promise<Array<import('../../types/models.js').AsyncJobRow>>}
+ */
+export const GetAsyncJobs = async (idapp) => {
+	if (!idapp) return [];
+
+	let uf = new uFetch(url_paths.getAsyncJobs);
+
+	let request = checkStatus(
+		await uf.get({
+			data: { idapp: idapp }
+		})
+	);
+
+	const response = await request.json();
+	return Array.isArray(response?.jobs) ? response.jobs : [];
+};
+
+/**
  * @param {JsonBody} data
  */
 export const GetAPIClients = async (data) => {

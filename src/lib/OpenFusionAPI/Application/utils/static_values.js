@@ -245,6 +245,70 @@ export function getIntervalTaskRuntimeStatus(value) {
 	return Number(value) === 1 ? IntervalTaskStatus[1] : IntervalTaskStatus[0];
 }
 
+// ============================================================================
+// Async Requests · estados del handler ASYNC_WRAPPER (`ofapi_async_jobs`)
+// ============================================================================
+
+/**
+ * Estados que el ejecutor async escribe en la tabla. Todos menos EXPIRED
+ * existen como ENUM en la BD: el backend deriva EXPIRED al vuelo cuando
+ * `expires_at` ya pasó (lo mismo hace `getAsyncJobStatus` en la GUI).
+ */
+/** @type {Record<string, StatusMeta>} */
+export const AsyncJobStatus = {
+	PENDING: {
+		label: 'Pending',
+		background: 'warning',
+		icon: ' fa-solid fa-hourglass-half ',
+		description: 'The request was accepted (202) and is waiting for a worker.'
+	},
+	RUNNING: {
+		label: 'Running',
+		background: 'info',
+		icon: ' fa-solid fa-play ',
+		description: 'A worker is executing the endpoint right now.'
+	},
+	COMPLETED: {
+		label: 'Completed',
+		background: 'success',
+		icon: ' fa-solid fa-circle-check ',
+		description: 'The endpoint finished; the result is consumable while the job has TTL.'
+	},
+	FAILED: {
+		label: 'Failed',
+		background: 'danger',
+		icon: ' fa-solid fa-triangle-exclamation ',
+		description: 'The background execution failed.'
+	},
+	EXPIRED: {
+		label: 'Expired',
+		background: 'dark',
+		icon: ' fa-solid fa-hourglass-end ',
+		description: 'The TTL of this job already elapsed.'
+	}
+};
+
+/** @type {StatusMeta} */
+export const AsyncJobStatusFallback = {
+	label: 'Unknown',
+	background: 'light',
+	icon: ' fa-solid fa-circle-question ',
+	description: 'Unknown status.'
+};
+
+/**
+ * Estado efectivo de un job: EXPIRED se calcula — no se persiste — comparando
+ * `expires_at` contra el reloj (mismo criterio que el endpoint del sistema).
+ * @param {{status?: string, expires_at?: string}|null|undefined} row
+ * @returns {StatusMeta}
+ */
+export function getAsyncJobStatus(row) {
+	if (row?.status !== 'COMPLETED' && row?.expires_at) {
+		if (new Date(row.expires_at).getTime() <= Date.now()) return AsyncJobStatus.EXPIRED;
+	}
+	return AsyncJobStatus[String(row?.status)] ?? AsyncJobStatusFallback;
+}
+
 /**
  * Resultado de la última ejecución, separado del estado operativo actual. El payload
  * permite corregir corridas antiguas que se guardaron como OK pese a `success: false`.

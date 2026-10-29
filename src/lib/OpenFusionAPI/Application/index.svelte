@@ -13,6 +13,7 @@
 		storeServerDynamicInformation,
 		storeServerModelChanged,
 		storeIntervalTaskEvent,
+		storeAsyncJobChanged,
 		storeBotStatusChanged,
 		storeBotChanged,
 		statusSystemEndpointsStore,
@@ -30,6 +31,7 @@
 	import AppVars from '#lib/OpenFusionAPI/Application/widgets/application_variables/index.svelte';
 	import Endpoints from '#lib/OpenFusionAPI/Application/widgets/endpoints/index.svelte';
 	import IntervalTasks from '#lib/OpenFusionAPI/Application/widgets/interval_tasks/index.svelte';
+	import AsyncRequests from '#lib/OpenFusionAPI/Application/widgets/async_jobs/index.svelte';
 	import Bots from '#lib/OpenFusionAPI/Application/widgets/bots/index.svelte';
 	import Logs from '#lib/OpenFusionAPI/Application/widgets/logs/index.svelte';
 	import ApiKeys from '#lib/OpenFusionAPI/Application/widgets/apikeys/index.svelte';
@@ -165,6 +167,19 @@
 					icon: ' fa-solid fa-list-check ',
 					onclick: () => {
 						menu_item_selected = '/interval_tasks';
+					}
+				});
+			}
+			// Async Requests: estado en BD de las peticiones que el handler
+			// ASYNC_WRAPPER ejecuta en segundo plano. Las controla el gate de
+			// endpoints (el wrapper es un handler de endpoint); el endpoint del
+			// sistema además exige admin (access 2).
+			if (currentUserHasPermission(currentUser, permEnv, 'endpoints', 'read')) {
+				appItems.push({
+					label: 'Async Requests',
+					icon: ' fa-solid fa-clapperboard ',
+					onclick: () => {
+						menu_item_selected = '/asyncrequests';
 					}
 				});
 			}
@@ -386,6 +401,11 @@
 			} else if (m && m.event_name == 'bot_changed') {
 				// Structural change (create/edit/delete): the list must reload.
 				storeBotChanged.set({ ...m.data, ts: m.timestamp });
+			} else if (m && m.event_name == 'database_hook' && m.data?.model == 'ofapi_async_jobs') {
+				// Debe ir antes del filtro por idapp: el payload trae idapp y el
+				// widget de Async Requests necesita ver el cambio de estado aunque
+				// el usuario esté en otra aplicación abierta.
+				storeAsyncJobChanged.set({ ...m.data, ts: m.timestamp });
 			} else if (m && m.data?.idapp == idapp) {
 				if (m && (m.event_name == 'cache_set' || m.event_name == 'cache_released')) {
 					storeCacheSize.update((value) => {
@@ -640,6 +660,8 @@
 			<Endpoints {idapp}></Endpoints>
 		{:else if menu_item_selected == '/interval_tasks'}
 			<IntervalTasks {idapp}></IntervalTasks>
+		{:else if menu_item_selected == '/asyncrequests'}
+			<AsyncRequests {idapp}></AsyncRequests>
 		{:else if menu_item_selected == '/apikeys'}
 			<ApiKeys bind:idapp></ApiKeys>
 		{:else if menu_item_selected == '/bots'}

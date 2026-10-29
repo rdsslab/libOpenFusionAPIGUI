@@ -20,6 +20,10 @@ export const url_paths = {
 	runNowIntervalTask: '/api/system/interval_tasks/run_now/prd',
 	stopIntervalTaskRun: '/api/system/interval_tasks/stop/prd',
 	resetIntervalTaskAttempts: '/api/system/interval_tasks/reset_attempts/prd',
+	// Estado de las peticiones asíncronas del ASYNC_WRAPPER (ofapi_async_jobs).
+	// El seed registra resource "/system/async/jobs" en la app system: se monta
+	// bajo /api/system/system/... como los demás recursos de sistema.
+	getAsyncJobs: '/api/system/system/async/jobs/prd',
 	getfunctions: '/api/system/api/function_names/prd',
 	serverAPIVersion: '/api/system/server/version/prd',
 	appBackup: '/api/system/app/backup/prd',

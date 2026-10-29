@@ -69,6 +69,46 @@
  */
 
 /**
+ * Fila de `ofapi_async_jobs`: el estado persistido de una petición que el
+ * handler ASYNC_WRAPPER ejecuta en segundo plano. `id` es el mismo UUID que
+ * el endpoint devuelve como `requestId` con el 202. EXPIRED nunca se escribe
+ * en la tabla: se deriva de `expires_at`.
+ * @typedef {object} AsyncJobRow
+ * @property {string} [id]
+ * @property {string} [idendpoint_base]
+ * @property {string} [idendpoint_async]
+ * @property {string} [idapp]
+ * @property {string} [environment]
+ * @property {{query?: Record<string, unknown>, body?: unknown}|null} [params]
+ * @property {string} [fingerprint]
+ * @property {'PENDING'|'RUNNING'|'COMPLETED'|'FAILED'|'EXPIRED'} [status]
+ * @property {number} [consume_count]
+ * @property {number} [max_consumes]
+ * @property {string} [job_token]
+ * @property {number} [ttl_ms]
+ * @property {string} [created_at]
+ * @property {string} [updated_at]
+ * @property {string} [expires_at]
+ * @property {string} [completed_at]
+ * @property {string} [method]
+ * @property {string} [url]
+ * @property {string} [resource]
+ * @property {number} [duration_ms]
+ * @property {string} [consume]
+ */
+
+/**
+ * Evento `database_hook` de la tabla `ofapi_async_jobs`: el backend emite
+ * uno por cada create/update/destroy del modelo, de manera que la vista de
+ * Async Requests refleja los cambios de estado sin recargar.
+ * @typedef {object} AsyncJobChangedEvent
+ * @property {string} [model]
+ * @property {string} [action]
+ * @property {AsyncJobRow} [data]
+ * @property {number|string} [ts]
+ */
+
+/**
  * Evento `bot_status_changed` del websocket.
  * @typedef {object} BotStatusChangedEvent
  * @property {number|string} [idbot]

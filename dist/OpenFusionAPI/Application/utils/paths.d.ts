@@ -20,6 +20,7 @@ export namespace url_paths {
     let runNowIntervalTask: string;
     let stopIntervalTaskRun: string;
     let resetIntervalTaskAttempts: string;
+    let getAsyncJobs: string;
     let getfunctions: string;
     let serverAPIVersion: string;
     let appBackup: string;

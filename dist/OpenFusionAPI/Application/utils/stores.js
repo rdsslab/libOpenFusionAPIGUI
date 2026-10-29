@@ -5,6 +5,7 @@ import { writable } from 'svelte/store';
  * @typedef {import('../../types/models.js').SystemEndpointsStatus} SystemEndpointsStatus
  * @typedef {import('../../types/models.js').ServerModelChangedEvent} ServerModelChangedEvent
  * @typedef {import('../../types/models.js').IntervalTaskEvent} IntervalTaskEvent
+ * @typedef {import('../../types/models.js').AsyncJobChangedEvent} AsyncJobChangedEvent
  * @typedef {import('../../types/models.js').BotStatusChangedEvent} BotStatusChangedEvent
  * @typedef {import('../../types/models.js').BotChangedEvent} BotChangedEvent
  * @typedef {import('../../types/models.js').SelectOption} SelectOption
@@ -73,6 +74,14 @@ export const storeServerModelChanged = writable({});
  * @type {import('svelte/store').Writable<IntervalTaskEvent|null>}
  */
 export const storeIntervalTaskEvent = writable(null);
+
+/**
+ * Cambio en la tabla `ofapi_async_jobs` (databaseHook): la GUI recibe un
+ * evento por cada create/update/destroy que el ASYNC_WRAPPER hace sobre una
+ * petición en segundo plano, para que Async Requests se actualice en vivo.
+ * @type {import('svelte/store').Writable<AsyncJobChangedEvent|null>}
+ */
+export const storeAsyncJobChanged = writable(null);
 
 /**
  * Cambio de estado runtime de un bot (bot_status_changed).
