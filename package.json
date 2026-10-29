@@ -1,6 +1,6 @@
 {
 	"name": "@rdsslab/libopenfusionapigui",
-	"version": "9.5.42",
+	"version": "9.5.47",
 	"main": "./dist/index.js",
 	"repository": {
 		"type": "git",
@@ -54,6 +54,7 @@
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.39.5",
+		"@playwright/test": "^1.64.1",
 		"@sveltejs/kit": "^3.1.0",
 		"@sveltejs/package": "^3.0.0",
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",

@@ -53,7 +53,7 @@
 				<span class="icon is-small">
 					<i class="fa-solid fa-xmark"></i>
 				</span>
-				<span>Cancel</span>
+				<span>Close</span>
 			</button>
 		</p>
 	</div>

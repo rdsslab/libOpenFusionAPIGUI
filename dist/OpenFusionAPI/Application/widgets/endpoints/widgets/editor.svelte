@@ -69,6 +69,14 @@
 
 	let deploying = $state({ show: false, message: '', error: false });
 	let dirty = $state(false);
+	/** Snapshot del endpoint tal como llega del servidor una vez que los handlers terminaron de inicializarse. */
+	/** @type {any} */
+	let initialSnapshot = $state(null);
+	/** true durante la fase de carga, mientras los handlers ejecutan su onchange() de inicialización. */
+	let initializing = $state(false);
+	/** Temporizador que detecta el reposo tras la última mutación de la fase de carga. */
+	/** @type {ReturnType<typeof setTimeout>|undefined} */
+	let settleTimer;
 
 	// Cache del último handler consultado para evitar re-fetch innecesarios
 	// NOTA: getHandlerDocsRequest() se llama directamente desde setValuesEndpoint().
@@ -208,6 +216,11 @@
 	}
 
 	async function setValuesEndpoint() {
+		// Reiniciar la fase de inicialización: el $effect de reposo capturará
+		// el snapshot cuando dejen de llegar mutaciones de los handlers.
+		initializing = true;
+		initialSnapshot = null;
+		dirty = false;
 		//console.warn($state.snapshot(endpoint), defaultEndpoint);
 		if (app && app.endpoints && idendpoint) {
 			let ep_found = app.endpoints.find((ep) => ep.idendpoint == idendpoint);
@@ -228,7 +241,40 @@
 			//Notification.error('Application not found');
 			clearValues();
 		}
+		// No se captura el snapshot aquí: la fase de inicialización continúa
+		// y el $effect de reposo lo hará cuando el endpoint deje de mutar.
 	}
+
+	/**
+	 * Captura el snapshot inicial (baseline) cuando el endpoint deja de
+	 * mutar tras la carga. Los handlers disparan onchange() en ráfaga al
+	 * montarse y algunos completan su inicialización después (llamadas de
+	 * red), por lo que un retardo fijo era insuficiente: se espera 500 ms de
+	 * silencio para considerar terminada la inicialización.
+	 */
+	$effect(() => {
+		if (!initializing) return;
+		// Leer el endpoint completa la dependencia profunda: cualquier
+		// mutación proveniente de los handlers re-arma el temporizador.
+		$state.snapshot(endpoint);
+		if (settleTimer) clearTimeout(settleTimer);
+		settleTimer = setTimeout(() => {
+			initialSnapshot = $state.snapshot(endpoint);
+			initializing = false;
+			dirty = false;
+		}, 500);
+	});
+
+	/**
+	 * dirty=true solo cuando el endpoint difiere del snapshot inicial, es
+	 * decir, el usuario hizo un cambio real después de abrir el editor.
+	 * Vuelve a false si deshace sus cambios hasta volver al estado inicial.
+	 */
+	$effect(() => {
+		if (initializing || !initialSnapshot) return;
+		const current = $state.snapshot(endpoint);
+		dirty = JSON.stringify(current) !== JSON.stringify(initialSnapshot);
+	});
 
 	async function saveEndpoint() {
 		deploying.show = true;
@@ -247,6 +293,8 @@
 					message: 'Endpoint saved and deployed successfully.',
 					color: 'success'
 				});
+				initialSnapshot = $state.snapshot(endpoint);
+				dirty = false;
 				/** @type {any} */ (onsave)();
 			} else {
 				deploying.error = true;
@@ -448,7 +496,12 @@
 	function onChangeValueHandler(v = undefined) {
 		console.trace('onChangeValueHandler', v);
 		if (v) {
-			dirty = true;
+			// Durante la inicialización los handlers sincronizan sus valores,
+			// pero eso NO es un cambio del usuario: no marcar dirty.
+			const esInicializacion = initializing;
+			if (!esInicializacion) {
+				dirty = true;
+			}
 			endpoint.data_test = v.data_test;
 			endpoint.code = v.code;
 			endpoint.docs = v.docs;
@@ -862,6 +915,12 @@
 			}
 		}}
 		oncancel={() => {
+			if (settleTimer) {
+				clearTimeout(settleTimer);
+				settleTimer = undefined;
+			}
+			initializing = false;
+			initialSnapshot = null;
 			dirty = false;
 			idendpoint = undefined;
 			showEditor = false;
