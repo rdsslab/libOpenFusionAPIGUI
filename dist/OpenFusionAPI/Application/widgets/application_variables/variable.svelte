@@ -5,7 +5,8 @@
 		EditorCode,
 		Level,
 		copyTextToClipboard,
-		Notifications
+		Notifications,
+		TextArea
 	} from '@rdsslab/svelte-components';
 	import { equalObjs } from '../../utils/utils.js';
 	import { UpsertAppVar, DeleteAppVar } from '../../utils/request.js';
@@ -429,7 +430,7 @@
 				showSelectLang={true}
 				left={left_Editor}
 				right={right_Editor}
-				{showCode}
+				bind:showCode
 				showFormat={true}
 				{isReadOnly}
 				bind:code={av.value}
@@ -438,6 +439,28 @@
 					internalOnchange(av.name ?? '', e.code);
 				}}
 			></EditorCode>
+			{#if showCode}
+				{#if !isReadOnly}
+					<div class="field">
+						<label class="label is-small" for="appvar-note-{av.idvar}">Note</label>
+						<TextArea
+							id="appvar-note-{av.idvar}"
+							bind:value={av.note}
+							label="Note"
+							placeholder="Free-text note for operators (metadata only, not resolved as value)"
+							rows={3}
+							disabled={isReadOnly}
+						/>
+					</div>
+				{:else if av.note}
+					<div class="field">
+						<label class="label is-small" for="appvar-note-{av.idvar}">Note</label>
+						<div class="control">
+							<p class="help is-small" id="appvar-note-{av.idvar}">{av.note}</p>
+						</div>
+					</div>
+				{/if}
+			{/if}
 			<hr class="reset_margin" />
 		{:else}
 			{#if search_var.trim()}

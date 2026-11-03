@@ -7,8 +7,8 @@
 	import TextAreaWidget from '../common/textArea.svelte';
 	import { url_paths } from '../../utils/paths.js';
 	import { userStore } from '../../utils/stores.js';
-	import { GetApp as GetAppRequest, GetAppBackup, RestoreAppBackup } from '../../utils/request.js';
-	import { Notifications } from '@rdsslab/svelte-components';
+	import { GetApp as GetAppRequest, GetAppBackup, RestoreAppBackup, GetAppVars, UpsertAppVar } from '../../utils/request.js';
+	import { Notifications, Input, EditorCode } from '@rdsslab/svelte-components';
 
 	let notify = new Notifications();
 	let uf = new uFetch();
@@ -23,6 +23,38 @@
 	/** @type {import('../../../types/models.js').AppRow} */
 	let app = $state({ app: '', enabled: false, description: '' });
 
+	// ── Password recovery configuration (system app only, prd environment) ──
+	/** @type {Array<import('../../../types/models.js').AppVarRow>} */
+	let recoveryVars = $state([]);
+	/** @type {{emailTransport: string, emailFrom: string, telegramToken: string, emailEnabled: boolean, telegramEnabled: boolean}} */
+	let recoveryForm = $state({
+		emailTransport: '',
+		emailFrom: '',
+		telegramToken: '',
+		emailEnabled: false,
+		telegramEnabled: false
+	});
+	/** @type {string|number|null} */
+	let lastLoadedIdapp = $state(null);
+
+	const RECOVERY_VAR_NAMES = [
+		'$_VAR_EMAIL_TRANSPORT',
+		'$_VAR_EMAIL_FROM',
+		'$_VAR_TELEGRAM_TOKEN',
+		'$_VAR_RESET_EMAIL_ENABLED',
+		'$_VAR_RESET_TELEGRAM_ENABLED'
+	];
+
+	const RECOVERY_TRANSPORT_EXAMPLE = `{
+  "host": "smtp.example.com",
+  "port": 587,
+  "secure": false,
+  "auth": {
+    "user": "user@example.com",
+    "pass": "your-password"
+  }
+}`;
+
 	$effect(() => {
 		// Guardamos el valor actual de idapp para evitar race conditions
 		const idActual = idapp;
@@ -36,6 +68,144 @@
 			GetApp();
 		}
 	});
+
+	// Carga las AppVars de recuperación cuando la app es "system" (environment prd).
+	$effect(() => {
+		const appName = app?.app;
+		if (appName === 'system' && idapp && idapp !== lastLoadedIdapp) {
+			lastLoadedIdapp = idapp;
+			loadRecoveryVars();
+		} else if (appName !== 'system') {
+			lastLoadedIdapp = null;
+			recoveryVars = [];
+			recoveryForm = {
+				emailTransport: '',
+				emailFrom: '',
+				telegramToken: '',
+				emailEnabled: false,
+				telegramEnabled: false
+			};
+		}
+	});
+
+	/**
+	 * Carga las AppVars de recuperación de la app system para el environment prd.
+	 * Si no existen, las inicializa vacías para que el usuario las complete.
+	 */
+	async function loadRecoveryVars() {
+		if (!idapp) return;
+		try {
+			let rows = await GetAppVars(idapp);
+			if (!Array.isArray(rows)) rows = [];
+			let prdVars = rows.filter(
+				(/** @type {import('../../../types/models.js').AppVarRow} */ r) => r.environment === 'prd'
+			);
+
+			recoveryVars = RECOVERY_VAR_NAMES.map(name => {
+				let existing = prdVars.find(
+					(/** @type {import('../../../types/models.js').AppVarRow} */ r) => r.name === name
+				);
+				if (existing) return { ...existing };
+				return {
+					idapp: idapp,
+					name: name,
+					value: '',
+					environment: 'prd',
+					type: name === '$_VAR_EMAIL_TRANSPORT' ? 'json' : 'string',
+					enabled: true
+				};
+			});
+
+			let t = recoveryVars.find(r => r.name === '$_VAR_EMAIL_TRANSPORT');
+			let f = recoveryVars.find(r => r.name === '$_VAR_EMAIL_FROM');
+			let tk = recoveryVars.find(r => r.name === '$_VAR_TELEGRAM_TOKEN');
+			let fe = recoveryVars.find(r => r.name === '$_VAR_RESET_EMAIL_ENABLED');
+			let te = recoveryVars.find(r => r.name === '$_VAR_RESET_TELEGRAM_ENABLED');
+
+			recoveryForm = {
+				emailTransport: t?.value ?? '',
+				emailFrom: f?.value ?? '',
+				telegramToken: tk?.value ?? '',
+				emailEnabled: fe?.value === 'true',
+				telegramEnabled: te?.value === 'true'
+			};
+		} catch (error) {
+			console.error('loadRecoveryVars:', error);
+		}
+	}
+
+	/**
+	 * Sincroniza recoveryVars desde recoveryForm antes de guardar.
+	 * Mapea cada AppVar de recuperación al valor del formulario.
+	 */
+	function syncRecoveryVarsFromForm() {
+		recoveryVars = recoveryVars.map(rv => {
+			switch (rv.name) {
+				case '$_VAR_EMAIL_TRANSPORT':
+					rv.value = recoveryForm.emailTransport;
+					rv.type = 'json';
+					break;
+				case '$_VAR_EMAIL_FROM':
+					rv.value = recoveryForm.emailFrom;
+					rv.type = 'string';
+					break;
+				case '$_VAR_TELEGRAM_TOKEN':
+					rv.value = recoveryForm.telegramToken;
+					rv.type = 'string';
+					break;
+				case '$_VAR_RESET_EMAIL_ENABLED':
+					rv.value = recoveryForm.emailEnabled ? 'true' : 'false';
+					rv.type = 'string';
+					break;
+				case '$_VAR_RESET_TELEGRAM_ENABLED':
+					rv.value = recoveryForm.telegramEnabled ? 'true' : 'false';
+					rv.type = 'string';
+					break;
+			}
+			return rv;
+		});
+	}
+
+	/**
+	 * Guarda todas las AppVars de recuperación (environment prd).
+	 * Se invoca al presionar el botón principal "Save & deploy".
+	 */
+	async function saveAllRecoveryVars() {
+		if (!idapp) return;
+		syncRecoveryVarsFromForm();
+
+		let saved = 0;
+		let errors = 0;
+		for (const rv of recoveryVars) {
+			let appvar = { ...rv };
+			try {
+				let result = await UpsertAppVar(appvar, $userStore.token);
+				if (result && result.idvar) {
+					appvar.idvar = result.idvar;
+					saved++;
+				} else {
+					errors++;
+					notify.push({
+						message: `Error saving ${rv.name}: ${result?.message || result?.error || 'Unknown error'}`,
+						color: 'danger'
+					});
+				}
+			} catch (error) {
+				errors++;
+				console.error(error);
+				notify.push({
+					message: `Error saving ${rv.name}: ${getErrorMessage(error)}`,
+					color: 'danger'
+				});
+			}
+		}
+
+		if (errors === 0 && saved > 0) {
+			notify.push({ message: 'Password recovery variables saved successfully.', color: 'success' });
+		} else if (errors > 0) {
+			notify.push({ message: `${saved} saved, ${errors} failed.`, color: 'warning' });
+		}
+	}
 
 	// IMPORTANTE: NUNCA LEAS `app` DENTRO DE ESTE EFECTO
 	// Cualquier lectura de `app` haría que el efecto se active cuando `app` cambie
@@ -284,6 +454,9 @@
 		left={[backup_restore_app]}
 		onsavedeploy={async () => {
 			await SaveApp();
+			if (app.app === 'system') {
+				await saveAllRecoveryVars();
+			}
 		}}
 		oncancel={() => {
 			//	alert('No');
@@ -402,4 +575,84 @@
 	</div>
 
 	<TextAreaWidget label="Description" bind:value={app.description}></TextAreaWidget>
+
+	{#if app.app === 'system'}
+		<div class="field">
+			<label class="label">Password Recovery Configuration</label>
+			<p class="help">OTP-based password recovery via email or Telegram. Only visible for the "system" application. Environment: prd. Saved on "Save & deploy".</p>
+		</div>
+
+		<div class="field">
+			<label class="label">SMTP Transport (JSON)</label>
+			<p class="control is-expanded">
+				{#snippet recoveryLeft()}
+					<span>SMTP Transport</span>
+				{/snippet}
+				{#snippet recoveryRight()}
+					<span>application/json</span>
+				{/snippet}
+				<EditorCode
+					left={recoveryLeft}
+					right={recoveryRight}
+					bind:code={recoveryForm.emailTransport}
+					lang="json"
+					isReadOnly={false}
+					showFormat={true}
+				></EditorCode>
+			</p>
+			<p class="help">JSON configuration for nodemailer SMTP transport. The backend reads <code>$_VAR_EMAIL_TRANSPORT</code>.</p>
+		</div>
+
+		<div class="field">
+			<label class="label">Example SMTP Transport JSON</label>
+			<div class="control">
+				<pre style="background:#f5f5f5;padding:10px;border:1px solid #ddd;font-size:12px;overflow:auto;white-space:pre-wrap;">{RECOVERY_TRANSPORT_EXAMPLE}</pre>
+			</div>
+			<p class="help">Paste your SMTP transport configuration as JSON above.</p>
+		</div>
+
+		<div class="field has-addons">
+			<p class="control is-expanded">
+				<Input label="Email From" bind:value={recoveryForm.emailFrom} type="text" placeholder="sender@example.com"></Input>
+			</p>
+		</div>
+
+		<div class="field has-addons">
+			<p class="control is-expanded">
+				<Input label="Telegram Bot Token" bind:value={recoveryForm.telegramToken} type="password" placeholder="Bot token from @BotFather"></Input>
+			</p>
+		</div>
+
+		<div class="field has-addons">
+			<p class="control">
+				<label class="label">Email Channel Enabled</label>
+			</p>
+			<p class="control">
+				<input
+					type="button"
+					value={recoveryForm.emailEnabled ? 'On' : 'Off'}
+					class={recoveryForm.emailEnabled ? 'button is-success is-selected is-small' : 'button is-danger is-small'}
+					onclick={() => {
+						recoveryForm.emailEnabled = !recoveryForm.emailEnabled;
+					}}
+				/>
+			</p>
+		</div>
+
+		<div class="field has-addons">
+			<p class="control">
+				<label class="label">Telegram Channel Enabled</label>
+			</p>
+			<p class="control">
+				<input
+					type="button"
+					value={recoveryForm.telegramEnabled ? 'On' : 'Off'}
+					class={recoveryForm.telegramEnabled ? 'button is-success is-selected is-small' : 'button is-danger is-small'}
+					onclick={() => {
+						recoveryForm.telegramEnabled = !recoveryForm.telegramEnabled;
+					}}
+				/>
+			</p>
+		</div>
+	{/if}
 </div>

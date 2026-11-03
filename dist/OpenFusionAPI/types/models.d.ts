@@ -164,6 +164,7 @@ export type AppVarRow = {
     description?: string | undefined;
     enabled?: boolean | undefined;
     type?: string | undefined;
+    note?: string | undefined;
     edit_name?: boolean | undefined;
     org_name?: string | undefined;
     idvar_destination?: string | number | undefined;
