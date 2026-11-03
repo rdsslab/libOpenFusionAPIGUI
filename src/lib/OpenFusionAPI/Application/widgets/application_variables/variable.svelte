@@ -125,6 +125,18 @@
 	}
 
 	onMount(() => {});
+
+	// Inicializa el estado de showCode por variable para que el icono "eye"
+	// de cada EditorCode afecte solo a la fila correspondiente y no a todas.
+	$effect(() => {
+		if (Array.isArray(appVars)) {
+			for (const av of appVars) {
+				if (av && av.showCode === undefined) {
+					av.showCode = showCode;
+				}
+			}
+		}
+	});
 </script>
 
 {#snippet left_header(/** @type {AppVarRow} */ appvar)}
@@ -385,7 +397,8 @@
 											appVars.push({
 												idapp: idapp,
 												name: var_full_name,
-												environment: environment
+												environment: environment,
+												showCode: showCode
 											});
 											appVars = [...appVars];
 										}
@@ -430,7 +443,7 @@
 				showSelectLang={true}
 				left={left_Editor}
 				right={right_Editor}
-				bind:showCode
+				bind:showCode={av.showCode}
 				showFormat={true}
 				{isReadOnly}
 				bind:code={av.value}

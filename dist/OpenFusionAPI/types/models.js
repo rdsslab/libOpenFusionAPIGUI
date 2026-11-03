@@ -171,6 +171,7 @@
  * @property {string} [note]
  * @property {boolean} [edit_name]
  * @property {string} [org_name]
+ * @property {boolean} [showCode]
  * @property {number|string} [idvar_destination]
  */
 

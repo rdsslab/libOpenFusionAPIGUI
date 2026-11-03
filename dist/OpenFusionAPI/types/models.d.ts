@@ -167,6 +167,7 @@ export type AppVarRow = {
     note?: string | undefined;
     edit_name?: boolean | undefined;
     org_name?: string | undefined;
+    showCode?: boolean | undefined;
     idvar_destination?: string | number | undefined;
 };
 /**
