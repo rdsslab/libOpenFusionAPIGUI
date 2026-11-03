@@ -364,8 +364,17 @@
 		resetTabs();
 	});
 	// Mantener selectedRow.params sincronizado con el JSON del editor.
+	// Si el JSON está incompleto o mal formado (mientras el usuario escribe),
+	// no se sobrescribe selectedRow.params: se espera a que el texto sea válido
+	// otra vez. Evita el SyntaxError no capturado que forzó hmr_reload_after_error.
 	$effect(() => {
-		selectedRow.params = JSON.parse(paramsJson || '{}');
+		let parsed;
+		try {
+			parsed = JSON.parse(paramsJson || '{}');
+		} catch {
+			return;
+		}
+		selectedRow.params = parsed;
 	});
 </script>
 

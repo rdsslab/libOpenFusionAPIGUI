@@ -167,7 +167,8 @@
 			if (evRec[field] !== undefined) updated[field] = evRec[field];
 		}
 		if (evRec.enabled !== undefined) updated.task_enabled = /** @type {boolean} */ (evRec.enabled);
-		if (evRec.started_at && evRec.last_run === undefined) updated.last_run = /** @type {string|null} */ (evRec.started_at);
+		if (evRec.started_at && evRec.last_run === undefined)
+			updated.last_run = /** @type {string|null} */ (evRec.started_at);
 		if (evRec.duration_ms !== undefined && evRec.duration_ms !== null) {
 			updated.last_exec_time = Math.round(/** @type {number} */ (evRec.duration_ms));
 		}
@@ -256,7 +257,8 @@
 			decorator: {
 				component: ColumnTypes.TextLimit,
 				props: {
-					suffix: (/** @type {IntervalTaskRow} */ row) => (row?.disabled_by === 'system' ? ' ⚠ Suspended by errors' : '')
+					suffix: (/** @type {IntervalTaskRow} */ row) =>
+						row?.disabled_by === 'system' ? ' ⚠ Suspended by errors' : ''
 				}
 			}
 		},
@@ -339,8 +341,21 @@
 		return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
 	}
 
+	/** Sincroniza `selectedRow.params` con el JSON del editor de parámetros.
+	 * Si el JSON está incompleto o mal formado (mientras el usuario escribe),
+	 * no se sobrescribe `selectedRow.params` ni se recarga nada: se espera a
+	 * que el texto sea válido otra vez. Evita el `SyntaxError` no capturado
+	 * que forzó `hmr_reload_after_error`.
+	 */
 	$effect(() => {
-		selectedRow.params = JSON.parse(paramsJson || '{}');
+		let parsed;
+		try {
+			parsed = JSON.parse(paramsJson || '{}');
+		} catch {
+			return;
+		}
+
+		selectedRow.params = parsed;
 
 		idapp;
 		void (async () => {
@@ -625,77 +640,76 @@
 	}
 </script>
 
-	{#snippet r01()}
-		<div class="field has-addons">
-			{#if selectedRow.idtask}
-				<p class="control">
-					<button
-						class="button is-small is-warning"
-						class:is-loading={runNowPending}
-						disabled={runNowPending ||
-							!runtime?.task_enabled ||
-							Boolean(suspensionStatus) ||
-							(Number(runtime?.status) === 1 && !runtime?.allow_concurrent)}
-						title={!runtime?.task_enabled
-							? 'Enable and save the task before running it'
-							: suspensionStatus
-								? 'The scheduler suspended this task: fix the cause and use Reset attempts'
-								: Number(runtime?.status) === 1 && !runtime?.allow_concurrent
-									? 'The task is already running and does not allow concurrency'
-									: 'Runs the last saved configuration immediately'}
-						onclick={() => runNow(runtime)}
-					>
-						<span class="icon is-small"><i class="fa-solid fa-bolt"></i></span>
-						<span>Run now</span>
-					</button>
-				</p>
-				<p class="control">
-					<button
-						class="button is-small is-danger"
-						class:is-loading={stopNowPending}
-						disabled={stopNowPending || Number(runtime?.status) !== 1}
-						title={Number(runtime?.status) === 1
-							? 'Aborts the execution in flight; the task is not disabled and keeps its schedule'
-							: 'There is no execution in flight to stop'}
-						onclick={() => stopNow(runtime)}
-					>
-						<span class="icon is-small"><i class="fa-solid fa-stop"></i></span>
-						<span>Stop now</span>
-					</button>
-				</p>
-			{/if}
+{#snippet r01()}
+	<div class="field has-addons">
+		{#if selectedRow.idtask}
 			<p class="control">
 				<button
-					class="button is-small is-link"
-					onclick={async () => {
-						if (!confirm('Are you sure you want to save and deploy this task?')) return;
-						// saveInterval() notifica el resultado; el editor permanece abierto
-						// tanto si el guardado tuvo éxito como si falló.
-						await saveInterval();
-					}}
+					class="button is-small is-warning"
+					class:is-loading={runNowPending}
+					disabled={runNowPending ||
+						!runtime?.task_enabled ||
+						Boolean(suspensionStatus) ||
+						(Number(runtime?.status) === 1 && !runtime?.allow_concurrent)}
+					title={!runtime?.task_enabled
+						? 'Enable and save the task before running it'
+						: suspensionStatus
+							? 'The scheduler suspended this task: fix the cause and use Reset attempts'
+							: Number(runtime?.status) === 1 && !runtime?.allow_concurrent
+								? 'The task is already running and does not allow concurrency'
+								: 'Runs the last saved configuration immediately'}
+					onclick={() => runNow(runtime)}
 				>
-					<span class="icon is-small">
-						<i class="fa-solid fa-rocket"></i>
-					</span>
-					<span>Save & Deploy</span>
+					<span class="icon is-small"><i class="fa-solid fa-bolt"></i></span>
+					<span>Run now</span>
 				</button>
 			</p>
 			<p class="control">
 				<button
-					class="button is-small"
-					onclick={() => {
-						showEditor = false;
-					}}
+					class="button is-small is-danger"
+					class:is-loading={stopNowPending}
+					disabled={stopNowPending || Number(runtime?.status) !== 1}
+					title={Number(runtime?.status) === 1
+						? 'Aborts the execution in flight; the task is not disabled and keeps its schedule'
+						: 'There is no execution in flight to stop'}
+					onclick={() => stopNow(runtime)}
 				>
-					<span class="icon is-small">
-						<i class="fa-solid fa-xmark"></i>
-					</span>
-					<span>Cancel</span>
+					<span class="icon is-small"><i class="fa-solid fa-stop"></i></span>
+					<span>Stop now</span>
 				</button>
 			</p>
-		</div>
-	{/snippet}
-
+		{/if}
+		<p class="control">
+			<button
+				class="button is-small is-link"
+				onclick={async () => {
+					if (!confirm('Are you sure you want to save and deploy this task?')) return;
+					// saveInterval() notifica el resultado; el editor permanece abierto
+					// tanto si el guardado tuvo éxito como si falló.
+					await saveInterval();
+				}}
+			>
+				<span class="icon is-small">
+					<i class="fa-solid fa-rocket"></i>
+				</span>
+				<span>Save & Deploy</span>
+			</button>
+		</p>
+		<p class="control">
+			<button
+				class="button is-small"
+				onclick={() => {
+					showEditor = false;
+				}}
+			>
+				<span class="icon is-small">
+					<i class="fa-solid fa-xmark"></i>
+				</span>
+				<span>Cancel</span>
+			</button>
+		</p>
+	</div>
+{/snippet}
 
 {#snippet taskActions()}
 	<div class="field has-addons">
@@ -801,9 +815,14 @@
 							{/if}
 							<span class="tag is-{runtimeStatus.background}">{runtimeStatus.label}</span>
 							{#if lastResultStatus}
-								<span class="tag is-{lastResultStatus.background}">
-									Last result: {lastResultStatus.label}
-								</span>
+								<div class="control">
+									<div class="tags has-addons">
+										<span class="tag is-dark">Last result</span>
+										<span class="tag is-{lastResultStatus.background}"
+											>{lastResultStatus.label}</span
+										>
+									</div>
+								</div>
 							{/if}
 						</div>
 					</div>

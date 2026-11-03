@@ -65,9 +65,29 @@
 </script>
 
 <div class="mb-2">
-	<span class="tag is-link is-light">Task {task?.idtask ?? '?'}</span>
-	<span class="tag is-light">[{task?.method ?? ''}] {task?.url ?? ''}</span>
-	<span class="tag is-light">History limit: {task?.history_limit ?? 50}</span>
+	<div class="field is-grouped is-grouped-multiline">
+		<div class="control">
+			<div class="tags has-addons">
+				<span class="tag is-dark">Task</span>
+				<span class="tag">{task?.idtask ?? '?'}</span>
+			</div>
+		</div>
+
+		<div class="control">
+			<div class="tags has-addons">
+				<span class="tag is-dark">{task?.method ?? ''}</span>
+				<span class="tag">{task?.url ?? ''}</span>
+			</div>
+		</div>
+
+		<div class="control">
+			<div class="tags has-addons">
+				<span class="tag is-dark">History limit</span>
+				<span class="tag">{task?.history_limit ?? 50}</span>
+			</div>
+		</div>
+	</div>
+
 	{#if loading}
 		<span class="tag is-info is-light">Loading…</span>
 	{/if}
