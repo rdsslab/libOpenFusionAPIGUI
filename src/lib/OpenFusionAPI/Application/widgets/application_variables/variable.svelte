@@ -5,7 +5,8 @@
 		EditorCode,
 		Level,
 		copyTextToClipboard,
-		Notifications
+		Notifications,
+		TextArea
 	} from '@rdsslab/svelte-components';
 	import { equalObjs } from '#lib/OpenFusionAPI/Application/utils/utils.js';
 	import { UpsertAppVar, DeleteAppVar } from '#lib/OpenFusionAPI/Application/utils/request.js';
@@ -429,7 +430,7 @@
 				showSelectLang={true}
 				left={left_Editor}
 				right={right_Editor}
-				{showCode}
+				bind:showCode
 				showFormat={true}
 				{isReadOnly}
 				bind:code={av.value}
@@ -438,23 +439,27 @@
 					internalOnchange(av.name ?? '', e.code);
 				}}
 			></EditorCode>
-			{#if !isReadOnly}
-				<div class="field">
-					<label class="label is-small" for="appvar-note-{av.idvar}">Note</label>
-					<textarea
-						id="appvar-note-{av.idvar}"
-						class="textarea is-small"
-						placeholder="Free-text note for operators (metadata only, not resolved as value)"
-						bind:value={av.note}
-					></textarea>
-				</div>
-			{:else if av.note}
-				<div class="field">
-					<label class="label is-small" for="appvar-note-{av.idvar}">Note</label>
-					<div class="control">
-						<p class="help is-small" id="appvar-note-{av.idvar}">{av.note}</p>
+			{#if showCode}
+				{#if !isReadOnly}
+					<div class="field">
+						<label class="label is-small" for="appvar-note-{av.idvar}">Note</label>
+						<TextArea
+							id="appvar-note-{av.idvar}"
+							bind:value={av.note}
+							label="Note"
+							placeholder="Free-text note for operators (metadata only, not resolved as value)"
+							rows={3}
+							disabled={isReadOnly}
+						/>
 					</div>
-				</div>
+				{:else if av.note}
+					<div class="field">
+						<label class="label is-small" for="appvar-note-{av.idvar}">Note</label>
+						<div class="control">
+							<p class="help is-small" id="appvar-note-{av.idvar}">{av.note}</p>
+						</div>
+					</div>
+				{/if}
 			{/if}
 			<hr class="reset_margin" />
 		{:else}
