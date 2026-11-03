@@ -721,8 +721,8 @@
 				title={!historyTask?.idtask
 					? 'Select a single task to act on it'
 					: Number(historyTaskRuntime?.status) === 1
-						? 'Aborta la ejecución en vuelo; la tarea no se deshabilita y conserva su programación'
-						: 'No hay ninguna ejecución en vuelo que detener'}
+						? 'Abort the in-flight execution; the task is not disabled and keeps its schedule'
+						: 'No in-flight execution to stop'}
 				onclick={() => stopNow(historyTask)}
 			>
 				<span class="icon is-small"><i class="fa-solid fa-stop"></i></span>

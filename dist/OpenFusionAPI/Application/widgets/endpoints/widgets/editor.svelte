@@ -558,7 +558,7 @@
 			}
 		} catch {
 			// En caso de cualquier error inesperado
-			cadena = '[Error al convertir valor]';
+			cadena = '[Error converting value]';
 		}
 
 		// Retornar los primeros N caracteres

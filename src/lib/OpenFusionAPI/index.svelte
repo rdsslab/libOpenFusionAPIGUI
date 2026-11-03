@@ -75,7 +75,7 @@
 				tokenExpiryWarningShown = true;
 
 				notify.push({
-					message: `⚠️ Tu sesión expirará en aproximadamente ${Math.floor(minutesLeft)} minuto${Math.floor(minutesLeft) !== 1 ? 's' : ''}. Guarda tu trabajo.`,
+					message: `⚠️ Your session will expire in approximately ${Math.floor(minutesLeft)} minute${Math.floor(minutesLeft) !== 1 ? 's' : ''}. Save your work.`,
 					color: 'warning',
 					timeout: 120000 // 2 minutos
 				});
