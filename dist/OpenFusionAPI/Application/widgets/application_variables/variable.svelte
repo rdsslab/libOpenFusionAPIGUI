@@ -455,7 +455,7 @@
 					internalOnchange(av.name ?? '', e.code);
 				}}
 			></EditorCode>
-			{#if showCode}
+			{#if av.showCode}
 				{#if !isReadOnly}
 					<div class="field">
 						<label class="label is-small" for="appvar-note-{av.idvar}">Note</label>
