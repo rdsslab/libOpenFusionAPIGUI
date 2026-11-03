@@ -459,7 +459,7 @@
 			<div class="control is-flex is-align-items-center" style="gap: 0.25rem;">
 				{#each [1, 6, 12, 24, 48, 72, 168] as h}
 					<button
-						class="button is-small {presetHours === h ? 'is-info' : 'is-light'}"
+						class="button is-small {presetHours === h ? 'is-success' : 'is-dark'}"
 						onclick={() => (presetHours = h)}
 					>
 						{h < 24 ? `${h}h` : h === 24 ? '24h' : h === 48 ? '2d' : h === 72 ? '3d' : '7d'}

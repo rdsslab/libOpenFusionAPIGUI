@@ -133,12 +133,12 @@
 	}
 
 	let /** @type {Array<{fam: string, count: number}>} */ statusFamilies = $derived.by(() => {
-		if (!summary?.by_status_family) return [];
-		const order = ['2xx', '3xx', '4xx', '5xx', 'other'];
-		return order
-			.filter((key) => summary?.by_status_family?.[key] != null)
-			.map((key) => ({ fam: key, count: summary?.by_status_family[key] ?? 0 }));
-	});
+			if (!summary?.by_status_family) return [];
+			const order = ['2xx', '3xx', '4xx', '5xx', 'other'];
+			return order
+				.filter((key) => summary?.by_status_family?.[key] != null)
+				.map((key) => ({ fam: key, count: summary?.by_status_family[key] ?? 0 }));
+		});
 
 	/**
 	 * @param {string} fam
@@ -203,7 +203,10 @@
 					{#if summary?.worst_status_code != null && summary?.worst_status_code > 0}
 						<div class="cell column">
 							<div class="has-text-weight-semibold is-size-7">Worst status</div>
-							<div class="is-size-6" title={httpStatusText(/** @type {number} */ (summary?.worst_status_code ?? 0))}>
+							<div
+								class="is-size-6"
+								title={httpStatusText(/** @type {number} */ (summary?.worst_status_code ?? 0))}
+							>
 								{summary?.worst_status_code}
 							</div>
 						</div>
@@ -225,9 +228,15 @@
 				{#if statusFamilies.length > 0}
 					<div class="mb-3">
 						<p class="heading mb-1">Status distribution</p>
-						<div class="tags">
+
+						<div class="field is-grouped is-grouped-multiline">
 							{#each statusFamilies as item}
-								<span class="tag {familyClass(item.fam)}">{item.fam}: {item.count}</span>
+								<div class="control">
+									<div class="tags has-addons">
+										<span class="tag {familyClass(item.fam)}">{item.fam}</span>
+										<span class="tag">{item.count}</span>
+									</div>
+								</div>
 							{/each}
 						</div>
 					</div>
@@ -329,8 +338,11 @@
 									<tr>
 										<td class="is-size-7">{fmtTs(err.timestamp)}</td>
 										<td class="is-size-7">
-											<span class="tag is-danger" title={err.status_code != null ? httpStatusText(String(err.status_code)) : undefined}
-												>{err.status_code ?? '—'}</span
+											<span
+												class="tag is-danger"
+												title={err.status_code != null
+													? httpStatusText(String(err.status_code))
+													: undefined}>{err.status_code ?? '—'}</span
 											>
 										</td>
 										<td class="is-size-7">{err.method ?? '—'}</td>
