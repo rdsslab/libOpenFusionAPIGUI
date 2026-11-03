@@ -168,6 +168,7 @@
  * @property {string} [description]
  * @property {boolean} [enabled]
  * @property {string} [type]
+ * @property {string} [note]
  * @property {boolean} [edit_name]
  * @property {string} [org_name]
  * @property {number|string} [idvar_destination]

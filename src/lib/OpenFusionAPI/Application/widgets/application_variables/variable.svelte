@@ -438,6 +438,24 @@
 					internalOnchange(av.name ?? '', e.code);
 				}}
 			></EditorCode>
+			{#if !isReadOnly}
+				<div class="field">
+					<label class="label is-small" for="appvar-note-{av.idvar}">Note</label>
+					<textarea
+						id="appvar-note-{av.idvar}"
+						class="textarea is-small"
+						placeholder="Free-text note for operators (metadata only, not resolved as value)"
+						bind:value={av.note}
+					></textarea>
+				</div>
+			{:else if av.note}
+				<div class="field">
+					<label class="label is-small" for="appvar-note-{av.idvar}">Note</label>
+					<div class="control">
+						<p class="help is-small" id="appvar-note-{av.idvar}">{av.note}</p>
+					</div>
+				</div>
+			{/if}
 			<hr class="reset_margin" />
 		{:else}
 			{#if search_var.trim()}
