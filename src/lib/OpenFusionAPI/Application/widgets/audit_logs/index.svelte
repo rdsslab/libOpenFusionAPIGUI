@@ -91,7 +91,6 @@
 	 * @property {number} total
 	 */
 
-
 	// === Filtros ===
 	let action = $state('');
 	let entityType = $state('');
@@ -223,7 +222,10 @@
 				logs = [];
 				total = 0;
 				offset = 0;
-				notify.push({ message: getErrorMessage(e) || 'Failed to load audit logs', color: 'danger' });
+				notify.push({
+					message: getErrorMessage(e) || 'Failed to load audit logs',
+					color: 'danger'
+				});
 			}
 		} finally {
 			if (rid === logs_guard) loading = false;
@@ -244,7 +246,10 @@
 		} catch (e) {
 			console.error(e);
 			if (rid === logs_guard) {
-				notify.push({ message: getErrorMessage(e) || 'Failed to load more audit logs', color: 'danger' });
+				notify.push({
+					message: getErrorMessage(e) || 'Failed to load more audit logs',
+					color: 'danger'
+				});
 			}
 		} finally {
 			if (rid === logs_guard) loadingMore = false;
@@ -404,24 +409,31 @@
 	<div class="box p-3 mb-3">
 		<div class="field is-grouped is-grouped-multiline is-align-items-center">
 			<span class="control">
-				<span class="tag is-medium is-light mr-1">Window:</span>
+				<span class="tag is-small is-light mr-1">Window:</span>
 			</span>
 			{#each STATS_WINDOWS as d}
-				<p class="control">
-					<button
-						class="button is-small {statsDays === d ? 'is-info' : 'is-light'}"
-						onclick={() => (statsDays = d)}
-					>
-						{d}d
-					</button>
-				</p>
+				<div class="control">
+					<div class="tags has-addons">
+						<button class="tag is-dark" onclick={() => (statsDays = d)}>{d}</button>
+						<button
+							class="tag {statsDays === d ? 'is-success' : 'is-ligth'}"
+							onclick={() => (statsDays = d)}>days</button
+						>
+					</div>
+				</div>
 			{/each}
 			<span class="control">
-				<span class="tag is-medium is-info">{stats.total} events</span>
+				<div class="tags has-addons">
+					<span class="tag is-info">{stats.total}</span>
+					<span class="tag is-dark">events</span>
+				</div>
 			</span>
 			{#if stats.failures > 0}
 				<span class="control">
-					<span class="tag is-medium is-danger">{stats.failures} failures</span>
+					<div class="tags has-addons">
+						<span class="tag is-danger">{stats.failures}</span>
+						<span class="tag is-dark">failures</span>
+					</div>
 				</span>
 			{/if}
 			{#if loadingStats}
@@ -434,7 +446,12 @@
 			<div class="field is-grouped is-grouped-multiline">
 				<span class="tag is-light is-italic">By action:</span>
 				{#each stats.by_action as b}
-					<span class="tag is-info is-light">{b.action} <b>{b.count}</b></span>
+					<div class="control">
+						<div class="tags has-addons">
+							<span class="tag is-dark">{b.action}</span>
+							<span class="tag is-info">{b.count}</span>
+						</div>
+					</div>
 				{/each}
 			</div>
 		{/if}
@@ -442,7 +459,12 @@
 			<div class="field is-grouped is-grouped-multiline">
 				<span class="tag is-light is-italic">By entity:</span>
 				{#each stats.by_entity as b}
-					<span class="tag is-success is-light">{b.entity_type} <b>{b.count}</b></span>
+					<div class="control">
+						<div class="tags has-addons">
+							<span class="tag is-dark">{b.entity_type} </span>
+							<span class="tag is-info">{b.count}</span>
+						</div>
+					</div>
 				{/each}
 			</div>
 		{/if}
@@ -450,7 +472,12 @@
 			<div class="field is-grouped is-grouped-multiline">
 				<span class="tag is-light is-italic">By actor:</span>
 				{#each stats.by_actor as b}
-					<span class="tag is-warning is-light">{b.actor_username} <b>{b.count}</b></span>
+					<div class="control">
+						<div class="tags has-addons">
+							<span class="tag is-dark">{b.actor_username} </span>
+							<span class="tag is-info">{b.count}</span>
+						</div>
+					</div>
 				{/each}
 			</div>
 		{/if}
@@ -528,7 +555,7 @@
 			<div class="control is-flex is-align-items-center" style="gap: 0.25rem;">
 				{#each [1, 6, 12, 24, 48, 72, 168] as h}
 					<button
-						class="button is-small {presetHours === h ? 'is-info' : 'is-light'}"
+						class="button is-small {presetHours === h ? 'is-success' : 'is-dark'}"
 						onclick={() => (presetHours = h)}
 					>
 						{h < 24 ? `${h}h` : h === 24 ? '24h' : h === 48 ? '2d' : h === 72 ? '3d' : '7d'}
