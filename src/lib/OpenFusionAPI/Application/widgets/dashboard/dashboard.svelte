@@ -17,18 +17,18 @@
 	import { httpStatusText } from '#lib/OpenFusionAPI/Application/utils/httpStatus.js';
 	let { idapp = $bindable() } = $props();
 	/**
- * @typedef {Record<string, unknown>} RowAny
- * @typedef {{value: Array<string|number>, name?: string, other?: string, seriesName?: string}} DashboardChartPoint
- * @typedef {{idendpoint?: string|number, type?: string, name?: string, showSymbol?: boolean, smooth?: boolean, large?: boolean, data?: Array<DashboardChartPoint>, itemStyle?: Record<string, unknown>, lineStyle?: Record<string, unknown>, extra?: Record<string, unknown>}} ChartSeriesItem
- * @typedef {{status_class?: string, count?: string|number, minute?: string}} StatusClassRow
- * @typedef {{status_code?: string|number, recordCount?: string|number}} StatusCodeRow
- * @typedef {{resource?: string, requestCount?: string|number}} EndpointUsageRow
- * @typedef {{idendpoint?: string|number, method?: string, resource?: string, series?: Array<DashboardChartPoint>, count?: string|number, bucket?: string, title?: string}} TopErrorEndpointRow
- * @typedef {{cpuUsage: number}} ServerCpuEvent
- * @typedef {{memoryUsage: number}} ServerMemoryEvent
- * @typedef {{name: string, value: number}} StatusSummaryEntry
- * @typedef {{idendpoint: string|number, name: string, showSymbol: boolean, symbolSize: number, data: Array<DashboardChartPoint>}} EndpointSeriesEntry
- */
+	 * @typedef {Record<string, unknown>} RowAny
+	 * @typedef {{value: Array<string|number>, name?: string, other?: string, seriesName?: string}} DashboardChartPoint
+	 * @typedef {{idendpoint?: string|number, type?: string, name?: string, showSymbol?: boolean, smooth?: boolean, large?: boolean, data?: Array<DashboardChartPoint>, itemStyle?: Record<string, unknown>, lineStyle?: Record<string, unknown>, extra?: Record<string, unknown>}} ChartSeriesItem
+	 * @typedef {{status_class?: string, count?: string|number, minute?: string}} StatusClassRow
+	 * @typedef {{status_code?: string|number, recordCount?: string|number}} StatusCodeRow
+	 * @typedef {{resource?: string, requestCount?: string|number}} EndpointUsageRow
+	 * @typedef {{idendpoint?: string|number, method?: string, resource?: string, series?: Array<DashboardChartPoint>, count?: string|number, bucket?: string, title?: string}} TopErrorEndpointRow
+	 * @typedef {{cpuUsage: number}} ServerCpuEvent
+	 * @typedef {{memoryUsage: number}} ServerMemoryEvent
+	 * @typedef {{name: string, value: number}} StatusSummaryEntry
+	 * @typedef {{idendpoint: string|number, name: string, showSymbol: boolean, symbolSize: number, data: Array<DashboardChartPoint>}} EndpointSeriesEntry
+	 */
 	/** @type {Array<ChartSeriesItem>} */
 	let data_request_series = $state([]);
 
@@ -66,9 +66,13 @@
 		'5xx': [500, 599]
 	};
 
-	function statusMatchesSelectedClasses(/** @type {number} */ statusCode, /** @type {Array<string>} */ classes) {
+	function statusMatchesSelectedClasses(
+		/** @type {number} */ statusCode,
+		/** @type {Array<string>} */ classes
+	) {
 		return classes.some((cls) => {
-			const [min, max] = /** @type {Record<string, Array<number>>} */ (STATUS_CODE_RANGES)[cls] || [];
+			const [min, max] =
+				/** @type {Record<string, Array<number>>} */ (STATUS_CODE_RANGES)[cls] || [];
 			return min && statusCode >= min && statusCode <= max;
 		});
 	}
@@ -77,10 +81,10 @@
 		const points = Array.isArray(params) ? params : [params];
 		return points
 			.map((/** @type {DashboardChartPoint} */ p) => {
-				const date = new Date((/** @type {Array} */ p.value)[0]);
+				const date = new Date(/** @type {Array} */ p.value[0]);
 				const pad = (/** @type {number} */ n) => String(n).padStart(2, '0');
 				const formattedDate = `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-				return `URL: ${/** @type {string} */ (p.seriesName)}<br/>${formattedDate}<br/>Errores: ${(/** @type {Array} */ p.value)[1]}`;
+				return `URL: ${/** @type {string} */ (p.seriesName)}<br/>${formattedDate}<br/>Errores: ${/** @type {Array} */ p.value[1]}`;
 			})
 			.join('<br/><br/>');
 	}
@@ -149,7 +153,7 @@
 
 	function formatData(/** @type {RowAny} */ data_endpoint) {
 		if (matchesSelection(data_endpoint)) {
-			let now = new Date((/** @type {string|number} */ (data_endpoint.dateTime || Date.now())));
+			let now = new Date(/** @type {string|number} */ (data_endpoint.dateTime || Date.now()));
 			let label = data_endpoint.method
 				? `${data_endpoint.method} ${data_endpoint.resource || data_endpoint.url || ''}`.trim()
 				: `Endpoint ${data_endpoint.idendpoint}`;
@@ -165,14 +169,17 @@
 	// puede asumir que el punto más nuevo cae al final del arreglo: hay que ubicarlo por
 	// fecha para que la gráfica de líneas no dibuje saltos hacia atrás en el tiempo.
 	/**
-		 * @param {Array<DashboardChartPoint>} dataArray
-		 * @param {DashboardChartPoint} point
-		 * @returns {Array<DashboardChartPoint>}
+	 * @param {Array<DashboardChartPoint>} dataArray
+	 * @param {DashboardChartPoint} point
+	 * @returns {Array<DashboardChartPoint>}
 	 */
 	function insertSortedPoint(dataArray, point) {
-		const t = new Date((/** @type {Array<string|number>} */ point.value)[0]).getTime();
+		const t = new Date(/** @type {Array<string|number>} */ point.value[0]).getTime();
 		let i = dataArray.length - 1;
-		while (i >= 0 && new Date((/** @type {Array<string|number>} */ dataArray[i].value)[0]).getTime() > t) {
+		while (
+			i >= 0 &&
+			new Date(/** @type {Array<string|number>} */ dataArray[i].value[0]).getTime() > t
+		) {
 			i--;
 		}
 		const result = [...dataArray];
@@ -184,22 +191,34 @@
 	// `data_request_series` correspondiente a `idendpoint`, creando la serie si el endpoint
 	// no tenía actividad en la ventana histórica cargada.
 	/**
-		 * @param {Array<ChartSeriesItem>} seriesArray
-		 * @param {string|number} idendpoint
-		 * @param {string} label
-		 * @param {DashboardChartPoint} point
-		 * @returns {Array<ChartSeriesItem>}
+	 * @param {Array<ChartSeriesItem>} seriesArray
+	 * @param {string|number} idendpoint
+	 * @param {string} label
+	 * @param {DashboardChartPoint} point
+	 * @returns {Array<ChartSeriesItem>}
 	 */
 	function upsertSeriesPoint(seriesArray, idendpoint, label, point) {
 		const index = seriesArray.findIndex((series) => series.idendpoint === idendpoint);
 		if (index === -1) {
 			return [
 				...seriesArray,
-				/** @type {ChartSeriesItem} */ ({ idendpoint, name: label, showSymbol: true, symbolSize: 4, data: [point] })
+				/** @type {ChartSeriesItem} */ ({
+					idendpoint,
+					name: label,
+					showSymbol: true,
+					symbolSize: 4,
+					data: [point]
+				})
 			];
 		}
 		const updated = [...seriesArray];
-		updated[index] = { ...updated[index], data: insertSortedPoint((/** @type {Array<DashboardChartPoint>} */ (updated[index].data || [])), point) };
+		updated[index] = {
+			...updated[index],
+			data: insertSortedPoint(
+				/** @type {Array<DashboardChartPoint>} */ (updated[index].data || []),
+				point
+			)
+		};
 		return updated;
 	}
 
@@ -207,9 +226,9 @@
 	// (buscándolo, no asumiendo que es el último), o inserta uno nuevo en su posición
 	// cronológica — misma agrupación que hace el backend, pero incremental.
 	/**
-		 * @param {Array<DashboardChartPoint>} dataArray
-		 * @param {string|number} dateValue
-		 * @returns {Array<DashboardChartPoint>}
+	 * @param {Array<DashboardChartPoint>} dataArray
+	 * @param {string|number} dateValue
+	 * @returns {Array<DashboardChartPoint>}
 	 */
 	function incrementMinutePoint(dataArray, dateValue) {
 		const minuteDate = new Date(dateValue || Date.now());
@@ -217,24 +236,37 @@
 		const t = minuteDate.getTime();
 
 		let i = dataArray.length - 1;
-		while (i >= 0 && new Date((/** @type {Array<string|number>} */ dataArray[i].value)[0]).getTime() > t) {
+		while (
+			i >= 0 &&
+			new Date(/** @type {Array<string|number>} */ dataArray[i].value[0]).getTime() > t
+		) {
 			i--;
 		}
 
-		if (i >= 0 && new Date((/** @type {Array<string|number>} */ dataArray[i].value)[0]).getTime() === t) {
+		if (
+			i >= 0 &&
+			new Date(/** @type {Array<string|number>} */ dataArray[i].value[0]).getTime() === t
+		) {
 			const updated = [...dataArray];
 			const pt = /** @type {DashboardChartPoint} */ (updated[i]);
-			pt.value = [pt.value[0], (/** @type {number} */ (/** @type {string|number} */ pt.value[1])) + 1];
+			pt.value = [
+				pt.value[0],
+				/** @type {number} */ (/** @type {string|number} */ pt.value[1]) + 1
+			];
 			updated[i] = pt;
 			return updated;
 		}
 
 		const updated = [...dataArray];
-		updated.splice(i + 1, 0, /** @type {DashboardChartPoint} */ ({
-			name: minuteDate.toISOString(),
-			value: [minuteDate, 1],
-			other: 'Nada'
-		}));
+		updated.splice(
+			i + 1,
+			0,
+			/** @type {DashboardChartPoint} */ ({
+				name: minuteDate.toISOString(),
+				value: [minuteDate, 1],
+				other: 'Nada'
+			})
+		);
 		return updated;
 	}
 
@@ -242,10 +274,10 @@
 	// ('hour' o 'minute') en vez de asumir siempre minuto — para series agrupadas
 	// por hora, como la de top error endpoints.
 	/**
-		 * @param {Array<DashboardChartPoint>} dataArray
-		 * @param {string|number} dateValue
-		 * @param {string} granularity
-		 * @returns {Array<DashboardChartPoint>}
+	 * @param {Array<DashboardChartPoint>} dataArray
+	 * @param {string|number} dateValue
+	 * @param {string} granularity
+	 * @returns {Array<DashboardChartPoint>}
 	 */
 	function incrementBucketPoint(dataArray, dateValue, granularity) {
 		const bucketDate = new Date(dateValue || Date.now());
@@ -257,24 +289,37 @@
 		const t = bucketDate.getTime();
 
 		let i = dataArray.length - 1;
-		while (i >= 0 && new Date((/** @type {Array<string|number>} */ dataArray[i].value)[0]).getTime() > t) {
+		while (
+			i >= 0 &&
+			new Date(/** @type {Array<string|number>} */ dataArray[i].value[0]).getTime() > t
+		) {
 			i--;
 		}
 
-		if (i >= 0 && new Date((/** @type {Array<string|number>} */ dataArray[i].value)[0]).getTime() === t) {
+		if (
+			i >= 0 &&
+			new Date(/** @type {Array<string|number>} */ dataArray[i].value[0]).getTime() === t
+		) {
 			const updated = [...dataArray];
 			const pt = /** @type {DashboardChartPoint} */ (updated[i]);
-			pt.value = [pt.value[0], (/** @type {number} */ (/** @type {string|number} */ pt.value[1])) + 1];
+			pt.value = [
+				pt.value[0],
+				/** @type {number} */ (/** @type {string|number} */ pt.value[1]) + 1
+			];
 			updated[i] = pt;
 			return updated;
 		}
 
 		const updated = [...dataArray];
-		updated.splice(i + 1, 0, /** @type {DashboardChartPoint} */ ({
-			name: bucketDate.toISOString(),
-			value: [bucketDate, 1],
-			other: 'Nada'
-		}));
+		updated.splice(
+			i + 1,
+			0,
+			/** @type {DashboardChartPoint} */ ({
+				name: bucketDate.toISOString(),
+				value: [bucketDate, 1],
+				other: 'Nada'
+			})
+		);
 		return updated;
 	}
 
@@ -291,9 +336,9 @@
 	// incrementMinutePoint/incrementBucketPoint, pero sin bucket de tiempo (es un total, no
 	// una serie temporal).
 	/**
-		 * @param {Array<StatusSummaryEntry>} dataArray
-		 * @param {string|number} statusCode
-		 * @returns {Array<StatusSummaryEntry>}
+	 * @param {Array<StatusSummaryEntry>} dataArray
+	 * @param {string|number} statusCode
+	 * @returns {Array<StatusSummaryEntry>}
 	 */
 	function incrementStatusSummary(dataArray, statusCode) {
 		const code = String(statusCode);
@@ -311,9 +356,9 @@
 	// intervalo — usado para las gráficas a nivel de endpoint (deben verse casi inmediatas,
 	// pero sin repintar más de una vez cada `intervalMs` bajo ráfaga).
 	/**
-		 * @param {number} intervalMs
-		 * @param {() => void} flush
-		 * @returns {{trigger: () => void, cancel: () => void}}
+	 * @param {number} intervalMs
+	 * @param {() => void} flush
+	 * @returns {{trigger: () => void, cancel: () => void}}
 	 */
 	function createLeadingTrailingThrottle(intervalMs, flush) {
 		let cooling = false;
@@ -352,9 +397,9 @@
 	// una vez al final de la ventana, sin aplicación inmediata — usado para las gráficas
 	// agregadas, que deben actualizarse a lo sumo cada `intervalMs`.
 	/**
-		 * @param {number} intervalMs
-		 * @param {() => void} flush
-		 * @returns {{trigger: () => void, cancel: () => void}}
+	 * @param {number} intervalMs
+	 * @param {() => void} flush
+	 * @returns {{trigger: () => void, cancel: () => void}}
 	 */
 	function createTrailingThrottle(intervalMs, flush) {
 		/** @type {ReturnType<typeof setTimeout>|null|undefined} */
@@ -393,10 +438,17 @@
 				);
 			}
 
-			if (Number((/** @type {string|number} */ event.statusCode)) >= 400) {
+			if (Number(/** @type {string|number} */ event.statusCode) >= 400) {
 				data_top_error_endpoints = data_top_error_endpoints.map((series) =>
 					series.idendpoint === event.idendpoint
-						? { ...series, data: incrementBucketPoint((/** @type {Array<DashboardChartPoint>} */ (series.data || [])), /** @type {string|number} */ (event.dateTime), 'hour') }
+						? {
+								...series,
+								data: incrementBucketPoint(
+									/** @type {Array<DashboardChartPoint>} */ (series.data || []),
+									/** @type {string|number} */ (event.dateTime),
+									'hour'
+								)
+							}
 						: series
 				);
 			}
@@ -407,16 +459,28 @@
 		const events = pendingAggregateEvents;
 		pendingAggregateEvents = [];
 		for (const /** @type {RowAny} */ event of events) {
-			data_logs_per_minute = incrementMinutePoint(data_logs_per_minute, /** @type {string|number} */ (event.dateTime));
+			data_logs_per_minute = incrementMinutePoint(
+				data_logs_per_minute,
+				/** @type {string|number} */ (event.dateTime)
+			);
 
 			let status_class = statusClassForCode(/** @type {string|number} */ (event.statusCode));
 			data_status_class = data_status_class.map((series, index) =>
 				STATUS_CLASSES[index].key === status_class
-					? { ...series, data: incrementMinutePoint((/** @type {Array<DashboardChartPoint>} */ (series.data || [])), /** @type {string|number} */ (event.dateTime)) }
+					? {
+							...series,
+							data: incrementMinutePoint(
+								/** @type {Array<DashboardChartPoint>} */ (series.data || []),
+								/** @type {string|number} */ (event.dateTime)
+							)
+						}
 					: series
 			);
 
-			data_status_summary = incrementStatusSummary(data_status_summary, /** @type {string|number} */ (event.statusCode));
+			data_status_summary = incrementStatusSummary(
+				data_status_summary,
+				/** @type {string|number} */ (event.statusCode)
+			);
 		}
 	}
 
@@ -493,14 +557,16 @@
 					$userStore.token
 				);
 				if (Array.isArray(data_log_pm)) {
-					data_logs_per_minute = data_log_pm.map((/** @type {{minute?: string|number, count?: string|number}} */ dl) => {
-						let now = new Date((dl.minute ? /** @type {string|number} */ dl.minute : Date.now()));
-						return {
-							name: now.toISOString(),
-							value: [now.getTime(), parseInt(/** @type {string} */ (String(dl?.count)))],
-							other: 'Nada'
-						};
-					});
+					data_logs_per_minute = data_log_pm.map(
+						(/** @type {{minute?: string|number, count?: string|number}} */ dl) => {
+							let now = new Date(dl.minute ? /** @type {string|number} */ dl.minute : Date.now());
+							return {
+								name: now.toISOString(),
+								value: [now.getTime(), parseInt(/** @type {string} */ (String(dl?.count)))],
+								other: 'Nada'
+							};
+						}
+					);
 				} else {
 					console.error('getLogsRecordsPerMinute did not return an array:', data_log_pm);
 					data_logs_per_minute = [];
@@ -522,20 +588,25 @@
 					let seriesByEndpoint = new Map();
 					for (const /** @type {RowAny} */ log of request_logs) {
 						if (!seriesByEndpoint.has(log.idendpoint)) {
-							seriesByEndpoint.set(log.idendpoint, /** @type {ChartSeriesItem} */ ({
-								idendpoint: log.idendpoint,
-								name: `${log.method} ${log.url}`,
-								showSymbol: true,
-								symbolSize: 4,
-								data: []
-							}));
+							seriesByEndpoint.set(
+								log.idendpoint,
+								/** @type {ChartSeriesItem} */ ({
+									idendpoint: log.idendpoint,
+									name: `${log.method} ${log.url}`,
+									showSymbol: true,
+									symbolSize: 4,
+									data: []
+								})
+							);
 						}
 						let now = new Date(log.timestamp || Date.now());
-						seriesByEndpoint.get(log.idendpoint).data.push(/** @type {DashboardChartPoint} */ ({
-							name: now.toISOString(),
-							value: [now, log?.response_time],
-							other: `${log.method} ${log.url}`
-						}));
+						seriesByEndpoint.get(log.idendpoint).data.push(
+							/** @type {DashboardChartPoint} */ ({
+								name: now.toISOString(),
+								value: [now, log?.response_time],
+								other: `${log.method} ${log.url}`
+							})
+						);
 					}
 					data_request_series = Array.from(seriesByEndpoint.values());
 				} else {
@@ -549,19 +620,19 @@
 				);
 				if (Array.isArray(data_status)) {
 					data_status_class = STATUS_CLASSES.map((statusClass) => ({
-									name: statusClass.name,
-									color: statusClass.color,
-									data: data_status
-										.filter((row) => (/** @type {StatusClassRow} */ row).status_class === statusClass.key)
-										.map((row) => {
-											let now = new Date((/** @type {StatusClassRow} */ row).minute || Date.now());
-											return /** @type {DashboardChartPoint} */ ({
-												name: now.toISOString(),
-												value: [now, parseInt((/** @type {StatusClassRow} */ row)?.count)],
-												other: 'Nada'
-											});
-										})
-									}));
+						name: statusClass.name,
+						color: statusClass.color,
+						data: data_status
+							.filter((row) => /** @type {StatusClassRow} */ row.status_class === statusClass.key)
+							.map((row) => {
+								let now = new Date(/** @type {StatusClassRow} */ row.minute || Date.now());
+								return /** @type {DashboardChartPoint} */ ({
+									name: now.toISOString(),
+									value: [now, parseInt(/** @type {StatusClassRow} */ row?.count)],
+									other: 'Nada'
+								});
+							})
+					}));
 				} else {
 					console.error('getLogsStatusClassPerMinute did not return an array:', data_status);
 					data_status_class = [];
@@ -577,10 +648,13 @@
 						const code = String(row.status_code);
 						countByStatusCode[code] = (countByStatusCode[code] || 0) + parseInt(row.recordCount);
 					}
-					data_status_summary = Object.entries(countByStatusCode).map(([name, value]) => /** @type {StatusSummaryEntry} */ ({
-						name,
-						value
-					}));
+					data_status_summary = Object.entries(countByStatusCode).map(
+						([name, value]) =>
+							/** @type {StatusSummaryEntry} */ ({
+								name,
+								value
+							})
+					);
 				} else {
 					console.error('getLogSummaryByAppStatusCode did not return an array:', summary);
 					data_status_summary = [];
@@ -591,7 +665,10 @@
 					$userStore.token
 				);
 				data_top_endpoints = Array.isArray(usage?.most_used)
-					? usage.most_used.map((/** @type {EndpointUsageRow} */ e) => ({ name: e.resource, value: parseInt(/** @type {string} */ (String(e.requestCount || '0'))) }))
+					? usage.most_used.map((/** @type {EndpointUsageRow} */ e) => ({
+							name: e.resource,
+							value: parseInt(/** @type {string} */ (String(e.requestCount || '0')))
+						}))
 					: [];
 				data_unused_endpoints = Array.isArray(usage?.unused) ? usage.unused : [];
 
@@ -609,7 +686,9 @@
 					? top_errors.top_error_endpoints.map((/** @type {TopErrorEndpointRow} */ ep) => ({
 							idendpoint: ep.idendpoint,
 							name: `${ep.method} ${ep.resource}`,
-							data: (/** @type {Array<{bucket: string, count: string|number}>} */ (/** @type {unknown} */ (ep.series || []))).map((/** @type {{bucket: string, count: string|number}} */ s) => {
+							data: /** @type {Array<{bucket: string, count: string|number}>} */ (
+								/** @type {unknown} */ (ep.series || [])
+							).map((/** @type {{bucket: string, count: string|number}} */ s) => {
 								let bucketDate = new Date(s.bucket);
 								return /** @type {DashboardChartPoint} */ ({
 									name: bucketDate.toISOString(),
@@ -635,7 +714,7 @@
 
 	/** @type {(() => void)|undefined} */
 	let unsubscribe_dy;
-/** @type {(() => void)|undefined} */
+	/** @type {(() => void)|undefined} */
 	let unsubscribe_com;
 
 	onMount(() => {
@@ -659,7 +738,12 @@
 				endpointThrottle.trigger();
 				aggregateThrottle.trigger();
 
-				if (statusMatchesSelectedClasses(Number((/** @type {string|number} */ event.statusCode)), selectedStatusClasses)) {
+				if (
+					statusMatchesSelectedClasses(
+						Number(/** @type {string|number} */ event.statusCode),
+						selectedStatusClasses
+					)
+				) {
 					tableRefreshThrottle.trigger();
 				}
 			}
@@ -707,7 +791,7 @@
 				checked={selectedStatusClasses.includes(cls)}
 				onchange={(/** @type {Event} */ e) => {
 					const input = /** @type {HTMLInputElement} */ (e.target);
-						if (!input) return;
+					if (!input) return;
 					selectedStatusClasses = input.checked
 						? [...selectedStatusClasses, cls]
 						: selectedStatusClasses.filter((c) => c !== cls);
@@ -770,14 +854,17 @@
 					// el mouse por encima.
 					tooltip: {
 						show: true,
-						formatter: (/** @type {{ name: string }} */ params) => `${params.name} — ${httpStatusText(params.name)}`
+						formatter: (/** @type {{ name: string }} */ params) =>
+							`${params.name} — ${httpStatusText(params.name)}`
 					}
 				}
 			}}
 			series={[
 				{
 					type: 'pie',
-					data: /** @type {Array<{ value: any[]; name?: string }>} */ (data_status_summary.map((e) => ({ value: [e.value], name: e.name })))
+					data: /** @type {Array<{ value: any[]; name?: string }>} */ (
+						data_status_summary.map((e) => ({ value: [e.value], name: e.name }))
+					)
 				}
 			]}
 		></Chart.Base>
@@ -793,7 +880,14 @@
 				yAxis: { type: 'category', data: data_top_endpoints.map((d) => d.name) },
 				xAxis: { type: 'value' }
 			}}
-			series={[{ type: 'bar', data: data_top_endpoints.map((/** @type {{name: string, value: number}} */ d) => ({ value: [d.value] })) }]}
+			series={[
+				{
+					type: 'bar',
+					data: data_top_endpoints.map((/** @type {{name: string, value: number}} */ d) => ({
+						value: [d.value]
+					}))
+				}
+			]}
 		></Chart.Base>
 		<p class="help has-text-centered">
 			Most-used endpoints for the selected app and environment in the last 7 days
@@ -803,7 +897,7 @@
 		<Chart.TimeSeries
 			title="Top 10 Endpoints with Most Errors ({selectedHours}h)"
 			bind:series={data_top_error_endpoints}
-			tooltipFormatter={/** @type {(params: any) => string} */ (topErrorsTooltipFormatter)}
+			tooltipFormatter={topErrorsTooltipFormatter}
 		></Chart.TimeSeries>
 		<p class="help has-text-centered">
 			Endpoints with the most errors (status code &gt;= 400) per hour in the last {selectedHours} hours,
@@ -851,11 +945,18 @@
 	<div class="column is-half-desktop is-full-tablet">
 		<p class="title is-6">Unused Endpoints (last 7 days)</p>
 		{#if data_unused_endpoints.length}
-			<ul>
+			
 				{#each data_unused_endpoints as ep}
-					<li>{/** @type {RowAny} */ (ep).resource} ({/** @type {RowAny} */ (ep).method})</li>
+					
+						<div class="control">
+							<div class="tags has-addons">
+								<span class="tag is-dark">{/** @type {RowAny} */ (ep).method}</span>
+								<span class="tag">{/** @type {RowAny} */ (ep).resource}</span>
+							</div>
+						</div>
+					<br/> 
 				{/each}
-			</ul>
+			
 		{:else}
 			<p class="help">No unused endpoints in this window.</p>
 		{/if}
