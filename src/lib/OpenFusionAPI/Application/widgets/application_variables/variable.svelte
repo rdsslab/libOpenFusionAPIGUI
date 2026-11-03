@@ -126,9 +126,12 @@
 
 	onMount(() => {});
 
-	// Inicializa el estado de showCode por variable para que el icono "eye"
-	// de cada EditorCode afecte solo a la fila correspondiente y no a todas.
-	$effect(() => {
+	// Inicializa el estado de showCode por variable ANTES del render
+	// para que el icono "eye" de cada EditorCode afecte solo a la fila
+	// correspondiente y no a todas. Se usa $effect.pre (no $effect) para
+	// evitar que showCode sea undefined en el primer render, lo cual causaría
+	// "Cannot do `bind:showCode={undefined}` when `showCode` has a fallback value".
+	$effect.pre(() => {
 		if (Array.isArray(appVars)) {
 			for (const av of appVars) {
 				if (av && av.showCode === undefined) {
