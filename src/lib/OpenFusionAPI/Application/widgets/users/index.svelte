@@ -148,6 +148,15 @@
 		try {
 			let row = $state.snapshot(selectedRow);
 
+			// Filtrar campos UUID auto-generados que vengan como string vacío
+			// (el backend los genera automáticamente, no deben enviarse en el request)
+			const uuidAutoFields = ['idclient', 'idapp', 'idendpoint', 'idkey', 'iduser', 'idbot', 'idtask'];
+			uuidAutoFields.forEach(field => {
+				if (row[field] === '') {
+					delete row[field];
+				}
+			});
+
 			if (isEditing) {
 				delete row.password;
 				delete row.repeatPassword;
