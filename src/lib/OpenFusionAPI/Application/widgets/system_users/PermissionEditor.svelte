@@ -9,9 +9,11 @@
 	const resources = [
 		{ key: 'users', label: 'Users', actions: ['read', 'create', 'edit', 'delete'] },
 		{ key: 'apiclients', label: 'API Clients', actions: ['read', 'create', 'edit', 'delete'] },
+		{ key: 'apikeys', label: 'API Keys', actions: ['read', 'create', 'edit', 'delete'] },
 		{ key: 'endpoints', label: 'Endpoints', actions: ['read', 'create', 'edit', 'delete'] },
 		{ key: 'apps', label: 'Applications', actions: ['read', 'create', 'edit', 'delete'] },
 		{ key: 'appvars', label: 'App Variables', actions: ['read', 'create', 'edit', 'delete'] },
+		{ key: 'appgroups', label: 'App Groups', actions: ['read', 'create', 'edit', 'delete'] },
 		{ key: 'bots', label: 'Bots', actions: ['read', 'create', 'edit', 'delete'] },
 		{
 			key: 'interval_tasks',
@@ -42,6 +44,11 @@
 	function toggleAsAdmin() {
 		ensureEnv();
 		ctrl.as_admin = ctrl.as_admin === true ? false : true;
+		ctrl = { ...ctrl };
+	}
+
+	function toggleAuthenticated() {
+		ctrl.authenticated = ctrl.authenticated === true ? false : true;
 		ctrl = { ...ctrl };
 	}
 
@@ -99,6 +106,22 @@
 	</div>
 
 	{#if ctrl.as_admin !== true}
+		<div class="field mb-3">
+			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<label class="checkbox" onclick={toggleAuthenticated}>
+				<input
+					type="checkbox"
+					checked={ctrl.authenticated === true}
+					onchange={(e) => {
+						e.preventDefault();
+					}}
+				/>
+				<strong>Authenticated (no granular permission)</strong>
+				<span class="tag is-info is-light ml-2">Any valid session may access without resource permission</span>
+			</label>
+		</div>
+
 		<Tab
 			tabs={environments.map((e) => ({ id: e, label: e.toUpperCase() }))}
 			bind:active={activeTab}

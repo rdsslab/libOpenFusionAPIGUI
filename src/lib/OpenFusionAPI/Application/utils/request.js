@@ -24,6 +24,7 @@ import {
 /**
  * Verifica el status HTTP de una respuesta.
  * Si es 401, emite el evento `unauthorized` al authEventStore y lanza un error.
+ * Si es 403, lanza un error de "forbidden" para que el llamante pueda notificarlo.
  * @param {Response} response
  * @returns {Response} La misma respuesta si no hay error
  */
@@ -31,6 +32,9 @@ function checkStatus(response) {
 	if (response && response.status === 401) {
 		authEventStore.set({ type: 'unauthorized' });
 		throw new Error('Session expired or unauthorized (401)');
+	}
+	if (response && response.status === 403) {
+		throw new Error('Forbidden: you do not have permission to perform this action (403)');
 	}
 	return response;
 }
@@ -86,7 +90,8 @@ export const LoginRequest = async (username, password) => {
 	let uf = new uFetch();
 	uf.SetBasicAuthorization(username, password);
 	let user = await uf.post({
-		url: url_paths.login
+		url: url_paths.login,
+		data: {}
 	});
 	let data = await user.json();
 	return data;

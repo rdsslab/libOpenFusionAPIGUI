@@ -88,6 +88,48 @@
 		}
 	}
 
+	/**
+	 * `true` si el usuario en sesión puede restaurar los endpoints del sistema.
+	 * Requiere `settings:edit` o ser `as_admin`.
+	 */
+	function canManageSystemEndpoints() {
+		const u = currentUser;
+		if (!u) return false;
+		if (u?.ctrl?.as_admin === true) return true;
+		return currentUserHasPermission(u, permEnv, 'settings', 'edit');
+	}
+
+	/**
+	 * Restaura los endpoints del sistema solo si el usuario tiene permiso.
+	 * Devuelve el estado (o null si no hay permiso) y nunca lanza por 403.
+	 */
+	async function restoreSystemEndpointsIfAllowed(restore) {
+		if (!canManageSystemEndpoints()) {
+			statusSystemEndpointsStore.set({
+				valid: false,
+				message: 'No tiene permiso para restaurar endpoints del sistema (requiere settings:edit o as_admin).'
+			});
+			return null;
+		}
+		try {
+			const status = await restoreSystemEndpoints(restore);
+			statusSystemEndpointsStore.set(status);
+			return status;
+		} catch (error) {
+			const msg = getErrorMessage(error);
+			if (String(msg).includes('403')) {
+				statusSystemEndpointsStore.set({
+					valid: false,
+					message: 'No tiene permiso para restaurar endpoints del sistema (403).'
+				});
+				notify.push({ message: msg, color: 'warning' });
+			} else {
+				throw error;
+			}
+			return null;
+		}
+	}
+
 	let changepwd_compare_verify = $derived.by(() => {
 		return password_change.newPassword == password_change.repeatNewPassword;
 	});
@@ -143,7 +185,7 @@
 					}
 				});
 			}
-			if (currentUserHasPermission(currentUser, permEnv, 'apiclients', 'read')) {
+			if (currentUserHasPermission(currentUser, permEnv, 'apikeys', 'read')) {
 				appItems.push({
 					label: 'API Keys',
 					icon: ' fa-solid fa-key ',
@@ -171,10 +213,9 @@
 				});
 			}
 			// Async Requests: estado en BD de las peticiones que el handler
-			// ASYNC_WRAPPER ejecuta en segundo plano. Las controla el gate de
-			// endpoints (el wrapper es un handler de endpoint); el endpoint del
-			// sistema además exige admin (access 2).
-			if (currentUserHasPermission(currentUser, permEnv, 'endpoints', 'read')) {
+			// ASYNC_WRAPPER ejecuta en segundo plano. Requiere permiso de lectura
+			// de Settings (el endpoint del sistema además exige sesión válida).
+			if (currentUserHasPermission(currentUser, permEnv, 'settings', 'read')) {
 				appItems.push({
 					label: 'Async Requests',
 					icon: ' fa-solid fa-clapperboard ',
@@ -183,15 +224,16 @@
 					}
 				});
 			}
-			// Recurso de logs a nivel de aplicación (mismo gate que apps: no existe permiso
-			// granular 'logs' todavía en el backend).
-			appItems.push({
-				label: 'Logs',
-				icon: ' fa-solid fa-scroll ',
-				onclick: () => {
-					menu_item_selected = '/logs';
-				}
-			});
+			// Recurso de logs a nivel de aplicación: requiere permiso de lectura de Logs.
+			if (currentUserHasPermission(currentUser, permEnv, 'logs', 'read')) {
+				appItems.push({
+					label: 'Logs',
+					icon: ' fa-solid fa-scroll ',
+					onclick: () => {
+						menu_item_selected = '/logs';
+					}
+				});
+			}
 
 			sections.push({ title: 'Application', items: appItems });
 		}
@@ -216,7 +258,7 @@
 				}
 			});
 		}
-		if (currentUser?.ctrl?.as_admin === true) {
+		if (currentUserHasPermission(currentUser, permEnv, 'logs', 'read')) {
 			adminItems.push({
 				label: 'Audit Logs',
 				icon: ' fa-solid fa-magnifying-glass-chart ',
@@ -244,8 +286,7 @@
 				options = [];
 			}
 
-			let status_sys_endp = await restoreSystemEndpoints(false);
-			statusSystemEndpointsStore.set(status_sys_endp);
+			await restoreSystemEndpointsIfAllowed(false);
 		} catch (error) {
 			console.error(error);
 			notify.push({ message: getErrorMessage(error), color: 'danger' });
@@ -538,8 +579,7 @@
 					href="#"
 					class="dropdown-item"
 					onclick={async () => {
-						let status_sys_endp = await restoreSystemEndpoints(true);
-						statusSystemEndpointsStore.set(status_sys_endp);
+						await restoreSystemEndpointsIfAllowed(true);
 					}}
 				>
 					<div class="icon-text">

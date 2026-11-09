@@ -9,7 +9,8 @@ export const listAccessMethod = [
 	{ value: 'Public', id: 0 },
 	{ value: 'Basic', id: 1 },
 	{ value: 'Bearer', id: 2 },
-	{ value: 'Basic & Bearer', id: 3 }
+	{ value: 'Basic & Bearer', id: 3 },
+	{ value: 'Local only', id: 4 }
 ];
 
 /** @type {Record<string, {color: string, icon: string}>} */

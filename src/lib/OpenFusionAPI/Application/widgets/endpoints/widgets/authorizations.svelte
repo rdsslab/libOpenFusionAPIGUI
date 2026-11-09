@@ -75,6 +75,19 @@
 		defaultValue();
 	});
 
+	// Writeback: cuando el operador activa/desactiva el checkbox `auth` de un
+	// usuario, se refleja en `users` (array de ids de usuario autorizados).
+	$effect(() => {
+		const normalized = Array.isArray(users) ? users : [];
+		const selected = table_users
+			.filter((u) => u.auth === true)
+			.map((u) => u.iduser)
+			.filter((id) => id != null);
+		if (JSON.stringify(selected.slice().sort()) !== JSON.stringify(normalized.slice().sort())) {
+			users = selected;
+		}
+	});
+
 	onDestroy(() => {
 		clearTimeout(timeoutChageAuth);
 		unsubscribe();

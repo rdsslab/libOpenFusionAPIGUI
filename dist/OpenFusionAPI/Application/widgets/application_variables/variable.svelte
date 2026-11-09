@@ -46,9 +46,14 @@
 	let appVarsInternal = $state({});
 
 	let appVarsFiltered = $derived.by(() => {
+		// First filter by environment (passed from parent), then by search term
+		let base = Array.isArray(appVars) ? appVars : [];
+		if (environment) {
+			base = base.filter((item) => item && item.environment === environment);
+		}
 		let term = search_var.trim().toLowerCase();
-		if (!term || !Array.isArray(appVars) || appVars.length === 0) return appVars;
-		return appVars.filter((item) => {
+		if (!term || base.length === 0) return base;
+		return base.filter((item) => {
 			let name = item && item.name ? String(item.name).toLowerCase() : '';
 			let value =
 				item && item.value != null && item.value !== '' ? String(item.value).toLowerCase() : '';
@@ -88,6 +93,8 @@
 	 */
 	function appNameExists(name_app) {
 		return appVars.some((item) => {
+			// Solo comparar dentro del mismo entorno
+			if (environment && item.environment !== environment) return false;
 			return item.name == name_app;
 		});
 	}
@@ -103,7 +110,7 @@
 
 	/**
 	 * Valida si en la matriz existe más de un registro
-	 * con el mismo valor en la propiedad "name".
+	 * con el mismo valor en la propiedad "name" dentro del mismo entorno.
 	 *
 	 * @returns {boolean} - true si hay nombres duplicados, false si todos son únicos.
 	 */
@@ -112,6 +119,9 @@
 
 		for (const item of appVars) {
 			if (!item || typeof item.name !== 'string') continue; // Ignora si no tiene "name"
+			// Solo comparar dentro del mismo entorno: el mismo nombre puede
+			// existir en distintos entornos (dev/qa/prd) sin conflicto.
+			if (environment && item.environment !== environment) continue;
 
 			if (vistos.has(item.name)) {
 				// Ya se vio este nombre antes → hay duplicado
@@ -126,16 +136,27 @@
 
 	onMount(() => {});
 
-	// Inicializa el estado de showCode por variable ANTES del render
+	// Inicializa el estado de showCode, type y note por variable ANTES del render
 	// para que el icono "eye" de cada EditorCode afecte solo a la fila
 	// correspondiente y no a todas. Se usa $effect.pre (no $effect) para
-	// evitar que showCode sea undefined en el primer render, lo cual causaría
-	// "Cannot do `bind:showCode={undefined}` when `showCode` has a fallback value".
+	// evitar que showCode/type/note sean undefined en el primer render, lo cual causaría
+	// "Cannot do `bind:showCode={undefined}` when `showCode` has a fallback value"
+	// o "Cannot do `bind:lang={undefined}` when `lang` has a fallback value"
+	// o "Cannot do `bind:value={undefined}` when `value` has a fallback value" (TextArea).
 	$effect.pre(() => {
 		if (Array.isArray(appVars)) {
 			for (const av of appVars) {
 				if (av && av.showCode === undefined) {
 					av.showCode = showCode;
+				}
+				if (av && av.type === undefined) {
+					av.type = 'json';
+				}
+				if (av && av.note === undefined) {
+					av.note = '';
+				}
+				if (av && av.value === undefined) {
+					av.value = '';
 				}
 			}
 		}
@@ -401,7 +422,10 @@
 												idapp: idapp,
 												name: var_full_name,
 												environment: environment,
-												showCode: showCode
+												showCode: showCode,
+												type: 'json',
+												value: '',
+												note: ''
 											});
 											appVars = [...appVars];
 										}

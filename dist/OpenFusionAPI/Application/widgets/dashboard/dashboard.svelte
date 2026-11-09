@@ -912,6 +912,7 @@
 		</p>
 		<Table
 			RawDataTable={data_error_requests}
+			storageKey="dashboard-error-requests-prd"
 			columns={{
 				timestamp: {
 					label: 'Date/Time',

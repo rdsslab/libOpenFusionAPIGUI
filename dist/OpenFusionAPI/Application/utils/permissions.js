@@ -23,7 +23,9 @@ export function hasPermission(userCtrl, environment, resource, action) {
 	if (!envPerms) return false;
 
 	const resourcePerms = envPerms[resource];
-	if (resourcePerms && resourcePerms[action] === true) return true;
+	if (!resourcePerms) return false;
+	if (resourcePerms[action] === true) return true;
+	if (resourcePerms['*'] === true) return true;
 
 	const wildcardPerms = envPerms['*'];
 	if (wildcardPerms && wildcardPerms[action] === true) return true;

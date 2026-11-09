@@ -202,7 +202,7 @@
 		<div class="column">
 			<VarEnv
 				bind:idapp
-				bind:appVars={env_dev}
+				bind:appVars={DataAppVars}
 				environment="dev"
 				{isReadOnly}
 				title={'DEVELOPMENT'}
@@ -220,7 +220,7 @@
 		<div class="column">
 			<VarEnv
 				bind:idapp
-				bind:appVars={env_qa}
+				bind:appVars={DataAppVars}
 				environment="qa"
 				{isReadOnly}
 				title={'QUALITY'}
@@ -238,7 +238,7 @@
 		<div class="column">
 			<VarEnv
 				bind:idapp
-				bind:appVars={env_prd}
+				bind:appVars={DataAppVars}
 				environment="prd"
 				{isReadOnly}
 				title={'PRODUCTION'}
