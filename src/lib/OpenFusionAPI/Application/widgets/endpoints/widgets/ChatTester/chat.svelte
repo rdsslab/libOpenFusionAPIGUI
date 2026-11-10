@@ -24,28 +24,30 @@
 			avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
 			active: true
 		}),
-		messages = $bindable(/** @type {Array<ChatMessage>} */ ([
-			{ type: 'ia', sender: 'Ana Pérez', prompt: 'Hola, ¿cómo estás?', time: '12:30' },
-			{ type: 'user', prompt: '¡Hola! Todo bien, ¿y tú?', time: '12:31', status: 'read' },
-			{
-				type: 'ia',
-				sender: 'Ana Pérez',
-				prompt: 'Muy bien, gracias. ¿Qué tal el trabajo?',
-				time: '12:32'
-			},
-			{
-				type: 'user',
-				prompt: 'Bien, bastante ocupado últimamente. ¿Y tú?',
-				time: '12:33',
-				status: 'read'
-			},
-			{
-				type: 'ia',
-				sender: 'Ana Pérez',
-				prompt: 'Igual, pero me encanta lo que hago. ¿Tienes planes para el fin de semana?',
-				time: '12:34'
-			}
-		]))
+		messages = $bindable(
+			/** @type {Array<ChatMessage>} */ ([
+				{ type: 'ia', sender: 'Ana Pérez', prompt: 'Hola, ¿cómo estás?', time: '12:30' },
+				{ type: 'user', prompt: '¡Hola! Todo bien, ¿y tú?', time: '12:31', status: 'read' },
+				{
+					type: 'ia',
+					sender: 'Ana Pérez',
+					prompt: 'Muy bien, gracias. ¿Qué tal el trabajo?',
+					time: '12:32'
+				},
+				{
+					type: 'user',
+					prompt: 'Bien, bastante ocupado últimamente. ¿Y tú?',
+					time: '12:33',
+					status: 'read'
+				},
+				{
+					type: 'ia',
+					sender: 'Ana Pérez',
+					prompt: 'Igual, pero me encanta lo que hago. ¿Tienes planes para el fin de semana?',
+					time: '12:34'
+				}
+			])
+		)
 	} = $props();
 	// Mensaje actual en el input
 	let messageInput = $state('');
@@ -109,10 +111,7 @@
 			</div>
 			<div class="control">
 				<!-- svelte-ignore a11y_consider_explicit_label -->
-				<button
-					class="button"
-					onclick={() => sendMessage()}
-				>
+				<button class="button" onclick={() => sendMessage()}>
 					<span class="icon {class_content} has-text-success">
 						<i class="fas fa-paper-plane"></i>
 					</span>

@@ -248,7 +248,10 @@
 			return null;
 		} catch (error) {
 			console.error('getBot error >>>>>>>>>>>>>', error);
-			notify.push({ message: getErrorMessage(error) || 'Failed to load bot details', color: 'danger' });
+			notify.push({
+				message: getErrorMessage(error) || 'Failed to load bot details',
+				color: 'danger'
+			});
 			return null;
 		}
 	}
@@ -284,7 +287,10 @@
 			}
 		} catch (error) {
 			console.error('saveBot error >>>>>>>>>>>>>', error);
-			if (getErrorMessage(error) !== 'Failed to save bot' && !getErrorMessage(error).startsWith('URL:')) {
+			if (
+				getErrorMessage(error) !== 'Failed to save bot' &&
+				!getErrorMessage(error).startsWith('URL:')
+			) {
 				notify.push({ message: getErrorMessage(error) || 'Failed to save bot', color: 'danger' });
 			}
 			throw error;
@@ -308,7 +314,10 @@
 			await loadBots();
 		} catch (error) {
 			console.error('deleteBots error >>>>>>>>>>>>>', error);
-			notify.push({ message: getErrorMessage(error) || 'Failed to delete bot(s)', color: 'danger' });
+			notify.push({
+				message: getErrorMessage(error) || 'Failed to delete bot(s)',
+				color: 'danger'
+			});
 		}
 	}
 
@@ -319,26 +328,28 @@
 	 * arrive every ~10 s per bot. Patch the table row in-place; if the editor is open
 	 * for that bot, also refresh the health panel so the operator sees changes immediately.
 	 */
-	const unsubBotStatus = storeBotStatusChanged.subscribe((/** @type {BotStatusChangedEvent|null} */ evt) => {
-		if (!evt || !evt.idbot) return;
-		const idx = DataTableBots.findIndex((r) => r.idbot === evt.idbot);
-		if (idx !== -1) {
-			// Shallow merge: only overwrite fields present in the patch.
-			/** @type {BotRow} */
-			const row = { ...DataTableBots[idx] };
-			const rowRec = /** @type {Record<string, unknown>} */ (row);
-			const evtRec = /** @type {Record<string, unknown>} */ (evt);
-			for (const key of Object.keys(evt)) {
-				if (key === 'ts' || key === 'idbot' || key === 'idapp') continue;
-				rowRec[key] = evtRec[key];
+	const unsubBotStatus = storeBotStatusChanged.subscribe(
+		(/** @type {BotStatusChangedEvent|null} */ evt) => {
+			if (!evt || !evt.idbot) return;
+			const idx = DataTableBots.findIndex((r) => r.idbot === evt.idbot);
+			if (idx !== -1) {
+				// Shallow merge: only overwrite fields present in the patch.
+				/** @type {BotRow} */
+				const row = { ...DataTableBots[idx] };
+				const rowRec = /** @type {Record<string, unknown>} */ (row);
+				const evtRec = /** @type {Record<string, unknown>} */ (evt);
+				for (const key of Object.keys(evt)) {
+					if (key === 'ts' || key === 'idbot' || key === 'idapp') continue;
+					rowRec[key] = evtRec[key];
+				}
+				DataTableBots[idx] = row;
 			}
-			DataTableBots[idx] = row;
+			// If the editor is open for this bot, update health snapshot too.
+			if (showEditor && selectedRow.idbot === evt.idbot) {
+				health = /** @type {BotRow|null} */ ({ ...(health ?? {}), ...evt });
+			}
 		}
-		// If the editor is open for this bot, update health snapshot too.
-		if (showEditor && selectedRow.idbot === evt.idbot) {
-			health = /** @type {BotRow|null} */ ({ ...(health ?? {}), ...evt });
-		}
-	});
+	);
 
 	/**
 	 * bot_changed: structural change (create / edit / delete). The safest action is a
@@ -378,46 +389,45 @@
 	});
 </script>
 
-	{#snippet r01()}
-		<div class="field has-addons">
-			<p class="control">
-				<button
-					class="button is-small is-link"
-					onclick={async () => {
-						if (!confirm('Are you sure you want to save and deploy this bot?')) {
-							return;
-						}
-						// saveBot() ya notifica el resultado; el editor permanece abierto
-						// tanto si el guardado tuvo éxito como si falló.
-						try {
-							await saveBot();
-						} catch {
-							// Error already notified; keep editor open for correction
-						}
-					}}
-				>
-					<span class="icon is-small">
-						<i class="fa-solid fa-rocket"></i>
-					</span>
-					<span>Save & Deploy</span>
-				</button>
-			</p>
-			<p class="control">
-				<button
-					class="button is-small"
-					onclick={() => {
-						showEditor = false;
-					}}
-				>
-					<span class="icon is-small">
-						<i class="fa-solid fa-xmark"></i>
-					</span>
-					<span>Cancel</span>
-				</button>
-			</p>
-		</div>
-	{/snippet}
-
+{#snippet r01()}
+	<div class="field has-addons">
+		<p class="control">
+			<button
+				class="button is-small is-link"
+				onclick={async () => {
+					if (!confirm('Are you sure you want to save and deploy this bot?')) {
+						return;
+					}
+					// saveBot() ya notifica el resultado; el editor permanece abierto
+					// tanto si el guardado tuvo éxito como si falló.
+					try {
+						await saveBot();
+					} catch {
+						// Error already notified; keep editor open for correction
+					}
+				}}
+			>
+				<span class="icon is-small">
+					<i class="fa-solid fa-rocket"></i>
+				</span>
+				<span>Save & Deploy</span>
+			</button>
+		</p>
+		<p class="control">
+			<button
+				class="button is-small"
+				onclick={() => {
+					showEditor = false;
+				}}
+			>
+				<span class="icon is-small">
+					<i class="fa-solid fa-xmark"></i>
+				</span>
+				<span>Cancel</span>
+			</button>
+		</p>
+	</div>
+{/snippet}
 
 <Table
 	bind:RawDataTable={DataTableBots}

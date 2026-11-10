@@ -56,7 +56,9 @@
 	let { onexit = () => {} } = $props();
 	let idapp = $state(0);
 	let loading = $state(false);
-	let options = $state(/** @type {Array<import('#lib/OpenFusionAPI/types/models.js').PredictiveOption>} */ ([]));
+	let options = $state(
+		/** @type {Array<import('#lib/OpenFusionAPI/types/models.js').PredictiveOption>} */ ([])
+	);
 	let menu_item_selected = $state('');
 	let show_dialog_change_pwd = $state(false);
 
@@ -107,7 +109,8 @@
 		if (!canManageSystemEndpoints()) {
 			statusSystemEndpointsStore.set({
 				valid: false,
-				message: 'No tiene permiso para restaurar endpoints del sistema (requiere settings:edit o as_admin).'
+				message:
+					'No tiene permiso para restaurar endpoints del sistema (requiere settings:edit o as_admin).'
 			});
 			return null;
 		}

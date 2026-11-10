@@ -611,14 +611,14 @@
 		<Input
 			label="Enabled"
 			type="checkbox"
-			bind:value={(/** @type {any} */ (endpoint.json_schema)).in.enabled}
+			bind:value={/** @type {any} */ (endpoint.json_schema).in.enabled}
 			placeholder="Enabled"
 		/>
 
 		<EditorCode
 			lang="json"
 			showFormat={true}
-			bind:code={/** @type {any} */ ((/** @type {any} */ (endpoint.json_schema)).in.schema)}
+			bind:code={/** @type {any} */ (endpoint.json_schema).in.schema}
 			onchange={(/** @type {any} */ datajs) => {
 				//	json_schema_in = datajs.code;
 			}}
@@ -629,14 +629,14 @@
 		<Input
 			label="Enabled"
 			type="checkbox"
-			bind:value={(/** @type {any} */ (endpoint.json_schema)).out.enabled}
+			bind:value={/** @type {any} */ (endpoint.json_schema).out.enabled}
 			placeholder="Enabled"
 		/>
 
 		<EditorCode
 			lang="json"
 			showFormat={true}
-			bind:code={/** @type {any} */ ((/** @type {any} */ (endpoint.json_schema)).out.schema)}
+			bind:code={/** @type {any} */ (endpoint.json_schema).out.schema}
 			onchange={(/** @type {any} */ datajs) => {
 				//	json_schema_out = datajs.code;
 			}}

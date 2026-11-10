@@ -55,7 +55,11 @@
 		}
 	}
 
-	async function copyToClipboard(/** @type {Event} */ event, /** @type {string} */ text, /** @type {string} */ id) {
+	async function copyToClipboard(
+		/** @type {Event} */ event,
+		/** @type {string} */ text,
+		/** @type {string} */ id
+	) {
 		event.stopPropagation(); // Prevent toggling when clicking copy
 		const { result } = await copyTextToClipboard(text);
 		if (result) {
@@ -63,9 +67,7 @@
 			copiedStates = { ...copiedStates, [id]: true };
 			setTimeout(() => {
 				const newState = { ...copiedStates };
-				copiedStates = Object.fromEntries(
-					Object.entries(copiedStates).filter(([k]) => k !== id)
-				);
+				copiedStates = Object.fromEntries(Object.entries(copiedStates).filter(([k]) => k !== id));
 			}, 3000);
 		}
 	}

@@ -216,7 +216,10 @@
 			}
 		} catch (error) {
 			console.error('changePassword error:', error);
-			notify.push({ message: getErrorMessage(error) || 'Failed to change password', color: 'danger' });
+			notify.push({
+				message: getErrorMessage(error) || 'Failed to change password',
+				color: 'danger'
+			});
 		}
 	}
 
@@ -248,7 +251,10 @@
 			}
 		} catch (error) {
 			console.error('resetPassword error:', error);
-			notify.push({ message: getErrorMessage(error) || 'Failed to reset password', color: 'danger' });
+			notify.push({
+				message: getErrorMessage(error) || 'Failed to reset password',
+				color: 'danger'
+			});
 		}
 	}
 
@@ -311,44 +317,43 @@
 	}
 </script>
 
-	{#snippet r01()}
-		<div class="field has-addons">
-			{#if canCreate || canEdit}
-				<p class="control">
-					<button
-						class="button is-small is-link"
-						onclick={async () => {
-							if (!confirm('Are you sure you want to save and deploy this user?')) return;
-							await saveUser();
-						}}
-					>
-						<span class="icon is-small"><i class="fa-solid fa-rocket"></i></span>
-						<span>Save & Deploy</span>
-					</button>
-				</p>
-			{/if}
-			{#if isEditing && canDelete}
-				<p class="control">
-					<button class="button is-small is-danger is-outlined" onclick={deleteUser}>
-						<span class="icon is-small"><i class="fa-solid fa-trash"></i></span>
-						<span>Delete</span>
-					</button>
-				</p>
-			{/if}
+{#snippet r01()}
+	<div class="field has-addons">
+		{#if canCreate || canEdit}
 			<p class="control">
 				<button
-					class="button is-small"
-					onclick={() => {
-						showEditor = false;
+					class="button is-small is-link"
+					onclick={async () => {
+						if (!confirm('Are you sure you want to save and deploy this user?')) return;
+						await saveUser();
 					}}
 				>
-					<span class="icon is-small"><i class="fa-solid fa-xmark"></i></span>
-					<span>Cancel</span>
+					<span class="icon is-small"><i class="fa-solid fa-rocket"></i></span>
+					<span>Save & Deploy</span>
 				</button>
 			</p>
-		</div>
-	{/snippet}
-
+		{/if}
+		{#if isEditing && canDelete}
+			<p class="control">
+				<button class="button is-small is-danger is-outlined" onclick={deleteUser}>
+					<span class="icon is-small"><i class="fa-solid fa-trash"></i></span>
+					<span>Delete</span>
+				</button>
+			</p>
+		{/if}
+		<p class="control">
+			<button
+				class="button is-small"
+				onclick={() => {
+					showEditor = false;
+				}}
+			>
+				<span class="icon is-small"><i class="fa-solid fa-xmark"></i></span>
+				<span>Cancel</span>
+			</button>
+		</p>
+	</div>
+{/snippet}
 
 <Table
 	bind:RawDataTable={DataTableUsers}

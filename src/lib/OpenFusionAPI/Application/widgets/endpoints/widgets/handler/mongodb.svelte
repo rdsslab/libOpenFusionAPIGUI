@@ -18,7 +18,7 @@
 
 	let js_code = $state('// JS Code');
 
-		/** @type {ReturnType<typeof setTimeout>|undefined} */
+	/** @type {ReturnType<typeof setTimeout>|undefined} */
 	let timeoutChange;
 
 	let cnx_param_sample = {

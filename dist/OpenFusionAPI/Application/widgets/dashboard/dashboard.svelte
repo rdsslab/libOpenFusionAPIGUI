@@ -946,18 +946,15 @@
 	<div class="column is-half-desktop is-full-tablet">
 		<p class="title is-6">Unused Endpoints (last 7 days)</p>
 		{#if data_unused_endpoints.length}
-			
-				{#each data_unused_endpoints as ep}
-					
-						<div class="control">
-							<div class="tags has-addons">
-								<span class="tag is-dark">{/** @type {RowAny} */ (ep).method}</span>
-								<span class="tag">{/** @type {RowAny} */ (ep).resource}</span>
-							</div>
-						</div>
-					<br/> 
-				{/each}
-			
+			{#each data_unused_endpoints as ep}
+				<div class="control">
+					<div class="tags has-addons">
+						<span class="tag is-dark">{/** @type {RowAny} */ (ep).method}</span>
+						<span class="tag">{/** @type {RowAny} */ (ep).resource}</span>
+					</div>
+				</div>
+				<br />
+			{/each}
 		{:else}
 			<p class="help">No unused endpoints in this window.</p>
 		{/if}

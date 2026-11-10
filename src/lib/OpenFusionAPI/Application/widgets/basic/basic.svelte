@@ -7,7 +7,13 @@
 	import TextAreaWidget from '../common/textArea.svelte';
 	import { url_paths } from '../../utils/paths.js';
 	import { userStore } from '../../utils/stores.js';
-	import { GetApp as GetAppRequest, GetAppBackup, RestoreAppBackup, GetAppVars, UpsertAppVar } from '../../utils/request.js';
+	import {
+		GetApp as GetAppRequest,
+		GetAppBackup,
+		RestoreAppBackup,
+		GetAppVars,
+		UpsertAppVar
+	} from '../../utils/request.js';
 	import { Notifications, Input, EditorCode } from '@rdsslab/svelte-components';
 
 	let notify = new Notifications();
@@ -98,12 +104,14 @@
 			let rows = await GetAppVars(idapp);
 			if (!Array.isArray(rows)) rows = [];
 			let prdVars = rows.filter(
-				(/** @type {import('#lib/OpenFusionAPI/types/models.js').AppVarRow} */ r) => r.environment === 'prd'
+				(/** @type {import('#lib/OpenFusionAPI/types/models.js').AppVarRow} */ r) =>
+					r.environment === 'prd'
 			);
 
-			recoveryVars = RECOVERY_VAR_NAMES.map(name => {
+			recoveryVars = RECOVERY_VAR_NAMES.map((name) => {
 				let existing = prdVars.find(
-					(/** @type {import('#lib/OpenFusionAPI/types/models.js').AppVarRow} */ r) => r.name === name
+					(/** @type {import('#lib/OpenFusionAPI/types/models.js').AppVarRow} */ r) =>
+						r.name === name
 				);
 				if (existing) return { ...existing };
 				return {
@@ -116,11 +124,11 @@
 				};
 			});
 
-			let t = recoveryVars.find(r => r.name === '$_VAR_EMAIL_TRANSPORT');
-			let f = recoveryVars.find(r => r.name === '$_VAR_EMAIL_FROM');
-			let tk = recoveryVars.find(r => r.name === '$_VAR_TELEGRAM_TOKEN');
-			let fe = recoveryVars.find(r => r.name === '$_VAR_RESET_EMAIL_ENABLED');
-			let te = recoveryVars.find(r => r.name === '$_VAR_RESET_TELEGRAM_ENABLED');
+			let t = recoveryVars.find((r) => r.name === '$_VAR_EMAIL_TRANSPORT');
+			let f = recoveryVars.find((r) => r.name === '$_VAR_EMAIL_FROM');
+			let tk = recoveryVars.find((r) => r.name === '$_VAR_TELEGRAM_TOKEN');
+			let fe = recoveryVars.find((r) => r.name === '$_VAR_RESET_EMAIL_ENABLED');
+			let te = recoveryVars.find((r) => r.name === '$_VAR_RESET_TELEGRAM_ENABLED');
 
 			recoveryForm = {
 				emailTransport: t?.value ?? '',
@@ -139,7 +147,7 @@
 	 * Mapea cada AppVar de recuperación al valor del formulario.
 	 */
 	function syncRecoveryVarsFromForm() {
-		recoveryVars = recoveryVars.map(rv => {
+		recoveryVars = recoveryVars.map((rv) => {
 			switch (rv.name) {
 				case '$_VAR_EMAIL_TRANSPORT':
 					rv.value = recoveryForm.emailTransport;
@@ -258,7 +266,10 @@
 
 	async function GetApp() {
 		try {
-			let response = await GetAppRequest(/** @type {string|number} */ (idapp ?? ''), $userStore.token);
+			let response = await GetAppRequest(
+				/** @type {string|number} */ (idapp ?? ''),
+				$userStore.token
+			);
 
 			if (response) {
 				app = { ...response };
@@ -415,7 +426,10 @@
 						const minutes = String(now.getMinutes()).padStart(2, '0');
 
 						//const formattedDateTime = `${year}-${month}-${day} ${hours}:${minutes}`;
-						let app_json = await GetAppBackup(/** @type {string|number} */ (app.idapp ?? ''), $userStore.token);
+						let app_json = await GetAppBackup(
+							/** @type {string|number} */ (app.idapp ?? ''),
+							$userStore.token
+						);
 						// Convertir el objeto JSON a una cadena
 						const jsonString = JSON.stringify(app_json, null, 2);
 
@@ -579,7 +593,10 @@
 	{#if app.app === 'system'}
 		<div class="field">
 			<label class="label">Password Recovery Configuration</label>
-			<p class="help">OTP-based password recovery via email or Telegram. Only visible for the "system" application. Environment: prd. Saved on "Save & deploy".</p>
+			<p class="help">
+				OTP-based password recovery via email or Telegram. Only visible for the "system"
+				application. Environment: prd. Saved on "Save & deploy".
+			</p>
 		</div>
 
 		<div class="field">
@@ -600,26 +617,41 @@
 					showFormat={true}
 				></EditorCode>
 			</p>
-			<p class="help">JSON configuration for nodemailer SMTP transport. The backend reads <code>$_VAR_EMAIL_TRANSPORT</code>.</p>
+			<p class="help">
+				JSON configuration for nodemailer SMTP transport. The backend reads <code
+					>$_VAR_EMAIL_TRANSPORT</code
+				>.
+			</p>
 		</div>
 
 		<div class="field">
 			<label class="label">Example SMTP Transport JSON</label>
 			<div class="control">
-				<pre style="background:#f5f5f5;padding:10px;border:1px solid #ddd;font-size:12px;overflow:auto;white-space:pre-wrap;">{RECOVERY_TRANSPORT_EXAMPLE}</pre>
+				<pre
+					style="background:#f5f5f5;padding:10px;border:1px solid #ddd;font-size:12px;overflow:auto;white-space:pre-wrap;">{RECOVERY_TRANSPORT_EXAMPLE}</pre>
 			</div>
 			<p class="help">Paste your SMTP transport configuration as JSON above.</p>
 		</div>
 
 		<div class="field has-addons">
 			<p class="control is-expanded">
-				<Input label="Email From" bind:value={recoveryForm.emailFrom} type="text" placeholder="sender@example.com"></Input>
+				<Input
+					label="Email From"
+					bind:value={recoveryForm.emailFrom}
+					type="text"
+					placeholder="sender@example.com"
+				></Input>
 			</p>
 		</div>
 
 		<div class="field has-addons">
 			<p class="control is-expanded">
-				<Input label="Telegram Bot Token" bind:value={recoveryForm.telegramToken} type="password" placeholder="Bot token from @BotFather"></Input>
+				<Input
+					label="Telegram Bot Token"
+					bind:value={recoveryForm.telegramToken}
+					type="password"
+					placeholder="Bot token from @BotFather"
+				></Input>
 			</p>
 		</div>
 
@@ -631,7 +663,9 @@
 				<input
 					type="button"
 					value={recoveryForm.emailEnabled ? 'On' : 'Off'}
-					class={recoveryForm.emailEnabled ? 'button is-success is-selected is-small' : 'button is-danger is-small'}
+					class={recoveryForm.emailEnabled
+						? 'button is-success is-selected is-small'
+						: 'button is-danger is-small'}
 					onclick={() => {
 						recoveryForm.emailEnabled = !recoveryForm.emailEnabled;
 					}}
@@ -647,7 +681,9 @@
 				<input
 					type="button"
 					value={recoveryForm.telegramEnabled ? 'On' : 'Off'}
-					class={recoveryForm.telegramEnabled ? 'button is-success is-selected is-small' : 'button is-danger is-small'}
+					class={recoveryForm.telegramEnabled
+						? 'button is-success is-selected is-small'
+						: 'button is-danger is-small'}
 					onclick={() => {
 						recoveryForm.telegramEnabled = !recoveryForm.telegramEnabled;
 					}}

@@ -44,7 +44,7 @@
 
 	let query_code = $state('SELECT 1;');
 
-		/** @type {ReturnType<typeof setTimeout>|undefined} */
+	/** @type {ReturnType<typeof setTimeout>|undefined} */
 	let timeoutChange;
 
 	$effect(() => {

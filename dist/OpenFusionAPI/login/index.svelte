@@ -324,9 +324,10 @@
 			}
 		} catch (error) {
 			console.error(error);
-			const err = /** @type {{retry_after_seconds?: number|string, data?: {retry_after_seconds?: number|string, error?: string}, error?: string}} */ (
-				error
-			);
+			const err =
+				/** @type {{retry_after_seconds?: number|string, data?: {retry_after_seconds?: number|string, error?: string}, error?: string}} */ (
+					error
+				);
 			const seconds = err?.retry_after_seconds || err?.data?.retry_after_seconds;
 			const message =
 				err?.error ||

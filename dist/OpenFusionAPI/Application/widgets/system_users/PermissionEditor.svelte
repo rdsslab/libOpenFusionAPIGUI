@@ -118,7 +118,9 @@
 					}}
 				/>
 				<strong>Authenticated (no granular permission)</strong>
-				<span class="tag is-info is-light ml-2">Any valid session may access without resource permission</span>
+				<span class="tag is-info is-light ml-2"
+					>Any valid session may access without resource permission</span
+				>
 			</label>
 		</div>
 

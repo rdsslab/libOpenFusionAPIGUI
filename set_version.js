@@ -21,6 +21,14 @@ if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) {
 	process.exit(1);
 }
 
+// Permitir elegir tipo de bump: patch (default), minor, major
+const bumpType = process.argv[2] || 'patch';
+const validBumps = ['patch', 'minor', 'major'];
+if (!validBumps.includes(bumpType)) {
+	console.error(`Tipo de bump inválido: "${bumpType}". Use: patch, minor o major`);
+	process.exit(1);
+}
+
 // El bump lo hace npm y no una sustitución de texto a mano, porque package-lock.json
 // tiene su propia copia de la versión (la raíz y la entrada "" de `packages`): tocar
 // solo el manifest dejaba el lock diciendo otra cosa en cada build. `npm version`
@@ -35,7 +43,7 @@ if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) {
 // --no-git-tag-version porque el bump es parte del build, no un release: este repo no
 // versiona por tags.
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-execFileSync(npm, ['version', 'patch', '--no-git-tag-version'], { stdio: 'inherit' });
+execFileSync(npm, ['version', bumpType, '--no-git-tag-version'], { stdio: 'inherit' });
 
 // npm ya dejó la versión nueva en package.json: leerla de ahí en vez de recalcularla.
 const newVersion = JSON.parse(fs.readFileSync(packagePath, 'utf8')).version;
@@ -46,4 +54,4 @@ fs.mkdirSync(path.dirname(versionFilePath), { recursive: true });
 // Crear version.js
 fs.writeFileSync(versionFilePath, `export const version = '${newVersion}';\n`, 'utf8');
 
-console.log(`Versión actualizada a ${newVersion}`);
+console.log(`Versión actualizada a ${newVersion} (${bumpType})`);

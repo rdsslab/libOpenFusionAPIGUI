@@ -45,11 +45,24 @@
 	let showMigrateModal = $state(false);
 	let migrateTargetEnv = $state('');
 
+	// Environment filter state - by default only PRD is visible
+	/** @type {Record<'dev'|'qa'|'prd', boolean>} */
+	let visibleEnvs = $state({ dev: false, qa: false, prd: true });
+
 	const permEnv = getDefaultEnvironment();
 	const currentUser = $derived($userStore?.user);
 	const canCreate = $derived(currentUserHasPermission(currentUser, permEnv, 'endpoints', 'create'));
 	const canEdit = $derived(currentUserHasPermission(currentUser, permEnv, 'endpoints', 'edit'));
 	const canDelete = $derived(currentUserHasPermission(currentUser, permEnv, 'endpoints', 'delete'));
+
+	// Filtered endpoints based on visible environments
+	let filteredEndpoints = $derived.by(() => {
+		if (!app.endpoints || !Array.isArray(app.endpoints)) return [];
+		return app.endpoints.filter((ep) => {
+			const env = /** @type {'dev'|'qa'|'prd'} */ (ep.environment);
+			return env && visibleEnvs[env] === true;
+		});
+	});
 	let migrateConfirmCheck = $state(false);
 	/** @type {Array<string|number>} */
 	let selectedEndpointsForMigration = $state([]);
@@ -167,7 +180,11 @@
 
 		try {
 			if (idendpoints && Array.isArray(idendpoints) && idendpoints.length > 0) {
-				let doc = await getAppDocumentation(/** @type {string} */ ($userStore.token ?? ''), /** @type {string|number} */ (app.idapp ?? ''), idendpoints);
+				let doc = await getAppDocumentation(
+					/** @type {string} */ ($userStore.token ?? ''),
+					/** @type {string|number} */ (app.idapp ?? ''),
+					idendpoints
+				);
 				downloadFileAppDoc(doc.html, `${app.app}_${getCurrentDateToNameDoc()}.html`);
 			} else {
 				TableSelectionType = 2;
@@ -371,7 +388,9 @@
 			app = freshApp;
 
 			// Datos secundarios (editores JS / selectores): no bloquean la tabla.
-			getListFunction(/** @type {string} */ (String(freshApp.app ?? ''))).catch((error) => console.error(error));
+			getListFunction(/** @type {string} */ (String(freshApp.app ?? ''))).catch((error) =>
+				console.error(error)
+			);
 
 			// Resumen de status codes por endpoint (columna "Status Code").
 			loadStatusCodeSummary();
@@ -458,6 +477,52 @@
 			</span>
 		{/snippet}
 		{#snippet rt3()}
+			<div class="field has-addons">
+				<p class="control">
+					<button
+						class="button is-small"
+						onclick={() => (visibleEnvs.dev = !visibleEnvs.dev)}
+						title="Show/hide DEV endpoints"
+						class:is-info={visibleEnvs.dev}
+						class:is-outlined={!visibleEnvs.dev}
+					>
+						<span class="icon is-small">
+							<i class="fa-solid fa-bug"></i>
+						</span>
+						<span>DEV</span>
+					</button>
+				</p>
+				<p class="control">
+					<button
+						class="button is-small"
+						onclick={() => (visibleEnvs.qa = !visibleEnvs.qa)}
+						title="Show/hide QA endpoints"
+						class:is-warning={visibleEnvs.qa}
+						class:is-outlined={!visibleEnvs.qa}
+					>
+						<span class="icon is-small">
+							<i class="fa-solid fa-eye"></i>
+						</span>
+						<span>QA</span>
+					</button>
+				</p>
+				<p class="control">
+					<button
+						class="button is-small"
+						onclick={() => (visibleEnvs.prd = !visibleEnvs.prd)}
+						title="Show/hide PRD endpoints"
+						class:is-success={visibleEnvs.prd}
+						class:is-outlined={!visibleEnvs.prd}
+					>
+						<span class="icon is-small">
+							<i class="fa-solid fa-check"></i>
+						</span>
+						<span>PRD</span>
+					</button>
+				</p>
+			</div>
+		{/snippet}
+		{#snippet rt4()}
 			<span>
 				<button
 					class="button is-small"
@@ -476,12 +541,12 @@
 			showNewButton={canCreate}
 			showEditButton={canEdit}
 			showDeleteButton={canDelete}
-			bind:RawDataTable={app.endpoints}
+			bind:RawDataTable={filteredEndpoints}
 			columns={endpointColumns}
 			bind:selectionType={TableSelectionType}
 			bind:this={TableObject}
 			left_items={[lt01]}
-			right_items={[rt3, rt2, rt1]}
+			right_items={[rt3, rt4, rt1, rt2]}
 			ondeleterow={(/** @type {{rows: Array<EndpointRow>}} */ data) => {
 				if (confirm('Do you want to delete the endpoints selected?')) {
 					const rows = data.rows || [];
@@ -498,7 +563,9 @@
 						)
 					).finally(() => {
 						app.endpoints = (app.endpoints ?? []).filter((item) => {
-							return !rows.some((/** @type {EndpointRow} */ element) => element.idendpoint == item.idendpoint);
+							return !rows.some(
+								(/** @type {EndpointRow} */ element) => element.idendpoint == item.idendpoint
+							);
 						});
 					});
 				}

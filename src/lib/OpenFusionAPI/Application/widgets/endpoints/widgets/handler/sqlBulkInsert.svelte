@@ -30,7 +30,7 @@
 	});
 
 	let table_name = $state('');
-		/** @type {ReturnType<typeof setTimeout>|undefined} */
+	/** @type {ReturnType<typeof setTimeout>|undefined} */
 	let timeoutChange;
 
 	$effect(() => {

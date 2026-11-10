@@ -514,7 +514,10 @@
 					}
 				} catch (error) {
 					console.error('Error copying endpoint: ', error);
-					notify.push({ message: 'Error copying endpoint: ' + getErrorMessage(error), color: 'danger' });
+					notify.push({
+						message: 'Error copying endpoint: ' + getErrorMessage(error),
+						color: 'danger'
+					});
 				}
 
 				ShowDialogCopyEndpoint = false;

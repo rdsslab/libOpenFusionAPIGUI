@@ -31,7 +31,7 @@
 	]);
 
 	let query_code = $state('');
-		/** @type {ReturnType<typeof setTimeout>|undefined} */
+	/** @type {ReturnType<typeof setTimeout>|undefined} */
 	let timeoutChange;
 
 	let cnx_custom = $state({});

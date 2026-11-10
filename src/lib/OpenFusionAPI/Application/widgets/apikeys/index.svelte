@@ -321,50 +321,49 @@
 	});
 </script>
 
-	{#snippet r01()}
-		<div class="field has-addons">
-			{#if isEditing}
-				<p class="control">
-					<button
-						class="button is-small is-warning is-light"
-						title="Re-sign the token with the current application JWT key"
-						onclick={regenerateToken}
-					>
-						<span class="icon is-small">
-							<i class="fa-solid fa-rotate"></i>
-						</span>
-						<span>Regenerate JWT</span>
-					</button>
-				</p>
-				<p class="control">
-					<button class="button is-small is-link" onclick={onSaveClick}>
-						<span class="icon is-small">
-							<i class="fa-solid fa-save"></i>
-						</span>
-						<span>Save</span>
-					</button>
-				</p>
-			{:else}
-				<p class="control">
-					<button class="button is-small is-link" onclick={onSaveClick}>
-						<span class="icon is-small">
-							<i class="fa-solid fa-rocket"></i>
-						</span>
-						<span>Save & Deploy</span>
-					</button>
-				</p>
-			{/if}
+{#snippet r01()}
+	<div class="field has-addons">
+		{#if isEditing}
 			<p class="control">
-				<button class="button is-small" onclick={closeEditor}>
+				<button
+					class="button is-small is-warning is-light"
+					title="Re-sign the token with the current application JWT key"
+					onclick={regenerateToken}
+				>
 					<span class="icon is-small">
-						<i class="fa-solid fa-xmark"></i>
+						<i class="fa-solid fa-rotate"></i>
 					</span>
-					<span>{isEditing ? 'Close' : 'Cancel'}</span>
+					<span>Regenerate JWT</span>
 				</button>
 			</p>
-		</div>
-	{/snippet}
-
+			<p class="control">
+				<button class="button is-small is-link" onclick={onSaveClick}>
+					<span class="icon is-small">
+						<i class="fa-solid fa-save"></i>
+					</span>
+					<span>Save</span>
+				</button>
+			</p>
+		{:else}
+			<p class="control">
+				<button class="button is-small is-link" onclick={onSaveClick}>
+					<span class="icon is-small">
+						<i class="fa-solid fa-rocket"></i>
+					</span>
+					<span>Save & Deploy</span>
+				</button>
+			</p>
+		{/if}
+		<p class="control">
+			<button class="button is-small" onclick={closeEditor}>
+				<span class="icon is-small">
+					<i class="fa-solid fa-xmark"></i>
+				</span>
+				<span>{isEditing ? 'Close' : 'Cancel'}</span>
+			</button>
+		</p>
+	</div>
+{/snippet}
 
 {#snippet lt01()}
 	<div class="buttons are-small"></div>

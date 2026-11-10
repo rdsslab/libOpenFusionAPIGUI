@@ -150,8 +150,16 @@
 
 			// Filtrar campos UUID auto-generados que vengan como string vacío
 			// (el backend los genera automáticamente, no deben enviarse en el request)
-			const uuidAutoFields = ['idclient', 'idapp', 'idendpoint', 'idkey', 'iduser', 'idbot', 'idtask'];
-			uuidAutoFields.forEach(field => {
+			const uuidAutoFields = [
+				'idclient',
+				'idapp',
+				'idendpoint',
+				'idkey',
+				'iduser',
+				'idbot',
+				'idtask'
+			];
+			uuidAutoFields.forEach((field) => {
 				if (row[field] === '') {
 					delete row[field];
 				}
@@ -221,7 +229,10 @@
 			}
 		} catch (error) {
 			console.error('changePassword error:', error);
-			notify.push({ message: getErrorMessage(error) || 'Failed to change password', color: 'danger' });
+			notify.push({
+				message: getErrorMessage(error) || 'Failed to change password',
+				color: 'danger'
+			});
 		}
 	}
 
@@ -267,38 +278,37 @@
 	}
 </script>
 
-	{#snippet r01()}
-		<div class="field has-addons">
-			<p class="control">
-				<button
-					class="button is-small is-link"
-					onclick={async () => {
-						if (!confirm('Are you sure you want to save and deploy this client?')) return;
-						await saveUser();
-					}}
-				>
-					<span class="icon is-small">
-						<i class="fa-solid fa-rocket"></i>
-					</span>
-					<span>Save & Deploy</span>
-				</button>
-			</p>
-			<p class="control">
-				<button
-					class="button is-small"
-					onclick={() => {
-						showEditor = false;
-					}}
-				>
-					<span class="icon is-small">
-						<i class="fa-solid fa-xmark"></i>
-					</span>
-					<span>Cancel</span>
-				</button>
-			</p>
-		</div>
-	{/snippet}
-
+{#snippet r01()}
+	<div class="field has-addons">
+		<p class="control">
+			<button
+				class="button is-small is-link"
+				onclick={async () => {
+					if (!confirm('Are you sure you want to save and deploy this client?')) return;
+					await saveUser();
+				}}
+			>
+				<span class="icon is-small">
+					<i class="fa-solid fa-rocket"></i>
+				</span>
+				<span>Save & Deploy</span>
+			</button>
+		</p>
+		<p class="control">
+			<button
+				class="button is-small"
+				onclick={() => {
+					showEditor = false;
+				}}
+			>
+				<span class="icon is-small">
+					<i class="fa-solid fa-xmark"></i>
+				</span>
+				<span>Cancel</span>
+			</button>
+		</p>
+	</div>
+{/snippet}
 
 <Table
 	bind:RawDataTable={DataTableUsers}

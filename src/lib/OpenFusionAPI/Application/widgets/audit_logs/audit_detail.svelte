@@ -58,7 +58,6 @@
 	</div>
 {/snippet}
 
-
 <SlideFullScreen bind:show>
 	<Level left={[]} right={[r01]}></Level>
 

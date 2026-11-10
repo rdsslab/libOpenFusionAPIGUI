@@ -232,7 +232,10 @@
 						(e) =>
 							e?.idendpoint && (!environment || !e.environment || e.environment === environment)
 					)
-					.map((e) => ({ id: /** @type {string|number} */ (e.idendpoint ?? ''), value: /** @type {string} */ (e.endpoint ?? '') }));
+					.map((e) => ({
+						id: /** @type {string|number} */ (e.idendpoint ?? ''),
+						value: /** @type {string} */ (e.endpoint ?? '')
+					}));
 			}
 		} catch (e) {
 			console.error(e);
@@ -271,7 +274,13 @@
 		if (idendpoint && evt?.idendpoint && evt.idendpoint !== idendpoint) return false;
 		if (method && evt?.method && evt.method !== method) return false;
 		if (activeStatusFilter.length > 0 && evt?.statusCode != null) {
-			if (!statusMatchesFilter(/** @type {string} */ (String(evt.statusCode ?? '')), activeStatusFilter)) return false;
+			if (
+				!statusMatchesFilter(
+					/** @type {string} */ (String(evt.statusCode ?? '')),
+					activeStatusFilter
+				)
+			)
+				return false;
 		}
 		return true;
 	}
@@ -293,10 +302,12 @@
 
 	onMount(() => {
 		loadApps();
-		unsubscribe_com = storeEndpointOnComplete.subscribe((/** @type {Record<string, unknown>} */ event) => {
-			if (!realtime) return;
-			if (eventMatchesFilters(event)) scheduleRealtimeRefresh();
-		});
+		unsubscribe_com = storeEndpointOnComplete.subscribe(
+			(/** @type {Record<string, unknown>} */ event) => {
+				if (!realtime) return;
+				if (eventMatchesFilters(event)) scheduleRealtimeRefresh();
+			}
+		);
 	});
 
 	onDestroy(() => {
@@ -330,7 +341,8 @@
 	 */
 	function onRowClick({ row }) {
 		selectedRow = row;
-		selectedAppName = appNameById[/** @type {string} */ (String(row?.idapp ?? ''))] ?? row?.idapp ?? '';
+		selectedAppName =
+			appNameById[/** @type {string} */ (String(row?.idapp ?? ''))] ?? row?.idapp ?? '';
 		showDetail = true;
 	}
 

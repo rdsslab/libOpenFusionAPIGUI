@@ -20,10 +20,7 @@
 	/**
 	 * @type {{endpoint: EndpointRow, onchange: (data: HandlerChangePayload) => void}}
 	 */
-	let {
-		endpoint = $bindable(/** @type {EndpointRow} */ ({})),
-		onchange = () => {}
-	} = $props();
+	let { endpoint = $bindable(/** @type {EndpointRow} */ ({})), onchange = () => {} } = $props();
 
 	const mimeTypes = [
 		{ id: 'text/plain', value: 'text/plain', enabled: true, editor: 'text' },
