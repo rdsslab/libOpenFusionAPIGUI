@@ -17,7 +17,7 @@
 	} from '#lib/OpenFusionAPI/Application/utils/jwtUtils.js';
 	import { getDefaultEnvironment } from '#lib/OpenFusionAPI/Application/utils/permissions.js';
 	import { getErrorMessage } from '#lib/OpenFusionAPI/Application/utils/errors.js';
-	import logo from '#lib/OpenFusionAPI/img/favicon.png';
+	import logo from '#lib/OpenFusionAPI/img/logo.png';
 	import {
 		Notifications,
 		Modal,

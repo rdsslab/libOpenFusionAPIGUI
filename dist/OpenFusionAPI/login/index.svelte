@@ -17,7 +17,7 @@
 	} from '../Application/utils/jwtUtils.js';
 	import { getDefaultEnvironment } from '../Application/utils/permissions.js';
 	import { getErrorMessage } from '../Application/utils/errors.js';
-	import logo from '../img/favicon.png';
+	import logo from '../img/logo.png';
 	import {
 		Notifications,
 		Modal,
